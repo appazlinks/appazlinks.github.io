@@ -277,8 +277,10 @@
                 </div>
                 <div id="shortcutCategoryWrapper">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
-                    <input type="text" id="shortcutCategory" list="categorySuggestions" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <datalist id="categorySuggestions"></datalist>
+                    <div class="relative">
+                        <input type="text" id="shortcutCategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Selecione ou digite uma categoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('shortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                    </div>
                 </div>
 
                 <!-- Checkboxes de Favorito e Dispositivos -->
@@ -316,15 +318,19 @@
                 <input type="hidden" id="editOriginalId">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Título do Atalho *</label>
-                    <input type="text" id="editShortcutTitle" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="relative"><input type="text" id="editShortcutTitle" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editShortcutTitle')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
-                    <input type="text" id="editFileName" required autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="relative"><input type="text" id="editFileName" required autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editFileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
-                    <input type="text" id="editShortcutCategory" required list="categorySuggestions" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="relative">
+                        <input type="text" id="editShortcutCategory" required autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Selecione ou digite uma categoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('editShortcutCategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('editShortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                    </div>
                 </div>
 
                 <!-- Checkboxes de Favorito e Dispositivos (Editar) -->
@@ -362,11 +368,11 @@
                 <input type="hidden" id="editCategoryOldName">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Categoria *</label>
-                    <input type="text" id="editCategoryNewName" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="relative"><input type="text" id="editCategoryNewName" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editCategoryNewName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe do Ícone (FontAwesome)</label>
-                    <input type="text" id="editCategoryIconClass" placeholder="Ex: fa-solid fa-folder text-blue-500" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="relative"><input type="text" id="editCategoryIconClass" placeholder="Ex: fa-solid fa-folder text-blue-500" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editCategoryIconClass')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
                     <button type="button" onclick="closeEditCategoryModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
@@ -1083,6 +1089,168 @@
             });
         }
 
+        // ===== Combobox de categorias =====
+        let comboInputId = null;
+        let comboActiveIndex = -1;
+
+        function getAllCategoryNames() {
+            const set = new Set(['Geral']);
+            htmlFiles.forEach(s => set.add((s.category || 'Geral').trim()));
+            return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        function getComboList() {
+            let list = document.getElementById('categoryComboList');
+            if (!list) {
+                list = document.createElement('div');
+                list.id = 'categoryComboList';
+                list.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl overflow-y-auto py-1 text-sm';
+                list.style.zIndex = '100';
+                list.style.maxHeight = '208px';
+                document.body.appendChild(list);
+            }
+            return list;
+        }
+
+        function openCategoryCombo(inputId, showAll) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            comboInputId = inputId;
+            const list = getComboList();
+            const typed = input.value.trim().toLowerCase();
+            const all = getAllCategoryNames();
+            const names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+
+            list.innerHTML = '';
+            comboActiveIndex = -1;
+            if (names.length === 0) {
+                const hint = document.createElement('div');
+                hint.className = 'px-3 py-2 text-xs text-gray-400';
+                hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
+                list.appendChild(hint);
+            }
+            names.forEach(name => {
+                const isCurrent = name.toLowerCase() === typed;
+                const opt = document.createElement('button');
+                opt.type = 'button';
+                opt.setAttribute('role', 'option');
+                opt.dataset.value = name;
+                opt.className = 'combo-option w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (isCurrent ? 'text-blue-700 font-medium' : 'text-gray-700');
+                const label = document.createElement('span');
+                label.className = 'truncate';
+                label.textContent = name;
+                opt.appendChild(label);
+                if (isCurrent) {
+                    const check = document.createElement('i');
+                    check.className = 'fa-solid fa-check text-xs text-blue-600 shrink-0';
+                    opt.appendChild(check);
+                }
+                opt.onmousedown = ev => ev.preventDefault();
+                opt.onclick = () => selectCategoryOption(name);
+                list.appendChild(opt);
+            });
+
+            const rect = input.getBoundingClientRect();
+            list.style.left = rect.left + 'px';
+            list.style.width = rect.width + 'px';
+            list.classList.remove('hidden');
+            const listHeight = Math.min(list.scrollHeight, 208);
+            const spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < listHeight + 8 && rect.top > spaceBelow) {
+                list.style.top = Math.max(4, rect.top - listHeight - 4) + 'px';
+            } else {
+                list.style.top = (rect.bottom + 4) + 'px';
+            }
+        }
+
+        function closeCategoryCombo() {
+            const list = document.getElementById('categoryComboList');
+            if (list) list.classList.add('hidden');
+            comboInputId = null;
+            comboActiveIndex = -1;
+        }
+
+        function toggleCategoryCombo(inputId) {
+            const list = document.getElementById('categoryComboList');
+            const isOpen = list && !list.classList.contains('hidden') && comboInputId === inputId;
+            if (isOpen) { closeCategoryCombo(); return; }
+            const input = document.getElementById(inputId);
+            if (input) input.focus();
+            openCategoryCombo(inputId, true);
+        }
+
+        function selectCategoryOption(name) {
+            const input = document.getElementById(comboInputId);
+            if (input) { input.value = name; input.focus(); }
+            closeCategoryCombo();
+        }
+
+        function setComboActive(idx) {
+            const opts = document.querySelectorAll('#categoryComboList .combo-option');
+            if (!opts.length) return;
+            comboActiveIndex = (idx + opts.length) % opts.length;
+            opts.forEach((o, i) => o.classList.toggle('bg-blue-50', i === comboActiveIndex));
+            opts[comboActiveIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function initCategoryCombos() {
+            ['shortcutCategory', 'editShortcutCategory'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('focus', () => openCategoryCombo(id, true));
+                input.addEventListener('click', () => {
+                    const list = document.getElementById('categoryComboList');
+                    if (!list || list.classList.contains('hidden')) openCategoryCombo(id, true);
+                });
+                input.addEventListener('input', () => openCategoryCombo(id, false));
+                input.addEventListener('keydown', ev => {
+                    const list = document.getElementById('categoryComboList');
+                    const isOpen = list && !list.classList.contains('hidden');
+                    if (ev.key === 'ArrowDown') {
+                        ev.preventDefault();
+                        if (!isOpen) openCategoryCombo(id, true);
+                        setComboActive(comboActiveIndex + 1);
+                    } else if (ev.key === 'ArrowUp') {
+                        ev.preventDefault();
+                        if (!isOpen) openCategoryCombo(id, true);
+                        setComboActive(comboActiveIndex - 1);
+                    } else if (ev.key === 'Enter' && isOpen && comboActiveIndex >= 0) {
+                        ev.preventDefault();
+                        const opts = document.querySelectorAll('#categoryComboList .combo-option');
+                        if (opts[comboActiveIndex]) selectCategoryOption(opts[comboActiveIndex].dataset.value);
+                    } else if (ev.key === 'Escape' && isOpen) {
+                        ev.stopPropagation();
+                        closeCategoryCombo();
+                    } else if (ev.key === 'Tab') {
+                        closeCategoryCombo();
+                    }
+                });
+            });
+            document.addEventListener('mousedown', ev => {
+                const list = document.getElementById('categoryComboList');
+                if (!list || list.classList.contains('hidden')) return;
+                const input = comboInputId && document.getElementById(comboInputId);
+                const wrapper = input && input.parentElement;
+                if (list.contains(ev.target) || (wrapper && wrapper.contains(ev.target))) return;
+                closeCategoryCombo();
+            });
+            window.addEventListener('resize', closeCategoryCombo);
+            window.addEventListener('scroll', ev => {
+                const list = document.getElementById('categoryComboList');
+                if (list && ev.target === list) return;
+                closeCategoryCombo();
+            }, true);
+        }
+
+        // Limpa o conteúdo de um campo e devolve o foco a ele
+        function clearField(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.value = '';
+            el.focus();
+            if (id === 'shortcutCategory' || id === 'editShortcutCategory') openCategoryCombo(id, true);
+        }
+
         function openEditCategoryModal(catName) {
             document.getElementById('editCategoryOldName').value = catName;
             document.getElementById('editCategoryNewName').value = catName;
@@ -1232,6 +1400,9 @@
             }
 
             filtered.sort((a, b) => {
+                // Mais cliques sempre no topo; o A-Z/Z-A só desempata links com o mesmo número de cliques
+                const visitDiff = (b.visitCount || 0) - (a.visitCount || 0);
+                if (visitDiff !== 0) return visitDiff;
                 const titleA = (a.title || a.name || '').toLowerCase();
                 const titleB = (b.title || b.name || '').toLowerCase();
                 const comparison = titleA.localeCompare(titleB);
@@ -1261,7 +1432,7 @@
 
                     return `
                         <div class="group relative flex flex-col items-center justify-between p-3 py-3 min-h-[100px] h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
-                             onclick="openShortcut('${targetUrl}', '${item.id}')">
+                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
                             
                             <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
                                 <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
@@ -1299,7 +1470,7 @@
 
                     return `
                         <div class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
-                             onclick="openShortcut('${targetUrl}', '${item.id}')">
+                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
                             <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
                                 <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
                                     <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
@@ -1374,7 +1545,7 @@
             document.getElementById('shortcutModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('shortcutTitle').focus(), 50);
         }
-        function closeModal() { document.getElementById('shortcutModal').classList.add('hidden'); }
+        function closeModal() { closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
 
         function openEditShortcutModal(itemId) {
             const item = htmlFiles.find(f => f.id === itemId);
@@ -1389,7 +1560,7 @@
             document.getElementById('editShortcutModal').classList.remove('hidden');
         }
 
-        function closeEditShortcutModal() { document.getElementById('editShortcutModal').classList.add('hidden'); }
+        function closeEditShortcutModal() { closeCategoryCombo(); document.getElementById('editShortcutModal').classList.add('hidden'); }
 
         function handleEditFormSubmit(e) {
             e.preventDefault();
@@ -1452,10 +1623,27 @@
                 visitCount: 0, isFavorite: isFav,
                 showDesktop: showDesk, showMobile: showMob
             });
+            const newId = htmlFiles[htmlFiles.length - 1].id;
             saveToStorage(true);
             e.target.reset();
             closeModal();
+            // Garante que a categoria do novo link esteja visível e destaca o link adicionado
+            if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) currentCategory = category;
+            searchQuery = '';
+            const searchEls = document.querySelectorAll('#searchInputDesktop, #searchInputMobile');
+            searchEls.forEach(el => { el.value = ''; });
             render();
+            highlightNewShortcut(newId);
+        }
+
+        function highlightNewShortcut(id) {
+            setTimeout(() => {
+                const el = document.querySelector('[data-item-id="' + id + '"]');
+                if (!el) return;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-2', 'ring-blue-500');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500'), 2500);
+            }, 50);
         }
 
         function exportBackup() {
@@ -1666,6 +1854,7 @@
         });
 
         window.onload = async function() {
+            initCategoryCombos();
             await loadLocalData();
             render();
             const savedEmail = localStorage.getItem('local_user_email');
