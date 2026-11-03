@@ -478,7 +478,7 @@
 
         let htmlFiles = JSON.parse(localStorage.getItem('local_html_shortcuts')) || [];
         let categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
-        let currentCategory = 'all';
+        let currentCategory = 'favorites';
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
@@ -1098,7 +1098,7 @@
                         item.category = 'Geral';
                     }
                 });
-                if (currentCategory === catName) currentCategory = 'all';
+                if (currentCategory === catName) currentCategory = 'favorites';
                 saveToStorage(true);
                 render();
             }
@@ -1441,7 +1441,7 @@
         function confirmClearAllShortcuts() {
             if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
                 htmlFiles = [];
-                currentCategory = 'all';
+                currentCategory = 'favorites';
                 saveToStorage(true);
                 render();
             }
@@ -1469,7 +1469,7 @@
             if (previousEmail && previousEmail !== user.email) {
                 htmlFiles = [];
                 categoryCustomizations = {};
-                currentCategory = 'all';
+                currentCategory = 'favorites';
                 saveToStorage(false);
             }
 
