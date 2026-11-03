@@ -476,8 +476,8 @@
             }
         }
 
-        let htmlFiles = JSON.parse(localStorage.getItem('local_html_shortcuts')) || [];
-        let categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
+        let htmlFiles = [];
+        let categoryCustomizations = {};
         let currentCategory = 'favorites';
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
@@ -558,10 +558,88 @@
                 .finally(() => clearTimeout(timer));
         }
 
+        // ===== Armazenamento local em IndexedDB =====
+        const LOCAL_DB_NAME = 'azlinks_db';
+        const LOCAL_DB_STORE = 'kv';
+        let localDbPromise = null;
+        let pendingPush = false;   // há alterações locais ainda não enviadas à planilha
+        let localVersion = 0;      // incrementa a cada alteração local a sincronizar
+
+        function openLocalDB() {
+            if (localDbPromise) return localDbPromise;
+            localDbPromise = new Promise((resolve, reject) => {
+                if (!window.indexedDB) return reject(new Error('IndexedDB indisponível'));
+                const req = indexedDB.open(LOCAL_DB_NAME, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore(LOCAL_DB_STORE);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            return localDbPromise;
+        }
+
+        async function idbGet(key) {
+            try {
+                const db = await openLocalDB();
+                return await new Promise((resolve, reject) => {
+                    const q = db.transaction(LOCAL_DB_STORE, 'readonly').objectStore(LOCAL_DB_STORE).get(key);
+                    q.onsuccess = () => resolve(q.result);
+                    q.onerror = () => reject(q.error);
+                });
+            } catch (err) {
+                const v = localStorage.getItem('idbfb_' + key); // reserva se IndexedDB falhar
+                return v === null ? undefined : v;
+            }
+        }
+
+        // Recebe um objeto { chave: texto } e grava tudo em uma única transação
+        async function idbSetMany(obj) {
+            try {
+                const db = await openLocalDB();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(LOCAL_DB_STORE, 'readwrite');
+                    const store = tx.objectStore(LOCAL_DB_STORE);
+                    Object.keys(obj).forEach(k => store.put(obj[k], k));
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                    tx.onabort = () => reject(tx.error);
+                });
+            } catch (err) {
+                console.error('Erro ao gravar no IndexedDB, usando reserva:', err);
+                try { Object.keys(obj).forEach(k => localStorage.setItem('idbfb_' + k, obj[k])); } catch (e) {}
+            }
+        }
+
+        async function loadLocalData() {
+            const [s, c, d] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty')]);
+            try {
+                if (s !== undefined) {
+                    htmlFiles = JSON.parse(s) || [];
+                    categoryCustomizations = JSON.parse(c || '{}') || {};
+                    pendingPush = d === 'true';
+                    return;
+                }
+                // Primeira execução: migra dados antigos do localStorage
+                htmlFiles = JSON.parse(localStorage.getItem('local_html_shortcuts')) || [];
+                categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
+                await idbSetMany({
+                    shortcuts: JSON.stringify(htmlFiles),
+                    categories: JSON.stringify(categoryCustomizations),
+                    dirty: 'false'
+                });
+                localStorage.removeItem('local_html_shortcuts');
+                localStorage.removeItem('local_category_customizations');
+            } catch (err) {
+                console.error('Erro ao ler dados locais:', err);
+                htmlFiles = [];
+                categoryCustomizations = {};
+            }
+        }
+
         async function syncToGoogleSheets() {
-            if (!isSyncConfigured() || isSyncing) return;
+            if (!isSyncConfigured() || isSyncing || !navigator.onLine) return;
             isSyncing = true;
             beginSync();
+            const versionAtStart = localVersion;
             try {
                 await fetchWithTimeout(APPS_SCRIPT_URL, {
                     method: "POST",
@@ -573,16 +651,29 @@
                         planilha: APPS_SCRIPT_PLANILHA 
                     })
                 });
+                if (versionAtStart === localVersion) {
+                    pendingPush = false;
+                    idbSetMany({ dirty: 'false' });
+                }
             } catch (err) {
-                console.error("Erro ao sincronizar envio:", err);
+                console.error("Erro ao sincronizar envio (será tentado novamente):", err);
             } finally {
                 isSyncing = false;
                 endSync();
+                // houve alteração durante o envio: envia de novo
+                if (pendingPush && versionAtStart !== localVersion) setTimeout(syncToGoogleSheets, 0);
             }
         }
 
         async function syncFromGoogleSheets() {
-            if (!isSyncConfigured() || isSyncing) return;
+            if (!isSyncConfigured()) return;
+            // Alterações feitas offline vão primeiro para a planilha, para não serem sobrescritas
+            if (pendingPush) {
+                await syncToGoogleSheets();
+                if (pendingPush) return;
+            }
+            if (isSyncing || !navigator.onLine) return;
+            const versionAtStart = localVersion;
             const iconDesk = document.getElementById('syncIconDesk');
             const iconMob = document.getElementById('syncIconMob');
 
@@ -603,7 +694,7 @@
                 const res = await fetchWithTimeout(getUrl);
                 const data = await res.json();
                 
-                if (data.status === "success") {
+                if (data.status === "success" && !pendingPush && versionAtStart === localVersion) {
                     let changed = false;
                     
                     if (Array.isArray(data.shortcuts)) {
@@ -615,7 +706,7 @@
                         const newShortcutsStr = JSON.stringify(parsedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
                             htmlFiles = parsedShortcuts;
-                            localStorage.setItem('local_html_shortcuts', JSON.stringify(htmlFiles));
+                            idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
                             changed = true;
                         }
                     }
@@ -624,7 +715,7 @@
                         const newCatStr = JSON.stringify(data.categories);
                         if (newCatStr !== JSON.stringify(categoryCustomizations)) {
                             categoryCustomizations = data.categories;
-                            localStorage.setItem('local_category_customizations', JSON.stringify(categoryCustomizations));
+                            idbSetMany({ categories: JSON.stringify(categoryCustomizations) });
                             changed = true;
                         }
                     }
@@ -653,8 +744,16 @@
         }
 
         function saveToStorage(syncNow = true) {
-            localStorage.setItem('local_html_shortcuts', JSON.stringify(htmlFiles));
-            localStorage.setItem('local_category_customizations', JSON.stringify(categoryCustomizations));
+            const snapshot = {
+                shortcuts: JSON.stringify(htmlFiles),
+                categories: JSON.stringify(categoryCustomizations)
+            };
+            if (syncNow) {
+                localVersion++;
+                pendingPush = true;
+                snapshot.dirty = 'true';
+            }
+            idbSetMany(snapshot);
             localStorage.setItem('local_category_view_modes', JSON.stringify(categoryViewModes));
             localStorage.setItem('local_category_sort_orders', JSON.stringify(categorySortOrders));
             if (syncNow) {
@@ -1471,6 +1570,8 @@
                 categoryCustomizations = {};
                 currentCategory = 'favorites';
                 saveToStorage(false);
+                pendingPush = false;
+                idbSetMany({ dirty: 'false' });
             }
 
             APPS_SCRIPT_URL = user.url;
@@ -1560,7 +1661,12 @@
             }
         });
 
+        window.addEventListener('online', () => {
+            if (isSyncConfigured()) syncFromGoogleSheets();
+        });
+
         window.onload = async function() {
+            await loadLocalData();
             render();
             const savedEmail = localStorage.getItem('local_user_email');
             const result = savedEmail ? applyUser(savedEmail) : false;
