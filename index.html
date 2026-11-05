@@ -278,7 +278,7 @@
                 <div id="shortcutCategoryWrapper">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
                     <div class="relative">
-                        <input type="text" id="shortcutCategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Selecione ou digite uma categoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <input type="text" id="shortcutCategory" required autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Selecione ou digite uma categoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
                         <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('shortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
@@ -1538,7 +1538,7 @@
                 categoryInput.value = currentCategory;
                 if (categoryWrapper) categoryWrapper.classList.add('hidden');
             } else {
-                categoryInput.value = 'Geral';
+                categoryInput.value = '';
                 if (categoryWrapper) categoryWrapper.classList.remove('hidden');
             }
 
@@ -1602,13 +1602,20 @@
             const file = normalizeUrl(document.getElementById('fileName').value);
             
             // Corrige a captura da categoria em dispositivos móveis caso o campo esteja oculto
-            let category = 'Geral';
+            let category = '';
             const systemCategories = ['all', 'favorites', 'most_visited'];
             if (!systemCategories.includes(currentCategory)) {
                 category = currentCategory;
             } else {
                 const catInput = document.getElementById('shortcutCategory');
-                category = (catInput && catInput.value.trim()) ? catInput.value.trim() : 'Geral';
+                category = (catInput && catInput.value.trim()) ? catInput.value.trim() : '';
+            }
+
+            if (!category) {
+                alert('Selecione ou digite uma categoria.');
+                const ci = document.getElementById('shortcutCategory');
+                if (ci) ci.focus();
+                return;
             }
 
             const isFav = document.getElementById('shortcutFavorite').checked;
