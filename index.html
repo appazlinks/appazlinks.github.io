@@ -1287,7 +1287,12 @@
             } else if (newIcon) {
                 categoryCustomizations[newName] = { icon: newIcon };
             }
-            if (newName !== oldName) delete categoryCustomizations[oldName];
+            if (newName !== oldName) {
+                delete categoryCustomizations[oldName];
+                // Leva junto a ordenação e o modo de exibição da categoria renomeada
+                if (categorySortOrders[oldName]) { categorySortOrders[newName] = categorySortOrders[oldName]; delete categorySortOrders[oldName]; }
+                if (categoryViewModes[oldName]) { categoryViewModes[newName] = categoryViewModes[oldName]; delete categoryViewModes[oldName]; }
+            }
 
             if (currentCategory === oldName) currentCategory = newName;
             saveToStorage(true);
@@ -1403,10 +1408,14 @@
                 else if (currentCategory !== 'all') filtered = filtered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
             }
 
+            // Favoritos e Mais Visitados: mais cliques primeiro e, em empate, ordem alfabética.
+            // Demais categorias (incluindo Todos): apenas alfabética, com A-Z/Z-A próprio de cada categoria.
+            const sortByClicks = currentCategory === 'favorites' || currentCategory === 'most_visited';
             filtered.sort((a, b) => {
-                // Mais cliques sempre no topo; o A-Z/Z-A só desempata links com o mesmo número de cliques
-                const visitDiff = (b.visitCount || 0) - (a.visitCount || 0);
-                if (visitDiff !== 0) return visitDiff;
+                if (sortByClicks) {
+                    const visitDiff = (b.visitCount || 0) - (a.visitCount || 0);
+                    if (visitDiff !== 0) return visitDiff;
+                }
                 const titleA = (a.title || a.name || '').toLowerCase();
                 const titleB = (b.title || b.name || '').toLowerCase();
                 const comparison = titleA.localeCompare(titleB);
