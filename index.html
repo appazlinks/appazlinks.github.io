@@ -1079,9 +1079,9 @@
                 return btn;
             };
 
+            categoryList.appendChild(createCatBtn('Todos', 'fa-solid fa-border-all text-blue-600', visibleFiles.length, 'all', true));
             categoryList.appendChild(createCatBtn('Favoritos', 'fa-solid fa-star text-amber-400', visibleFiles.filter(s => !!s.isFavorite).length, 'favorites', true));
             categoryList.appendChild(createCatBtn('Mais Visitados', 'fa-solid fa-fire text-amber-500', visibleFiles.filter(s => (s.visitCount || 0) > 0).length, 'most_visited', true));
-            categoryList.appendChild(createCatBtn('Todos', 'fa-solid fa-border-all text-blue-600', visibleFiles.length, 'all', true));
 
             Array.from(uniqueCategories).sort().forEach((cat, index) => {
                 const count = visibleFiles.filter(s => (s.category || 'Geral').trim() === cat).length;
