@@ -889,15 +889,6 @@
             titleEl.appendChild(icon);
             titleEl.appendChild(document.createTextNode(' ' + label));
 
-            // Desativa "Novo" em Favoritos e Mais Visitados (não permitem incluir atalhos)
-            const blockNew = currentCategory === 'favorites' || currentCategory === 'most_visited';
-            document.querySelectorAll('button[onclick="openModal()"]').forEach(btn => {
-                btn.disabled = blockNew;
-                btn.title = blockNew ? 'Escolha "Todos" ou outra categoria para adicionar atalhos' : '';
-                btn.classList.toggle('opacity-40', blockNew);
-                btn.classList.toggle('cursor-not-allowed', blockNew);
-            });
-
             // Exibe o botão de três pontinhos no cabeçalho apenas se a categoria for "Todos" (all)
             if (headerMoreContainer) {
                 if (currentCategory === 'all') {
@@ -1537,8 +1528,8 @@
         }
 
         function openModal() {
-            // Favoritos e Mais Visitados são filtros: os links já pertencem a outras categorias
-            if (currentCategory === 'favorites' || currentCategory === 'most_visited') return;
+            // Favoritos e Mais Visitados são filtros: redireciona para "Todos" para escolher a categoria
+            if (currentCategory === 'favorites' || currentCategory === 'most_visited') filterCategory('all');
             const form = document.querySelector('#shortcutModal form');
             if (form) form.reset();
 
@@ -1619,7 +1610,6 @@
             // Corrige a captura da categoria em dispositivos móveis caso o campo esteja oculto
             let category = '';
             const systemCategories = ['all', 'favorites', 'most_visited'];
-            if (currentCategory === 'favorites' || currentCategory === 'most_visited') return;
             if (currentCategory !== 'all') {
                 category = currentCategory;
             } else {
