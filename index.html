@@ -889,6 +889,15 @@
             titleEl.appendChild(icon);
             titleEl.appendChild(document.createTextNode(' ' + label));
 
+            // Desativa "Novo" em Favoritos e Mais Visitados (não permitem incluir atalhos)
+            const blockNew = currentCategory === 'favorites' || currentCategory === 'most_visited';
+            document.querySelectorAll('button[onclick="openModal()"]').forEach(btn => {
+                btn.disabled = blockNew;
+                btn.title = blockNew ? 'Escolha "Todos" ou outra categoria para adicionar atalhos' : '';
+                btn.classList.toggle('opacity-40', blockNew);
+                btn.classList.toggle('cursor-not-allowed', blockNew);
+            });
+
             // Exibe o botão de três pontinhos no cabeçalho apenas se a categoria for "Todos" (all)
             if (headerMoreContainer) {
                 if (currentCategory === 'all') {
@@ -1528,22 +1537,24 @@
         }
 
         function openModal() {
+            // Favoritos e Mais Visitados são filtros: os links já pertencem a outras categorias
+            if (currentCategory === 'favorites' || currentCategory === 'most_visited') return;
             const form = document.querySelector('#shortcutModal form');
             if (form) form.reset();
 
             document.getElementById('shortcutDesktop').checked = true;
             document.getElementById('shortcutMobile').checked = true;
 
-            const systemCategories = ['all', 'favorites', 'most_visited'];
             const categoryWrapper = document.getElementById('shortcutCategoryWrapper');
             const categoryInput = document.getElementById('shortcutCategory');
 
-            if (!systemCategories.includes(currentCategory)) {
-                categoryInput.value = currentCategory;
-                if (categoryWrapper) categoryWrapper.classList.add('hidden');
-            } else {
+            // O campo Categoria só aparece em "Todos"; nas demais usa a categoria atual
+            if (currentCategory === 'all') {
                 categoryInput.value = '';
                 if (categoryWrapper) categoryWrapper.classList.remove('hidden');
+            } else {
+                categoryInput.value = currentCategory;
+                if (categoryWrapper) categoryWrapper.classList.add('hidden');
             }
 
             document.getElementById('shortcutModal').classList.remove('hidden');
@@ -1608,7 +1619,8 @@
             // Corrige a captura da categoria em dispositivos móveis caso o campo esteja oculto
             let category = '';
             const systemCategories = ['all', 'favorites', 'most_visited'];
-            if (!systemCategories.includes(currentCategory)) {
+            if (currentCategory === 'favorites' || currentCategory === 'most_visited') return;
+            if (currentCategory !== 'all') {
                 category = currentCategory;
             } else {
                 const catInput = document.getElementById('shortcutCategory');
