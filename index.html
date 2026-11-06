@@ -434,7 +434,7 @@
         let APPS_SCRIPT_URL = '';
         let APPS_SCRIPT_PLANILHA = '';
         const APPS_SCRIPT_URL_PLACEHOLDER = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
-        // URL do Web App (implantação do Apps Script com code.gs + usuario.gs). É única para todos os usuários.
+        // URL do Web App (implantação do Apps Script com code.gs + usuarios.gs). É única para todos os usuários.
         const APPS_SCRIPT_CENTRAL_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
 
         function isMobileDevice() {
@@ -1774,6 +1774,7 @@
             const res = await fetchWithTimeout(url);
             const data = await res.json();
             if (data.status !== 'success') throw new Error(data.message || 'Erro ao consultar usuário');
+            if (typeof data.encontrado === 'undefined') throw new Error('Apps Script desatualizado: publique uma nova versão da implantação com o usuarios.gs e o novo code.gs');
             return data; // { encontrado, usuario: { email, nome, planilha, vencimento, vencida } }
         }
 
@@ -1878,7 +1879,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 console.error('Erro ao consultar permissões:', err);
-                error.textContent = 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
+                error.textContent = String(err && err.message || '').indexOf('desatualizado') !== -1 ? err.message : 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
                 error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
