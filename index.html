@@ -1766,15 +1766,26 @@
 
         // Consulta as permissões do usuário (planilha mestre) pelo Apps Script
         async function fetchUsuario(email) {
+            const fail = (userMessage, detail) => { const e = new Error(detail || userMessage); e.userMessage = userMessage; return e; };
             if (!APPS_SCRIPT_CENTRAL_URL || APPS_SCRIPT_CENTRAL_URL === APPS_SCRIPT_URL_PLACEHOLDER) {
-                throw new Error('URL do Apps Script não configurada');
+                throw fail('URL do Apps Script não configurada: preencha APPS_SCRIPT_CENTRAL_URL no index.html com a URL do Web App.');
             }
             const sep = APPS_SCRIPT_CENTRAL_URL.includes('?') ? '&' : '?';
             const url = APPS_SCRIPT_CENTRAL_URL + sep + 'acao=usuario&email=' + encodeURIComponent(String(email || '').trim()) + '&_t=' + Date.now();
-            const res = await fetchWithTimeout(url);
-            const data = await res.json();
-            if (data.status !== 'success') throw new Error(data.message || 'Erro ao consultar usuário');
-            if (typeof data.encontrado === 'undefined') throw new Error('Apps Script desatualizado: publique uma nova versão da implantação com o usuarios.gs e o novo code.gs');
+            let res;
+            try {
+                res = await fetchWithTimeout(url);
+            } catch (err) {
+                throw fail('Não foi possível conectar ao Apps Script. Confira a internet e se a implantação está com acesso "Qualquer pessoa".', err && err.message);
+            }
+            let data;
+            try {
+                data = await res.json();
+            } catch (err) {
+                throw fail('O Apps Script não devolveu os dados esperados. Confira se a URL é a do Web App (termina em /exec) e se o acesso está como "Qualquer pessoa".', err && err.message);
+            }
+            if (data.status !== 'success') throw fail('Erro no Apps Script: ' + (data.message || 'falha ao consultar usuário'));
+            if (typeof data.encontrado === 'undefined') throw fail('Apps Script desatualizado: publique uma nova versão da implantação com o usuarios.gs e o novo code.gs.');
             return data; // { encontrado, usuario: { email, nome, planilha, vencimento, vencida } }
         }
 
@@ -1879,7 +1890,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 console.error('Erro ao consultar permissões:', err);
-                error.textContent = String(err && err.message || '').indexOf('desatualizado') !== -1 ? err.message : 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
+                error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
                 error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
