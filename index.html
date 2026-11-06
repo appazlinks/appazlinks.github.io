@@ -430,11 +430,12 @@
         </div>
     </div>
 
-    <script>document.write('<script src="usuarios.js?t=' + Date.now() + '"><\/script>');</script>
     <script>
         let APPS_SCRIPT_URL = '';
         let APPS_SCRIPT_PLANILHA = '';
         const APPS_SCRIPT_URL_PLACEHOLDER = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
+        // URL do Web App (implantação do Apps Script com code.gs + usuario.gs). É única para todos os usuários.
+        const APPS_SCRIPT_CENTRAL_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
 
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1763,12 +1764,30 @@
 
         const LICENSE_EXPIRED_MESSAGE = 'Cópia não registrada, entrar em contato com o desenvolvedor pelo telefone: 82987340685 para regularização da licença';
 
-        function applyUser(email) {
-            if (typeof azlinksBuscarUsuario !== 'function') return false;
-            const user = azlinksBuscarUsuario(email);
+        // Consulta as permissões do usuário (planilha mestre) pelo Apps Script
+        async function fetchUsuario(email) {
+            if (!APPS_SCRIPT_CENTRAL_URL || APPS_SCRIPT_CENTRAL_URL === APPS_SCRIPT_URL_PLACEHOLDER) {
+                throw new Error('URL do Apps Script não configurada');
+            }
+            const sep = APPS_SCRIPT_CENTRAL_URL.includes('?') ? '&' : '?';
+            const url = APPS_SCRIPT_CENTRAL_URL + sep + 'acao=usuario&email=' + encodeURIComponent(String(email || '').trim()) + '&_t=' + Date.now();
+            const res = await fetchWithTimeout(url);
+            const data = await res.json();
+            if (data.status !== 'success') throw new Error(data.message || 'Erro ao consultar usuário');
+            return data; // { encontrado, usuario: { email, nome, planilha, vencimento, vencida } }
+        }
+
+        function todayIso() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function applyUser(user) {
             if (!user) return false;
 
-            if (user.vencida) {
+            // vencida: bloqueio vindo da planilha (inativo) ou data de vencimento já passada
+            const expired = !!user.vencida || (!!user.vencimento && todayIso() > user.vencimento);
+            if (expired) {
                 APPS_SCRIPT_URL = '';
                 APPS_SCRIPT_PLANILHA = '';
                 return 'expired';
@@ -1784,12 +1803,16 @@
                 idbSetMany({ dirty: 'false' });
             }
 
-            APPS_SCRIPT_URL = user.url;
-            APPS_SCRIPT_PLANILHA = user.planilha;
+            APPS_SCRIPT_URL = APPS_SCRIPT_CENTRAL_URL;
+            APPS_SCRIPT_PLANILHA = user.planilha || '';
             localStorage.setItem('local_user_email', user.email);
+            // Guarda as permissões para o app abrir mesmo offline
+            localStorage.setItem('local_user_data', JSON.stringify({
+                email: user.email, nome: user.nome, planilha: user.planilha, vencimento: user.vencimento || ''
+            }));
 
             const footerName = document.getElementById('footerLicenseName');
-            if (footerName) footerName.textContent = user.nome;
+            if (footerName) footerName.textContent = user.nome || user.email;
             return true;
         }
 
@@ -1847,7 +1870,22 @@
                 return;
             }
 
-            const result = applyUser(email);
+            error.classList.add('hidden');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            let data;
+            try {
+                data = await fetchUsuario(email);
+            } catch (err) {
+                console.error('Erro ao consultar permissões:', err);
+                error.textContent = 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
+                error.classList.remove('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+            if (submitBtn) submitBtn.disabled = false;
+
+            const result = data.encontrado ? applyUser(data.usuario) : false;
             if (result === 'expired') {
                 closeEmailModal();
                 showLicenseBlock();
@@ -1875,13 +1913,38 @@
             if (isSyncConfigured()) syncFromGoogleSheets();
         });
 
+        // Revalida as permissões na planilha mestre (licença renovada, vencida ou removida)
+        async function refreshUserPermissions() {
+            const email = localStorage.getItem('local_user_email');
+            if (!email || !navigator.onLine) return;
+            try {
+                const data = await fetchUsuario(email);
+                if (!data.encontrado) {
+                    localStorage.removeItem('local_user_data');
+                    APPS_SCRIPT_URL = '';
+                    openEmailModal(false, 'Acesso não encontrado. Entre com um e-mail cadastrado.');
+                    return;
+                }
+                const result = applyUser(data.usuario);
+                if (result === 'expired') {
+                    localStorage.removeItem('local_user_data');
+                    showLicenseBlock();
+                }
+            } catch (err) {
+                console.log('Permissões não atualizadas (usando as guardadas):', err);
+            }
+        }
+
         window.onload = async function() {
             initCategoryCombos();
             await loadLocalData();
             render();
-            const savedEmail = localStorage.getItem('local_user_email');
-            const result = savedEmail ? applyUser(savedEmail) : false;
+            let cached = null;
+            try { cached = JSON.parse(localStorage.getItem('local_user_data') || 'null'); } catch (e) {}
+            const result = cached ? applyUser(cached) : false;
             if (result === true) {
+                // Abre com as permissões guardadas e atualiza em segundo plano
+                refreshUserPermissions();
                 await syncFromGoogleSheets();
                 startAutoSync();
             } else if (result === 'expired') {
