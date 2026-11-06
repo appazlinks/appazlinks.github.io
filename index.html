@@ -104,6 +104,7 @@
                     </button>
                 </div>
 
+                <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
                 <button type="button" onclick="syncFromGoogleSheets()" title="Forçar sincronização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer">
                     <i id="syncIconDesk" class="fa-solid fa-rotate-right pointer-events-none"></i>
                 </button>
@@ -143,6 +144,7 @@
                         </button>
                     </div>
 
+                    <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
                     <button type="button" onclick="syncFromGoogleSheets()" title="Forçar sincronização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer">
                         <i id="syncIconMob" class="fa-solid fa-rotate-right pointer-events-none"></i>
                     </button>
@@ -433,7 +435,7 @@
     <script>
         let APPS_SCRIPT_URL = '';
         let APPS_SCRIPT_PLANILHA = '';
-        const APPS_SCRIPT_URL_PLACEHOLDER = '';
+        const APPS_SCRIPT_URL_PLACEHOLDER = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
         // URL do Web App (implantação do Apps Script com code.gs + usuarios.gs). É única para todos os usuários.
         const APPS_SCRIPT_CENTRAL_URL = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec';
 
@@ -493,6 +495,7 @@
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
+        let categoryIconSizes = JSON.parse(localStorage.getItem('local_category_icon_sizes')) || {};
         let sidebarOpen = false;
         let itemToDeleteId = null;
         let editingShortcutIconId = null;
@@ -767,6 +770,7 @@
             idbSetMany(snapshot);
             localStorage.setItem('local_category_view_modes', JSON.stringify(categoryViewModes));
             localStorage.setItem('local_category_sort_orders', JSON.stringify(categorySortOrders));
+            localStorage.setItem('local_category_icon_sizes', JSON.stringify(categoryIconSizes));
             if (syncNow) {
                 syncToGoogleSheets();
             }
@@ -906,6 +910,64 @@
             renderGrid();
         }
 
+        // ===== Tamanho da visualização (por categoria): grande (padrão), médio e pequeno =====
+        const ICON_SIZES = {
+            large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8',        cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
+            medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10',      cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
+            small:  { label: 'Pequeno', cols: 'gap-2 grid-cols-4 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-11 xl:grid-cols-12',        cardPad: 'p-1.5 py-1.5', cardMin: 'min-h-[64px]', box: 'w-6 h-6', img: 'w-5 h-5', text: 'text-[10px]', rowPad: 'px-3 py-1',   lBox: 'w-5 h-5', lImg: 'w-3.5 h-3.5' }
+        };
+
+        function getIconSize(cat) {
+            const v = categoryIconSizes[cat];
+            return ICON_SIZES[v] ? v : 'large';
+        }
+
+        function setIconSize(size) {
+            if (!ICON_SIZES[size]) return;
+            categoryIconSizes[currentCategory] = size;
+            saveToStorage(false);
+            closeSizeMenu();
+            renderGrid();
+        }
+
+        function closeSizeMenu() {
+            const m = document.getElementById('sizeMenu');
+            if (m) m.classList.add('hidden');
+        }
+
+        function toggleSizeMenu(event) {
+            event.stopPropagation();
+            const btn = event.currentTarget;
+            let menu = document.getElementById('sizeMenu');
+            if (menu && !menu.classList.contains('hidden')) { closeSizeMenu(); return; }
+            if (!menu) {
+                menu = document.createElement('div');
+                menu.id = 'sizeMenu';
+                menu.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-sm w-36';
+                menu.style.zIndex = '100';
+                document.body.appendChild(menu);
+            }
+            const current = getIconSize(currentCategory);
+            menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
+                ['small', 'medium', 'large'].map(k => {
+                    const on = k === current;
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                        '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
+                }).join('');
+            menu.classList.remove('hidden');
+            const rect = btn.getBoundingClientRect();
+            const w = menu.offsetWidth || 144;
+            menu.style.left = Math.max(4, Math.min(rect.right - w, window.innerWidth - w - 4)) + 'px';
+            menu.style.top = (rect.bottom + 4) + 'px';
+        }
+
+        window.addEventListener('resize', closeSizeMenu);
+        window.addEventListener('scroll', e => {
+            const m = document.getElementById('sizeMenu');
+            if (m && e.target === m) return;
+            closeSizeMenu();
+        }, true);
+
         function getViewMode(cat) {
             return categoryViewModes[cat] || 'grid';
         }
@@ -993,6 +1055,7 @@
         }
 
         function handleOutsideInteraction(e) {
+            if (!e.target.closest('#sizeMenu') && !e.target.closest('[data-size-btn]')) closeSizeMenu();
             if (!e.target.closest('.action-menu-container') && !e.target.closest('button[onclick*="toggleActionMenu"]')) {
                 closeAllActionMenus();
             }
@@ -1293,6 +1356,7 @@
                 // Leva junto a ordenação e o modo de exibição da categoria renomeada
                 if (categorySortOrders[oldName]) { categorySortOrders[newName] = categorySortOrders[oldName]; delete categorySortOrders[oldName]; }
                 if (categoryViewModes[oldName]) { categoryViewModes[newName] = categoryViewModes[oldName]; delete categoryViewModes[oldName]; }
+                if (categoryIconSizes[oldName]) { categoryIconSizes[newName] = categoryIconSizes[oldName]; delete categoryIconSizes[oldName]; }
             }
 
             if (currentCategory === oldName) currentCategory = newName;
@@ -1434,10 +1498,12 @@
             empty.classList.add('hidden');
 
             const totalItems = filtered.length;
+            const sz = ICON_SIZES[getIconSize(currentCategory)];
 
             if (viewMode === 'grid') {
                 list.classList.add('hidden');
                 grid.classList.remove('hidden');
+                grid.className = 'grid ' + sz.cols;
                 grid.innerHTML = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
@@ -1445,17 +1511,17 @@
                     const isFav = !!item.isFavorite;
 
                     return `
-                        <div class="group relative flex flex-col items-center justify-between p-3 py-3 min-h-[100px] h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
+                        <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
                              data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
                             
                             <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
                                 <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
                             </button>
 
-                            <div class="w-10 h-10 my-auto flex items-center justify-center pointer-events-none shrink-0">
-                                <img src="${iconUrl}" class="w-8 h-8 object-contain" onerror="this.src='https://via.placeholder.com/32'">
+                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
+                                <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
                             </div>
-                            <span class="text-xs text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
+                            <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
                             
                             <div class="absolute top-1 right-1 action-menu-container z-20">
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
@@ -1483,14 +1549,14 @@
                     const isFav = !!item.isFavorite;
 
                     return `
-                        <div class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
+                        <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
                              data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
                             <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
                                 <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
                                     <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
                                 </button>
-                                <div class="w-7 h-7 flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
-                                    <img src="${iconUrl}" class="w-5 h-5 object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
+                                <div class="${sz.lBox} flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
+                                    <img src="${iconUrl}" class="${sz.lImg} object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
                                 </div>
                                 <div class="min-w-0 flex-1 pointer-events-none">
                                     <p class="text-xs font-medium text-gray-800 truncate pointer-events-none">${item.title || item.name}</p>
@@ -1674,7 +1740,8 @@
                 shortcuts: htmlFiles,
                 categories: categoryCustomizations,
                 viewModes: categoryViewModes,
-                sortOrders: categorySortOrders
+                sortOrders: categorySortOrders,
+                iconSizes: categoryIconSizes
             };
             const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1734,6 +1801,7 @@
                         if (imported.categories && typeof imported.categories === 'object') Object.assign(categoryCustomizations, imported.categories);
                         if (imported.viewModes && typeof imported.viewModes === 'object') Object.assign(categoryViewModes, imported.viewModes);
                         if (imported.sortOrders && typeof imported.sortOrders === 'object') Object.assign(categorySortOrders, imported.sortOrders);
+                        if (imported.iconSizes && typeof imported.iconSizes === 'object') Object.assign(categoryIconSizes, imported.iconSizes);
                     }
 
                     saveToStorage(true);
