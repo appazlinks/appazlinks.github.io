@@ -80,6 +80,24 @@
         .dropdown-content button.danger { color: var(--danger); }
         .dropdown-content button.danger:hover { background: #fee2e2; }
 
+        /* Computador (a partir de 768px): tabela. Celular: cards. */
+        .table-view { display: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+        .table-view table { width: 100%; border-collapse: collapse; }
+        .table-view th, .table-view td { text-align: left; padding: .7rem .85rem; border-bottom: 1px solid var(--border); font-size: .88rem; vertical-align: middle; }
+        .table-view th { background: #f1f5f9; font-size: .8rem; text-transform: uppercase; letter-spacing: .3px; color: #475569; }
+        .table-view thead th:first-child { border-top-left-radius: 8px; }
+        .table-view thead th:last-child { border-top-right-radius: 8px; }
+        .table-view tbody tr:last-child td { border-bottom: none; }
+        .table-view tbody tr:hover { background: #f8fafc; }
+        .table-view td.col-plan code { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; background: #f1f5f9; padding: .1rem .35rem; border-radius: 4px; font-size: .75rem; }
+        .table-view .col-acoes { width: 70px; text-align: center; }
+        .table-view .badge { margin-top: 0; }
+        .table-view .menu { position: relative; top: auto; right: auto; display: inline-block; }
+        @media (min-width: 768px) {
+            .cards { display: none; }
+            .table-view { display: block; }
+        }
+
         .empty { text-align: center; color: var(--muted); padding: 2rem 1rem; }
 
         /* Botões */
@@ -128,6 +146,21 @@
 
     <div class="count" id="contador"></div>
     <div class="cards" id="cards"></div>
+    <div class="table-view" id="tabelaWrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>ID da planilha</th>
+                    <th>Validade</th>
+                    <th>Status</th>
+                    <th class="col-acoes">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
     <div class="empty" id="vazio" style="display:none;">Nenhum usuário encontrado.</div>
 </div>
 
@@ -201,7 +234,7 @@
 
 <script>
     // URL do Web App do Apps Script (a mesma usada no index.html, termina em /exec)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec';
+    const APPS_SCRIPT_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
 
     let usuarios = [];
     let chaveAdmin = sessionStorage.getItem('azlinks_admin_chave') || '';
@@ -283,6 +316,28 @@
 
         $('contador').textContent = lista.length + (lista.length === 1 ? ' usuário' : ' usuários');
         $('vazio').style.display = lista.length ? 'none' : 'block';
+
+        const menuHtml = u => `
+            <div class="menu">
+                <button type="button" class="dropbtn" data-menu title="Ações">⋮</button>
+                <div class="dropdown-content">
+                    <button type="button" data-editar="${esc(u.email)}">Editar</button>
+                    <button type="button" class="danger" data-excluir="${esc(u.email)}">Excluir</button>
+                </div>
+            </div>`;
+
+        $('tbody').innerHTML = lista.map(u => {
+            const vencida = !!u.validade && hoje > u.validade;
+            return `
+                <tr>
+                    <td><strong>${esc(u.nome)}</strong></td>
+                    <td>${esc(u.email)}</td>
+                    <td class="col-plan"><code title="${esc(u.planilha)}">${esc(u.planilha)}</code></td>
+                    <td>${u.validade ? esc(formatarData(u.validade)) : '<em>Sem vencimento</em>'}</td>
+                    <td><span class="badge ${vencida ? 'badge-expired' : 'badge-active'}">${vencida ? 'Vencida' : 'Ativa'}</span></td>
+                    <td class="col-acoes">${menuHtml(u)}</td>
+                </tr>`;
+        }).join('');
 
         $('cards').innerHTML = lista.map(u => {
             const vencida = !!u.validade && hoje > u.validade;
