@@ -209,8 +209,7 @@
         <div id="sidebarOverlay" onclick="collapseSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden"></div>
 
         <main class="flex-1 flex flex-col p-3 md:p-4 overflow-y-auto safe-bottom-padding gap-4">
-            <div id="shortcutsGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3"></div>
-            <div id="shortcutsList" class="hidden flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible"></div>
+            <div id="shortcutsContainer" class="flex flex-col gap-6"></div>
             
             <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400">
                 <i class="fa-regular fa-folder-open text-5xl mb-3 text-gray-300"></i>
@@ -288,6 +287,14 @@
                         <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('shortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
+                <div id="shortcutSubcategoryWrapper">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria (Opcional)</label>
+                    <div class="relative">
+                        <input type="text" id="shortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Ex: Relatórios, Ferramentas..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('shortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('shortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                    </div>
+                </div>
 
                 <!-- Checkboxes de Favorito e Dispositivos -->
                 <div class="flex flex-wrap items-center gap-4 py-1.5 border-t border-b border-gray-100 my-1">
@@ -336,6 +343,14 @@
                         <input type="text" id="editShortcutCategory" required autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
                         <button type="button" tabindex="-1" onclick="clearField('editShortcutCategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
                         <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('editShortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria (Opcional)</label>
+                    <div class="relative">
+                        <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Ex: Relatórios, Ferramentas..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
 
@@ -576,8 +591,8 @@
         const LOCAL_DB_NAME = 'azlinks_db';
         const LOCAL_DB_STORE = 'kv';
         let localDbPromise = null;
-        let pendingPush = false;   // há alterações locais ainda não enviadas à planilha
-        let localVersion = 0;      // incrementa a cada alteração local a sincronizar
+        let pendingPush = false;
+        let localVersion = 0;
 
         function openLocalDB() {
             if (localDbPromise) return localDbPromise;
@@ -600,12 +615,11 @@
                     q.onerror = () => reject(q.error);
                 });
             } catch (err) {
-                const v = localStorage.getItem('idbfb_' + key); // reserva se IndexedDB falhar
+                const v = localStorage.getItem('idbfb_' + key);
                 return v === null ? undefined : v;
             }
         }
 
-        // Recebe um objeto { chave: texto } e grava tudo em uma única transação
         async function idbSetMany(obj) {
             try {
                 const db = await openLocalDB();
@@ -618,7 +632,6 @@
                     tx.onabort = () => reject(tx.error);
                 });
             } catch (err) {
-                console.error('Erro ao gravar no IndexedDB, usando reserva:', err);
                 try { Object.keys(obj).forEach(k => localStorage.setItem('idbfb_' + k, obj[k])); } catch (e) {}
             }
         }
@@ -632,7 +645,6 @@
                     pendingPush = d === 'true';
                     return;
                 }
-                // Primeira execução: migra dados antigos do localStorage
                 htmlFiles = JSON.parse(localStorage.getItem('local_html_shortcuts')) || [];
                 categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
                 await idbSetMany({
@@ -643,7 +655,6 @@
                 localStorage.removeItem('local_html_shortcuts');
                 localStorage.removeItem('local_category_customizations');
             } catch (err) {
-                console.error('Erro ao ler dados locais:', err);
                 htmlFiles = [];
                 categoryCustomizations = {};
             }
@@ -670,18 +681,16 @@
                     idbSetMany({ dirty: 'false' });
                 }
             } catch (err) {
-                console.error("Erro ao sincronizar envio (será tentado novamente):", err);
+                console.error("Erro ao sincronizar envio:", err);
             } finally {
                 isSyncing = false;
                 endSync();
-                // houve alteração durante o envio: envia de novo
                 if (pendingPush && versionAtStart !== localVersion) setTimeout(syncToGoogleSheets, 0);
             }
         }
 
         async function syncFromGoogleSheets() {
             if (!isSyncConfigured()) return;
-            // Alterações feitas offline vão primeiro para a planilha, para não serem sobrescritas
             if (pendingPush) {
                 await syncToGoogleSheets();
                 if (pendingPush) return;
@@ -715,7 +724,8 @@
                         const parsedShortcuts = data.shortcuts.map(s => ({
                             ...s,
                             showDesktop: s.showDesktop !== false,
-                            showMobile: s.showMobile !== false
+                            showMobile: s.showMobile !== false,
+                            subcategory: s.subcategory || ''
                         }));
                         const newShortcutsStr = JSON.stringify(parsedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
@@ -894,7 +904,6 @@
             titleEl.appendChild(icon);
             titleEl.appendChild(document.createTextNode(' ' + label));
 
-            // Exibe o botão de três pontinhos no cabeçalho apenas se a categoria for "Todos" (all)
             if (headerMoreContainer) {
                 if (currentCategory === 'all') {
                     headerMoreContainer.classList.remove('hidden');
@@ -910,7 +919,6 @@
             renderGrid();
         }
 
-        // ===== Tamanho da visualização (por categoria): grande (padrão), médio e pequeno =====
         const ICON_SIZES = {
             large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8',        cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
             medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10',      cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
@@ -1157,13 +1165,25 @@
             });
         }
 
-        // ===== Combobox de categorias =====
+        // ===== Combobox de categorias e subcategorias =====
         let comboInputId = null;
         let comboActiveIndex = -1;
 
         function getAllCategoryNames() {
             const set = new Set(['Geral']);
             htmlFiles.forEach(s => set.add((s.category || 'Geral').trim()));
+            return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        function getAllSubcategoryNames(targetCategory) {
+            const set = new Set();
+            htmlFiles.forEach(s => {
+                const cat = (s.category || 'Geral').trim();
+                const sub = (s.subcategory || '').trim();
+                if (sub && (targetCategory === 'all' || cat.toLowerCase() === targetCategory.toLowerCase())) {
+                    set.add(sub);
+                }
+            });
             return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
@@ -1186,15 +1206,24 @@
             comboInputId = inputId;
             const list = getComboList();
             const typed = input.value.trim().toLowerCase();
-            const all = getAllCategoryNames();
-            const names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            const isSub = inputId.includes('Subcategory');
+            
+            let names = [];
+            if (isSub) {
+                const catVal = document.getElementById(inputId.includes('edit') ? 'editShortcutCategory' : 'shortcutCategory')?.value || currentCategory;
+                names = getAllSubcategoryNames(catVal);
+                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
+            } else {
+                const all = getAllCategoryNames();
+                names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            }
 
             list.innerHTML = '';
             comboActiveIndex = -1;
             if (names.length === 0) {
                 const hint = document.createElement('div');
                 hint.className = 'px-3 py-2 text-xs text-gray-400';
-                hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
+                hint.textContent = isSub ? 'Nova subcategoria: "' + input.value.trim() + '"' : 'Nova categoria: "' + input.value.trim() + '"';
                 list.appendChild(hint);
             }
             names.forEach(name => {
@@ -1247,6 +1276,10 @@
             openCategoryCombo(inputId, true);
         }
 
+        function toggleSubcategoryCombo(inputId) {
+            toggleCategoryCombo(inputId);
+        }
+
         function selectCategoryOption(name) {
             const input = document.getElementById(comboInputId);
             if (input) { input.value = name; input.focus(); }
@@ -1262,7 +1295,7 @@
         }
 
         function initCategoryCombos() {
-            ['shortcutCategory', 'editShortcutCategory'].forEach(id => {
+            ['shortcutCategory', 'editShortcutCategory', 'shortcutSubcategory', 'editShortcutSubcategory'].forEach(id => {
                 const input = document.getElementById(id);
                 if (!input) return;
                 input.addEventListener('focus', () => openCategoryCombo(id, true));
@@ -1310,13 +1343,14 @@
             }, true);
         }
 
-        // Limpa o conteúdo de um campo e devolve o foco a ele
         function clearField(id) {
             const el = document.getElementById(id);
             if (!el) return;
             el.value = '';
             el.focus();
-            if (id === 'shortcutCategory' || id === 'editShortcutCategory') openCategoryCombo(id, true);
+            if (['shortcutCategory', 'editShortcutCategory', 'shortcutSubcategory', 'editShortcutSubcategory'].includes(id)) {
+                openCategoryCombo(id, true);
+            }
         }
 
         function openEditCategoryModal(catName) {
@@ -1353,7 +1387,6 @@
             }
             if (newName !== oldName) {
                 delete categoryCustomizations[oldName];
-                // Leva junto a ordenação e o modo de exibição da categoria renomeada
                 if (categorySortOrders[oldName]) { categorySortOrders[newName] = categorySortOrders[oldName]; delete categorySortOrders[oldName]; }
                 if (categoryViewModes[oldName]) { categoryViewModes[newName] = categoryViewModes[oldName]; delete categoryViewModes[oldName]; }
                 if (categoryIconSizes[oldName]) { categoryIconSizes[newName] = categoryIconSizes[oldName]; delete categoryIconSizes[oldName]; }
@@ -1445,14 +1478,14 @@
             }
         }
 
+        // Renderização principal dos atalhos agrupados/separados por subcategoria na área direita
         function renderGrid() {
-            const grid = document.getElementById('shortcutsGrid');
-            const list = document.getElementById('shortcutsList');
+            const container = document.getElementById('shortcutsContainer');
             const empty = document.getElementById('emptyState');
             const viewMode = getViewMode(currentCategory);
             const sortOrder = getSortOrder(currentCategory);
 
-            if (!grid) return;
+            if (!container) return;
             updateCategoryHeader();
             updateViewButtonsStyle();
             updateSortButtonStyle();
@@ -1473,8 +1506,6 @@
                 else if (currentCategory !== 'all') filtered = filtered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
             }
 
-            // Favoritos e Mais Visitados: mais cliques primeiro e, em empate, ordem alfabética.
-            // Demais categorias (incluindo Todos): apenas alfabética, com A-Z/Z-A próprio de cada categoria.
             const sortByClicks = currentCategory === 'favorites' || currentCategory === 'most_visited';
             filtered.sort((a, b) => {
                 if (sortByClicks) {
@@ -1490,94 +1521,130 @@
             document.getElementById('currentCategoryCount').textContent = `${filtered.length} itens`;
 
             if (filtered.length === 0) {
-                grid.classList.add('hidden');
-                list.classList.add('hidden');
+                container.innerHTML = '';
+                container.classList.add('hidden');
                 empty.classList.remove('hidden');
                 return;
             }
             empty.classList.add('hidden');
+            container.classList.remove('hidden');
+            container.innerHTML = '';
 
-            const totalItems = filtered.length;
-            const sz = ICON_SIZES[getIconSize(currentCategory)];
+            // Agrupa por subcategoria (itens sem subcategoria vão para um grupo padrão vazio ou "Outros" se houver mistos)
+            const subGroups = {};
+            filtered.forEach(item => {
+                const sub = (item.subcategory || '').trim();
+                if (!subGroups[sub]) subGroups[sub] = [];
+                subGroups[sub].push(item);
+            });
 
-            if (viewMode === 'grid') {
-                list.classList.add('hidden');
-                grid.classList.remove('hidden');
-                grid.className = 'grid ' + sz.cols;
-                grid.innerHTML = filtered.map((item, index) => {
-                    const targetUrl = item.file || item.name;
-                    const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                    const menuId = `actionMenuGrid_${index}`;
-                    const isFav = !!item.isFavorite;
+            const subKeys = Object.keys(subGroups).sort((a, b) => {
+                if (!a) return -1; // Sem subcategoria aparece primeiro
+                if (!b) return 1;
+                return a.localeCompare(b, 'pt-BR');
+            });
 
-                    return `
-                        <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
-                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
-                            
-                            <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
-                                <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
-                            </button>
+            subKeys.forEach(subKey => {
+                const groupItems = subGroups[subKey];
+                const groupWrapper = document.createElement('div');
+                groupWrapper.className = 'flex flex-col gap-2';
 
-                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
-                                <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
-                            </div>
-                            <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
-                            
-                            <div class="absolute top-1 right-1 action-menu-container z-20">
-                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
-                                </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                    <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
-                                    <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
-                                    <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
-                                    <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
-                                </div>
-                            </div>
-                        </div>
+                if (subKey) {
+                    const subHeader = document.createElement('div');
+                    subHeader.className = 'flex items-center gap-2 border-b border-gray-200 pb-1.5 mt-2';
+                    subHeader.innerHTML = `
+                        <i class="fa-solid fa-folder-tree text-blue-500 text-sm"></i>
+                        <h3 class="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase">${subKey}</h3>
+                        <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">${groupItems.length}</span>
                     `;
-                }).join('');
-            } else {
-                grid.classList.add('hidden');
-                list.classList.remove('hidden');
-                list.innerHTML = filtered.map((item, index) => {
-                    const targetUrl = item.file || item.name;
-                    const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                    const menuId = `actionMenuList_${index}`;
-                    const isNearBottom = index >= totalItems - 2;
-                    const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
-                    const isFav = !!item.isFavorite;
+                    groupWrapper.appendChild(subHeader);
+                }
 
-                    return `
-                        <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
-                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
-                            <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
-                                <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
+                const sz = ICON_SIZES[getIconSize(currentCategory)];
+
+                if (viewMode === 'grid') {
+                    const gridEl = document.createElement('div');
+                    gridEl.className = 'grid ' + sz.cols;
+                    gridEl.innerHTML = groupItems.map((item, index) => {
+                        const targetUrl = item.file || item.name;
+                        const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
+                        const menuId = `actionMenuGrid_${item.id}`;
+                        const isFav = !!item.isFavorite;
+
+                        return `
+                            <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
+                                 data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                                
+                                <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
                                     <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
                                 </button>
-                                <div class="${sz.lBox} flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
-                                    <img src="${iconUrl}" class="${sz.lImg} object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
+
+                                <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
+                                    <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
                                 </div>
-                                <div class="min-w-0 flex-1 pointer-events-none">
-                                    <p class="text-xs font-medium text-gray-800 truncate pointer-events-none">${item.title || item.name}</p>
-                                    <p class="text-[10px] text-gray-400 truncate pointer-events-none">${targetUrl}</p>
+                                <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
+                                
+                                <div class="absolute top-1 right-1 action-menu-container z-20">
+                                    <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                    </button>
+                                    <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                        <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
+                                        <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
+                                        <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
+                                        <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0 action-menu-container z-20">
-                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
-                                </button>
-                                <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                    <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
-                                    <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
-                                    <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
-                                    <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                        `;
+                    }).join('');
+                    groupWrapper.appendChild(gridEl);
+                } else {
+                    const listEl = document.createElement('div');
+                    listEl.className = 'flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible';
+                    const totalGroupItems = groupItems.length;
+                    listEl.innerHTML = groupItems.map((item, index) => {
+                        const targetUrl = item.file || item.name;
+                        const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
+                        const menuId = `actionMenuList_${item.id}`;
+                        const isNearBottom = index >= totalGroupItems - 2;
+                        const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
+                        const isFav = !!item.isFavorite;
+
+                        return `
+                            <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors relative"
+                                 data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                                <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
+                                    <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
+                                        <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
+                                    </button>
+                                    <div class="${sz.lBox} flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
+                                        <img src="${iconUrl}" class="${sz.lImg} object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
+                                    </div>
+                                    <div class="min-w-0 flex-1 pointer-events-none">
+                                        <p class="text-xs font-medium text-gray-800 truncate pointer-events-none">${item.title || item.name}</p>
+                                        <p class="text-[10px] text-gray-400 truncate pointer-events-none">${targetUrl}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0 action-menu-container z-20">
+                                    <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                    </button>
+                                    <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                        <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
+                                        <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
+                                        <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
+                                        <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                }).join('');
-            }
+                        `;
+                    }).join('');
+                    groupWrapper.appendChild(listEl);
+                }
+
+                container.appendChild(groupWrapper);
+            });
         }
 
         function triggerShortcutIconChange(itemId) {
@@ -1604,7 +1671,6 @@
         }
 
         function openModal() {
-            // Favoritos e Mais Visitados são filtros: redireciona para "Todos" para escolher a categoria
             if (currentCategory === 'favorites' || currentCategory === 'most_visited') filterCategory('all');
             const form = document.querySelector('#shortcutModal form');
             if (form) form.reset();
@@ -1614,8 +1680,8 @@
 
             const categoryWrapper = document.getElementById('shortcutCategoryWrapper');
             const categoryInput = document.getElementById('shortcutCategory');
+            const subcategoryInput = document.getElementById('shortcutSubcategory');
 
-            // O campo Categoria só aparece em "Todos"; nas demais usa a categoria atual
             if (currentCategory === 'all') {
                 categoryInput.value = '';
                 if (categoryWrapper) categoryWrapper.classList.remove('hidden');
@@ -1624,9 +1690,13 @@
                 if (categoryWrapper) categoryWrapper.classList.add('hidden');
             }
 
+            // Se estiver em uma subcategoria específica ou visualizando um contexto, já preenche a subcategoria automaticamente
+            subcategoryInput.value = '';
+
             document.getElementById('shortcutModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('shortcutTitle').focus(), 50);
         }
+
         function closeModal() { closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
 
         function openEditShortcutModal(itemId) {
@@ -1636,6 +1706,7 @@
             document.getElementById('editShortcutTitle').value = item.title || item.name;
             document.getElementById('editFileName').value = item.file || item.name;
             document.getElementById('editShortcutCategory').value = item.category || 'Geral';
+            document.getElementById('editShortcutSubcategory').value = item.subcategory || '';
             document.getElementById('editShortcutFavorite').checked = !!item.isFavorite;
             document.getElementById('editShortcutDesktop').checked = item.showDesktop !== false;
             document.getElementById('editShortcutMobile').checked = item.showMobile !== false;
@@ -1653,6 +1724,7 @@
                 item.name = item.title;
                 item.file = normalizeUrl(document.getElementById('editFileName').value);
                 item.category = document.getElementById('editShortcutCategory').value.trim() || 'Geral';
+                item.subcategory = document.getElementById('editShortcutSubcategory').value.trim();
                 item.isFavorite = document.getElementById('editShortcutFavorite').checked;
                 item.showDesktop = document.getElementById('editShortcutDesktop').checked;
                 item.showMobile = document.getElementById('editShortcutMobile').checked;
@@ -1683,9 +1755,7 @@
             const title = document.getElementById('shortcutTitle').value.trim();
             const file = normalizeUrl(document.getElementById('fileName').value);
             
-            // Corrige a captura da categoria em dispositivos móveis caso o campo esteja oculto
             let category = '';
-            const systemCategories = ['all', 'favorites', 'most_visited'];
             if (currentCategory !== 'all') {
                 category = currentCategory;
             } else {
@@ -1700,6 +1770,7 @@
                 return;
             }
 
+            const subcategory = document.getElementById('shortcutSubcategory').value.trim();
             const isFav = document.getElementById('shortcutFavorite').checked;
             const showDesk = document.getElementById('shortcutDesktop').checked;
             const showMob = document.getElementById('shortcutMobile').checked;
@@ -1708,7 +1779,7 @@
 
             htmlFiles.push({
                 id: generateUniqueId(),
-                title, name: title, file, category, customIcon: '',
+                title, name: title, file, category, subcategory, customIcon: '',
                 visitCount: 0, isFavorite: isFav,
                 showDesktop: showDesk, showMobile: showMob
             });
@@ -1716,7 +1787,6 @@
             saveToStorage(true);
             e.target.reset();
             closeModal();
-            // Garante que a categoria do novo link esteja visível e destaca o link adicionado
             if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) currentCategory = category;
             searchQuery = '';
             const searchEls = document.querySelectorAll('#searchInputDesktop, #searchInputMobile');
@@ -1771,23 +1841,25 @@
                     if (!Array.isArray(incoming)) throw new Error('Formato inválido');
 
                     const usedIds = new Set(htmlFiles.map(f => f.id));
-                    const exists = (url, cat) => htmlFiles.some(f =>
+                    const exists = (url, cat, sub) => htmlFiles.some(f =>
                         String(f.file || '').trim().toLowerCase() === url.toLowerCase() &&
-                        (f.category || 'Geral').trim() === cat);
+                        (f.category || 'Geral').trim() === cat &&
+                        (f.subcategory || '').trim() === (sub || '').trim());
 
                     let added = 0, skipped = 0;
                     incoming.forEach(raw => {
                         const url = normalizeUrl(raw && raw.file);
                         const title = String((raw && (raw.title || raw.name)) || '').trim();
                         const category = String((raw && raw.category) || 'Geral').trim() || 'Geral';
-                        if (!url || !title || exists(url, category)) { skipped++; return; }
+                        const subcategory = String((raw && raw.subcategory) || '').trim();
+                        if (!url || !title || exists(url, category, subcategory)) { skipped++; return; }
 
                         let id = raw.id && !usedIds.has(raw.id) ? raw.id : generateUniqueId();
                         usedIds.add(id);
 
                         htmlFiles.push({
                             ...raw,
-                            id, title, name: title, file: url, category,
+                            id, title, name: title, file: url, category, subcategory,
                             customIcon: raw.customIcon || '',
                             visitCount: raw.visitCount || 0,
                             isFavorite: !!raw.isFavorite,
@@ -1832,11 +1904,10 @@
 
         const LICENSE_EXPIRED_MESSAGE = 'Cópia não registrada, entrar em contato com o desenvolvedor pelo telefone: 82987340685 para regularização da licença';
 
-        // Consulta as permissões do usuário (planilha mestre) pelo Apps Script
         async function fetchUsuario(email) {
             const fail = (userMessage, detail) => { const e = new Error(detail || userMessage); e.userMessage = userMessage; return e; };
             if (!APPS_SCRIPT_CENTRAL_URL || APPS_SCRIPT_CENTRAL_URL === APPS_SCRIPT_URL_PLACEHOLDER) {
-                throw fail('URL do Apps Script não configurada: preencha APPS_SCRIPT_CENTRAL_URL no index.html com a URL do Web App.');
+                throw fail('URL do Apps Script não configurada.');
             }
             const sep = APPS_SCRIPT_CENTRAL_URL.includes('?') ? '&' : '?';
             const url = APPS_SCRIPT_CENTRAL_URL + sep + 'acao=usuario&email=' + encodeURIComponent(String(email || '').trim()) + '&_t=' + Date.now();
@@ -1844,17 +1915,16 @@
             try {
                 res = await fetchWithTimeout(url);
             } catch (err) {
-                throw fail('Não foi possível conectar ao Apps Script. Confira a internet e se a implantação está com acesso "Qualquer pessoa".', err && err.message);
+                throw fail('Não foi possível conectar ao Apps Script.', err && err.message);
             }
             let data;
             try {
                 data = await res.json();
             } catch (err) {
-                throw fail('O Apps Script não devolveu os dados esperados. Confira se a URL é a do Web App (termina em /exec) e se o acesso está como "Qualquer pessoa".', err && err.message);
+                throw fail('O Apps Script não devolveu os dados esperados.', err && err.message);
             }
             if (data.status !== 'success') throw fail('Erro no Apps Script: ' + (data.message || 'falha ao consultar usuário'));
-            if (typeof data.encontrado === 'undefined') throw fail('Apps Script desatualizado: publique uma nova versão da implantação com o usuarios.gs e o novo code.gs.');
-            return data; // { encontrado, usuario: { email, nome, planilha, vencimento, vencida } }
+            return data;
         }
 
         function todayIso() {
@@ -1865,7 +1935,6 @@
         function applyUser(user) {
             if (!user) return false;
 
-            // vencida: bloqueio vindo da planilha (inativo) ou data de vencimento já passada
             const expired = !!user.vencida || (!!user.vencimento && todayIso() > user.vencimento);
             if (expired) {
                 APPS_SCRIPT_URL = '';
@@ -1886,7 +1955,6 @@
             APPS_SCRIPT_URL = APPS_SCRIPT_CENTRAL_URL;
             APPS_SCRIPT_PLANILHA = user.planilha || '';
             localStorage.setItem('local_user_email', user.email);
-            // Guarda as permissões para o app abrir mesmo offline
             localStorage.setItem('local_user_data', JSON.stringify({
                 email: user.email, nome: user.nome, planilha: user.planilha, vencimento: user.vencimento || ''
             }));
@@ -1957,8 +2025,7 @@
             try {
                 data = await fetchUsuario(email);
             } catch (err) {
-                console.error('Erro ao consultar permissões:', err);
-                error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail. Confira a conexão e tente novamente.';
+                error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
                 error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
@@ -1972,7 +2039,7 @@
                 return;
             }
             if (result !== true) {
-                error.textContent = 'E-mail não cadastrado. Entre em contato com o desenvolvedor.';
+                error.textContent = 'E-mail não cadastrado.';
                 error.classList.remove('hidden');
                 return;
             }
@@ -1993,7 +2060,6 @@
             if (isSyncConfigured()) syncFromGoogleSheets();
         });
 
-        // Revalida as permissões na planilha mestre (licença renovada, vencida ou removida)
         async function refreshUserPermissions() {
             const email = localStorage.getItem('local_user_email');
             if (!email || !navigator.onLine) return;
@@ -2002,7 +2068,7 @@
                 if (!data.encontrado) {
                     localStorage.removeItem('local_user_data');
                     APPS_SCRIPT_URL = '';
-                    openEmailModal(false, 'Acesso não encontrado. Entre com um e-mail cadastrado.');
+                    openEmailModal(false, 'Acesso não encontrado.');
                     return;
                 }
                 const result = applyUser(data.usuario);
@@ -2010,9 +2076,7 @@
                     localStorage.removeItem('local_user_data');
                     showLicenseBlock();
                 }
-            } catch (err) {
-                console.log('Permissões não atualizadas (usando as guardadas):', err);
-            }
+            } catch (err) {}
         }
 
         window.onload = async function() {
@@ -2023,7 +2087,6 @@
             try { cached = JSON.parse(localStorage.getItem('local_user_data') || 'null'); } catch (e) {}
             const result = cached ? applyUser(cached) : false;
             if (result === true) {
-                // Abre com as permissões guardadas e atualiza em segundo plano
                 refreshUserPermissions();
                 await syncFromGoogleSheets();
                 startAutoSync();
