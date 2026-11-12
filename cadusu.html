@@ -54,7 +54,6 @@
         .user-email { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
         .row { display: flex; align-items: baseline; gap: .4rem; font-size: .8rem; min-width: 0; }
         .row .lbl { color: var(--muted); flex-shrink: 0; }
-        .row code { background: #f1f5f9; padding: .1rem .35rem; border-radius: 4px; font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
         .badge { align-self: flex-start; margin-top: .25rem; padding: .2rem .55rem; border-radius: 4px; font-size: .72rem; font-weight: bold; }
         .badge-active { background: #d1fae5; color: #065f46; }
         .badge-expired { background: #fee2e2; color: #991b1b; }
@@ -94,7 +93,6 @@
         .table-view thead th:last-child { border-top-right-radius: 8px; }
         .table-view tbody tr:last-child td { border-bottom: none; }
         .table-view tbody tr:hover { background: #f8fafc; }
-        .table-view td.col-plan code { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; background: #f1f5f9; padding: .1rem .35rem; border-radius: 4px; font-size: .75rem; }
         .table-view .col-acoes { width: 70px; text-align: center; }
         .table-view .badge { margin-top: 0; }
         .table-view .menu { position: relative; top: auto; right: auto; display: inline-block; }
@@ -157,7 +155,6 @@
                 <tr>
                     <th>Nome</th>
                     <th>E-mail</th>
-                    <th>ID da planilha</th>
                     <th>Validade</th>
                     <th>Status</th>
                     <th class="col-acoes">Ações</th>
@@ -327,7 +324,6 @@
                 <tr>
                     <td><strong>${esc(u.nome)}</strong></td>
                     <td>${esc(u.email)}</td>
-                    <td class="col-plan"><code title="${esc(u.planilha)}">${esc(u.planilha)}</code></td>
                     <td>${u.validade ? esc(formatarData(u.validade)) : '<em>Sem vencimento</em>'}</td>
                     <td><span class="badge ${vencida ? 'badge-expired' : 'badge-active'}">${vencida ? 'Vencida' : 'Ativa'}</span></td>
                     <td class="col-acoes">${menuHtml(u)}</td>
@@ -341,7 +337,6 @@
                     ${menuHtml(u)}
                     <div class="user-name">${esc(u.nome)}</div>
                     <div class="user-email">${esc(u.email)}</div>
-                    <div class="row"><span class="lbl">Planilha:</span><code title="${esc(u.planilha)}">${esc(u.planilha)}</code></div>
                     <div class="row"><span class="lbl">Validade:</span><span>${u.validade ? esc(formatarData(u.validade)) : '<em>Sem vencimento</em>'}</span></div>
                     <span class="badge ${vencida ? 'badge-expired' : 'badge-active'}">${vencida ? 'Vencida' : 'Ativa'}</span>
                 </div>`;
@@ -468,7 +463,7 @@
     });
 
     function fecharModais() {
-        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('default') || $(id).classList.remove('active'));
+        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('active'));
         $('formUsuario').reset();
         $('planilha').value = '';
         emailEmEdicao = null;
