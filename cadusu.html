@@ -468,7 +468,7 @@
     });
 
     function fecharModais() {
-        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('active'));
+        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('default') || $(id).classList.remove('active'));
         $('formUsuario').reset();
         $('planilha').value = '';
         emailEmEdicao = null;
