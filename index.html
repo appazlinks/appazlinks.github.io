@@ -167,15 +167,24 @@
 
         <!-- Cabeçalho Categoria -->
         <div class="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200/80 shadow-sm w-full">
-            <div class="flex items-center gap-2 min-w-0">
-                <button type="button" id="btnBackSubcategory" onclick="exitSubcategory()" title="Voltar para categoria" class="hidden p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
-                    <i class="fa-solid fa-arrow-left pointer-events-none"></i>
-                </button>
-                <h2 id="currentCategoryTitle" class="font-semibold text-gray-800 text-xs md:text-base flex items-center gap-2 truncate">
-                    <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
-                </h2>
+            <div class="flex flex-col gap-1 min-w-0 flex-1">
+                <div class="flex items-center gap-2 min-w-0">
+                    <h2 id="currentCategoryTitle" class="font-semibold text-gray-800 text-xs md:text-base flex items-center gap-2 truncate">
+                        <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
+                    </h2>
+                </div>
+                <!-- Linha da Subcategoria (Aparece abaixo da categoria quando selecionada) -->
+                <div id="currentSubcategoryRow" class="hidden flex items-center gap-2 min-w-0 pt-1 border-t border-gray-100">
+                    <button type="button" onclick="exitSubcategory()" title="Voltar para categoria" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-arrow-left pointer-events-none text-xs"></i>
+                    </button>
+                    <span id="currentSubcategoryBadge" class="text-blue-600 font-semibold text-xs flex items-center gap-1.5 truncate">
+                        <i class="fa-solid fa-folder text-amber-400"></i> <span id="currentSubcategoryText" class="truncate"></span>
+                    </span>
+                </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+
+            <div class="flex items-center gap-2 shrink-0 pl-2">
                 <span id="syncIndicator" class="hidden text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 items-center gap-1">
                     <i class="fa-solid fa-sync fa-spin"></i> Sincronizando...
                 </span>
@@ -195,7 +204,7 @@
                         </div>
                         <!-- Opções exibidas quando uma categoria personalizada está selecionada -->
                         <div id="headerMenuCategoryOptions" class="hidden">
-                            <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</button>
+                            <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria</button>
                         </div>
                     </div>
                 </div>
@@ -276,7 +285,7 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar Atalho (SEM campo de subcategoria - preenchido automaticamente se estiver dentro de uma) -->
+    <!-- Modal Adicionar Atalho -->
     <div id="shortcutModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
             <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -325,11 +334,11 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar / Renomear Subcategoria (acessado pelo menu da categoria) -->
+    <!-- Modal Adicionar / Renomear Subcategoria -->
     <div id="subcategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
             <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-                <h3 id="subcategoryModalTitle" class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</h3>
+                <h3 id="subcategoryModalTitle" class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria</h3>
                 <button type="button" onclick="closeSubcategoryModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="handleSubcategorySubmit(event)" class="p-5 flex flex-col gap-3">
@@ -338,7 +347,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Subcategoria *</label>
                     <div class="relative">
-                        <input type="text" id="subcatNameInput" required placeholder="Ex: Bancos, Relatórios, Trabalho..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <input type="text" id="subcatNameInput" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
                         <button type="button" tabindex="-1" onclick="clearField('subcatNameInput')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
                     </div>
                 </div>
@@ -378,8 +387,9 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria</label>
                     <div class="relative">
-                        <input type="text" id="editShortcutSubcategory" autocomplete="off" placeholder="Deixe vazio para fora de subcategoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
-                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
 
@@ -535,7 +545,7 @@
         let htmlFiles = [];
         let categoryCustomizations = {};
         let currentCategory = 'favorites';
-        let currentSubcategory = null; // Controla a subcategoria atualmente aberta
+        let currentSubcategory = null;
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
@@ -891,7 +901,7 @@
 
         function filterCategory(cat) {
             currentCategory = cat;
-            currentSubcategory = null; // Ao mudar de categoria, sai de qualquer subcategoria
+            currentSubcategory = null;
             renderCategories();
             applySidebarState();
             renderGrid();
@@ -910,7 +920,8 @@
 
         function updateCategoryHeader() {
             const titleEl = document.getElementById('currentCategoryTitle');
-            const btnBack = document.getElementById('btnBackSubcategory');
+            const subRow = document.getElementById('currentSubcategoryRow');
+            const subText = document.getElementById('currentSubcategoryText');
             const headerMoreContainer = document.getElementById('categoryHeaderMoreContainer');
             const menuAll = document.getElementById('headerMenuAllOptions');
             const menuCat = document.getElementById('headerMenuCategoryOptions');
@@ -931,10 +942,6 @@
                 iconClass = getCategoryIcon(currentCategory);
             }
 
-            if (btnBack) {
-                btnBack.classList.toggle('hidden', !currentSubcategory);
-            }
-
             titleEl.innerHTML = '';
             const custom = categoryCustomizations[currentCategory];
             const isSystemCat = ['all', 'favorites', 'most_visited'].includes(currentCategory);
@@ -951,19 +958,15 @@
             titleEl.appendChild(icon);
             titleEl.appendChild(document.createTextNode(' ' + label));
 
-            if (currentSubcategory) {
-                const sep = document.createElement('span');
-                sep.className = 'text-gray-400 mx-1';
-                sep.textContent = '/';
-                titleEl.appendChild(sep);
-
-                const subBadge = document.createElement('span');
-                subBadge.className = 'text-blue-600 font-semibold flex items-center gap-1';
-                subBadge.innerHTML = `<i class="fa-solid fa-folder text-amber-400 text-xs"></i> ${currentSubcategory}`;
-                titleEl.appendChild(subBadge);
+            if (subRow && subText) {
+                if (currentSubcategory) {
+                    subText.textContent = currentSubcategory;
+                    subRow.classList.remove('hidden');
+                } else {
+                    subRow.classList.add('hidden');
+                }
             }
 
-            // Controla o menu de três pontinhos no cabeçalho
             if (headerMoreContainer) {
                 if (currentCategory === 'all') {
                     headerMoreContainer.classList.remove('hidden');
@@ -985,7 +988,6 @@
             renderGrid();
         }
 
-        // ===== Tamanho da visualização (por categoria): grande (padrão), médio e pequeno =====
         const ICON_SIZES = {
             large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8',        cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
             medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10',      cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
@@ -1155,17 +1157,15 @@
                     });
                 }
             });
+            initSubcategoryCombos();
         });
 
-        // ===== Gestão de Subcategorias (armazenadas em categoryCustomizations[cat].subcategories) =====
         function getCategorySubcategories(catName) {
             const set = new Set();
-            // Subcategorias explícitas criadas pelo menu da categoria
             const custom = categoryCustomizations[catName];
             if (custom && Array.isArray(custom.subcategories)) {
                 custom.subcategories.forEach(s => { if (s && s.trim()) set.add(s.trim()); });
             }
-            // Subcategorias existentes em atalhos dessa categoria
             const isMob = isMobileDevice();
             htmlFiles.forEach(item => {
                 const showDesktop = item.showDesktop !== false;
@@ -1185,7 +1185,7 @@
             document.getElementById('subcatNameInput').value = oldSubName;
             document.getElementById('subcategoryModalTitle').innerHTML = oldSubName
                 ? '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Subcategoria'
-                : '<i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria';
+                : '<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria';
             document.getElementById('subcategoryModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('subcatNameInput').focus(), 50);
         }
@@ -1209,7 +1209,6 @@
             let subs = categoryCustomizations[catName].subcategories;
 
             if (oldSub) {
-                // Renomeia subcategoria nos atalhos e na lista
                 htmlFiles.forEach(item => {
                     if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
                         (item.subcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
@@ -1222,11 +1221,9 @@
                     currentSubcategory = newSub;
                 }
             } else {
-                // Cria nova subcategoria
                 if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) {
                     subs.push(newSub);
                 }
-                // Entra automaticamente na categoria e na subcategoria criada
                 currentCategory = catName;
                 currentSubcategory = newSub;
             }
@@ -1271,7 +1268,6 @@
             });
 
             const uniqueCategories = new Set(visibleFiles.map(s => (s.category || 'Geral').trim()));
-            // Inclui também categorias que tenham subcategorias criadas
             Object.keys(categoryCustomizations).forEach(cat => {
                 if (categoryCustomizations[cat] && Array.isArray(categoryCustomizations[cat].subcategories) && categoryCustomizations[cat].subcategories.length > 0) {
                     uniqueCategories.add(cat);
@@ -1300,7 +1296,7 @@
                             </button>
                             <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
                                 <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus(); if(window.innerWidth < 768) collapseSidebar();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
-                                    <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Nova Subcategoria
+                                    <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria
                                 </button>
                                 <button type="button" onclick="event.stopPropagation(); openEditCategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar
@@ -1343,7 +1339,7 @@
             });
         }
 
-        // ===== Combobox de categorias =====
+        // ===== Combobox de categorias e subcategorias =====
         let comboInputId = null;
         let comboActiveIndex = -1;
 
@@ -1372,15 +1368,29 @@
             comboInputId = inputId;
             const list = getComboList();
             const typed = input.value.trim().toLowerCase();
-            const all = getAllCategoryNames();
-            const names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            const isSub = inputId.includes('Subcategory');
+
+            let names = [];
+            if (isSub) {
+                const catVal = document.getElementById(inputId.includes('edit') ? 'editShortcutCategory' : 'shortcutCategory')?.value || currentCategory;
+                names = getCategorySubcategories(catVal);
+                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
+            } else {
+                const all = getAllCategoryNames();
+                names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            }
 
             list.innerHTML = '';
             comboActiveIndex = -1;
-            if (names.length === 0) {
+            if (names.length === 0 && !isSub) {
                 const hint = document.createElement('div');
                 hint.className = 'px-3 py-2 text-xs text-gray-400';
                 hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
+                list.appendChild(hint);
+            } else if (names.length === 0 && isSub) {
+                const hint = document.createElement('div');
+                hint.className = 'px-3 py-2 text-xs text-gray-400';
+                hint.textContent = 'Nenhuma subcategoria cadastrada';
                 list.appendChild(hint);
             }
             names.forEach(name => {
@@ -1433,6 +1443,10 @@
             openCategoryCombo(inputId, true);
         }
 
+        function toggleSubcategoryCombo(inputId) {
+            toggleCategoryCombo(inputId);
+        }
+
         function selectCategoryOption(name) {
             const input = document.getElementById(comboInputId);
             if (input) { input.value = name; input.focus(); }
@@ -1445,6 +1459,19 @@
             comboActiveIndex = (idx + opts.length) % opts.length;
             opts.forEach((o, i) => o.classList.toggle('bg-blue-50', i === comboActiveIndex));
             opts[comboActiveIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function initSubcategoryCombos() {
+            ['editShortcutSubcategory'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('focus', () => openCategoryCombo(id, true));
+                input.addEventListener('click', () => {
+                    const list = document.getElementById('categoryComboList');
+                    if (!list || list.classList.contains('hidden')) openCategoryCombo(id, true);
+                });
+                input.addEventListener('input', () => openCategoryCombo(id, false));
+            });
         }
 
         function initCategoryCombos() {
@@ -1501,7 +1528,7 @@
             if (!el) return;
             el.value = '';
             el.focus();
-            if (id === 'shortcutCategory' || id === 'editShortcutCategory') openCategoryCombo(id, true);
+            if (id === 'shortcutCategory' || id === 'editShortcutCategory' || id === 'editShortcutSubcategory') openCategoryCombo(id, true);
         }
 
         function openEditCategoryModal(catName) {
@@ -1661,20 +1688,16 @@
             let subcategoriesToShow = [];
 
             if (searchQuery.length > 0) {
-                // Na pesquisa, busca em todos os links
                 filtered = deviceFiltered.filter(s => (s.title && s.title.toLowerCase().includes(searchQuery)));
             } else if (isSystemCat) {
                 if (currentCategory === 'favorites') filtered = deviceFiltered.filter(s => !!s.isFavorite);
                 else if (currentCategory === 'most_visited') filtered = deviceFiltered.filter(s => (s.visitCount || 0) > 0);
                 else filtered = deviceFiltered;
             } else {
-                // Dentro de uma categoria personalizada
                 const catItems = deviceFiltered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
                 if (currentSubcategory) {
-                    // Dentro de uma subcategoria específica: mostra apenas os links dela
                     filtered = catItems.filter(s => (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase());
                 } else {
-                    // Na raiz da categoria: mostra as pastas das subcategorias + os links sem subcategoria
                     subcategoriesToShow = getCategorySubcategories(currentCategory);
                     filtered = catItems.filter(s => !(s.subcategory || '').trim());
                 }
@@ -1711,7 +1734,6 @@
                 grid.classList.remove('hidden');
                 grid.className = 'grid ' + sz.cols;
 
-                // Pastas de subcategorias no lado direito
                 const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = deviceFiltered.filter(s =>
                         (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
@@ -1977,7 +1999,6 @@
                 return;
             }
 
-            // Se já estiver dentro de uma subcategoria, insere automaticamente nela sem precisar informar
             const subcategory = currentSubcategory ? currentSubcategory : '';
 
             const isFav = document.getElementById('shortcutFavorite').checked;
@@ -2238,12 +2259,12 @@
             let data;
             try {
                 data = await fetchUsuario(email);
-            } catch (err) {
+            }(`err` => {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
                 error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
-            }
+            });
             if (submitBtn) submitBtn.disabled = false;
 
             const result = data.encontrado ? applyUser(data.usuario) : false;
@@ -2295,6 +2316,7 @@
 
         window.onload = async function() {
             initCategoryCombos();
+            initSubcategoryCombos();
             await loadLocalData();
             render();
             let cached = null;
