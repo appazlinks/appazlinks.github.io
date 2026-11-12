@@ -544,7 +544,7 @@
 
         let htmlFiles = [];
         let categoryCustomizations = {};
-        let currentCategory = 'favorites';
+        let currentCategory = 'all'; // Modificado para 'all' por padrão para já exibir todos os atalhos ao iniciar
         let currentSubcategory = null;
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
@@ -679,12 +679,20 @@
             const [s, c, d] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty')]);
             try {
                 if (s !== undefined) {
-                    htmlFiles = JSON.parse(s) || [];
+                    htmlFiles = (JSON.parse(s) || []).map(item => ({
+                        ...item,
+                        showDesktop: item.showDesktop !== false,
+                        showMobile: item.showMobile !== false
+                    }));
                     categoryCustomizations = JSON.parse(c || '{}') || {};
                     pendingPush = d === 'true';
                     return;
                 }
-                htmlFiles = JSON.parse(localStorage.getItem('local_html_shortcuts')) || [];
+                htmlFiles = (JSON.parse(localStorage.getItem('local_html_shortcuts')) || []).map(item => ({
+                    ...item,
+                    showDesktop: item.showDesktop !== false,
+                    showMobile: item.showMobile !== false
+                }));
                 categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
                 await idbSetMany({
                     shortcuts: JSON.stringify(htmlFiles),
@@ -1655,7 +1663,7 @@
                 });
                 delete categoryCustomizations[catName];
                 if (currentCategory === catName) {
-                    currentCategory = 'favorites';
+                    currentCategory = 'all';
                     currentSubcategory = null;
                 }
                 saveToStorage(true);
@@ -2124,7 +2132,7 @@
         function confirmClearAllShortcuts() {
             if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
                 htmlFiles = [];
-                currentCategory = 'favorites';
+                currentCategory = 'all';
                 currentSubcategory = null;
                 saveToStorage(true);
                 render();
@@ -2180,7 +2188,7 @@
             if (previousEmail && previousEmail !== user.email) {
                 htmlFiles = [];
                 categoryCustomizations = {};
-                currentCategory = 'favorites';
+                currentCategory = 'all';
                 currentSubcategory = null;
                 saveToStorage(false);
                 pendingPush = false;
@@ -2259,12 +2267,12 @@
             let data;
             try {
                 data = await fetchUsuario(email);
-            }(`err` => {
+            } catch (err) {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
                 error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
-            });
+            }
             if (submitBtn) submitBtn.disabled = false;
 
             const result = data.encontrado ? applyUser(data.usuario) : false;
