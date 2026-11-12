@@ -167,24 +167,36 @@
 
         <!-- Cabeçalho Categoria -->
         <div class="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200/80 shadow-sm w-full">
-            <h2 id="currentCategoryTitle" class="font-semibold text-gray-800 text-xs md:text-base flex items-center gap-2">
-                <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
-            </h2>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+                <button type="button" id="btnBackSubcategory" onclick="exitSubcategory()" title="Voltar para categoria" class="hidden p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-arrow-left pointer-events-none"></i>
+                </button>
+                <h2 id="currentCategoryTitle" class="font-semibold text-gray-800 text-xs md:text-base flex items-center gap-2 truncate">
+                    <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
+                </h2>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
                 <span id="syncIndicator" class="hidden text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 items-center gap-1">
                     <i class="fa-solid fa-sync fa-spin"></i> Sincronizando...
                 </span>
                 <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full">0 itens</span>
                 
-                <!-- Botão Três Pontinhos (Exibido apenas na Categoria Todos) -->
+                <!-- Botão Três Pontinhos do Cabeçalho (Todos ou dentro de Categoria) -->
                 <div id="categoryHeaderMoreContainer" class="relative dropdown-container shrink-0 hidden">
                     <button type="button" id="btnHeaderMore" title="Mais opções" class="p-1.5 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer">
                         <i class="fa-solid fa-ellipsis-vertical pointer-events-none"></i>
                     </button>
-                    <div id="headerMoreDropdown" class="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-md shadow-lg hidden z-30 py-1 text-xs">
-                        <button onclick="exportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-download text-gray-400"></i> Exportar</button>
-                        <button onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-upload text-gray-400"></i> Importar</button>
-                        <button onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-red-600 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-trash text-red-500"></i> Remover Todos</button>
+                    <div id="headerMoreDropdown" class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg hidden z-30 py-1 text-xs">
+                        <!-- Opções exibidas apenas na Categoria Todos -->
+                        <div id="headerMenuAllOptions">
+                            <button type="button" onclick="exportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-download text-gray-400"></i> Exportar</button>
+                            <button type="button" onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-upload text-gray-400"></i> Importar</button>
+                            <button type="button" onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-red-600 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-trash text-red-500"></i> Remover Todos</button>
+                        </div>
+                        <!-- Opções exibidas quando uma categoria personalizada está selecionada -->
+                        <div id="headerMenuCategoryOptions" class="hidden">
+                            <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -209,7 +221,8 @@
         <div id="sidebarOverlay" onclick="collapseSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden"></div>
 
         <main class="flex-1 flex flex-col p-3 md:p-4 overflow-y-auto safe-bottom-padding gap-4">
-            <div id="shortcutsContainer" class="flex flex-col gap-6"></div>
+            <div id="shortcutsGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3"></div>
+            <div id="shortcutsList" class="hidden flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible"></div>
             
             <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400">
                 <i class="fa-regular fa-folder-open text-5xl mb-3 text-gray-300"></i>
@@ -263,7 +276,7 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar Atalho -->
+    <!-- Modal Adicionar Atalho (SEM campo de subcategoria - preenchido automaticamente se estiver dentro de uma) -->
     <div id="shortcutModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
             <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -287,14 +300,6 @@
                         <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('shortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
-                <div id="shortcutSubcategoryWrapper">
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria (Opcional)</label>
-                    <div class="relative">
-                        <input type="text" id="shortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Ex: Relatórios, Ferramentas..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
-                        <button type="button" tabindex="-1" onclick="clearField('shortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
-                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('shortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
-                    </div>
-                </div>
 
                 <!-- Checkboxes de Favorito e Dispositivos -->
                 <div class="flex flex-wrap items-center gap-4 py-1.5 border-t border-b border-gray-100 my-1">
@@ -315,6 +320,31 @@
                 <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
                     <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar / Renomear Subcategoria (acessado pelo menu da categoria) -->
+    <div id="subcategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 id="subcategoryModalTitle" class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</h3>
+                <button type="button" onclick="closeSubcategoryModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSubcategorySubmit(event)" class="p-5 flex flex-col gap-3">
+                <input type="hidden" id="subcatParentCategory">
+                <input type="hidden" id="subcatOldName">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Subcategoria *</label>
+                    <div class="relative">
+                        <input type="text" id="subcatNameInput" required placeholder="Ex: Bancos, Relatórios, Trabalho..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <button type="button" tabindex="-1" onclick="clearField('subcatNameInput')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeSubcategoryModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar</button>
                 </div>
             </form>
         </div>
@@ -346,11 +376,10 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria (Opcional)</label>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria</label>
                     <div class="relative">
-                        <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Ex: Relatórios, Ferramentas..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
-                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
-                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                        <input type="text" id="editShortcutSubcategory" autocomplete="off" placeholder="Deixe vazio para fora de subcategoria" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
                     </div>
                 </div>
 
@@ -451,7 +480,6 @@
         let APPS_SCRIPT_URL = '';
         let APPS_SCRIPT_PLANILHA = '';
         const APPS_SCRIPT_URL_PLACEHOLDER = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
-        // URL do Web App (implantação do Apps Script com code.gs + usuarios.gs). É única para todos os usuários.
         const APPS_SCRIPT_CENTRAL_URL = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec';
 
         function isMobileDevice() {
@@ -507,6 +535,7 @@
         let htmlFiles = [];
         let categoryCustomizations = {};
         let currentCategory = 'favorites';
+        let currentSubcategory = null; // Controla a subcategoria atualmente aberta
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
@@ -862,15 +891,29 @@
 
         function filterCategory(cat) {
             currentCategory = cat;
+            currentSubcategory = null; // Ao mudar de categoria, sai de qualquer subcategoria
             renderCategories();
             applySidebarState();
             renderGrid();
             if (window.innerWidth < 768) collapseSidebar();
         }
 
+        function openSubcategory(subName) {
+            currentSubcategory = subName;
+            renderGrid();
+        }
+
+        function exitSubcategory() {
+            currentSubcategory = null;
+            renderGrid();
+        }
+
         function updateCategoryHeader() {
             const titleEl = document.getElementById('currentCategoryTitle');
+            const btnBack = document.getElementById('btnBackSubcategory');
             const headerMoreContainer = document.getElementById('categoryHeaderMoreContainer');
+            const menuAll = document.getElementById('headerMenuAllOptions');
+            const menuCat = document.getElementById('headerMenuCategoryOptions');
             if (!titleEl) return;
 
             let label, iconClass;
@@ -888,6 +931,10 @@
                 iconClass = getCategoryIcon(currentCategory);
             }
 
+            if (btnBack) {
+                btnBack.classList.toggle('hidden', !currentSubcategory);
+            }
+
             titleEl.innerHTML = '';
             const custom = categoryCustomizations[currentCategory];
             const isSystemCat = ['all', 'favorites', 'most_visited'].includes(currentCategory);
@@ -896,17 +943,36 @@
                 icon = document.createElement('img');
                 icon.src = custom.image;
                 icon.alt = '';
-                icon.className = 'w-4 h-4 object-contain rounded';
+                icon.className = 'w-4 h-4 object-contain rounded shrink-0';
             } else {
                 icon = document.createElement('i');
-                icon.className = iconClass;
+                icon.className = iconClass + ' shrink-0';
             }
             titleEl.appendChild(icon);
             titleEl.appendChild(document.createTextNode(' ' + label));
 
+            if (currentSubcategory) {
+                const sep = document.createElement('span');
+                sep.className = 'text-gray-400 mx-1';
+                sep.textContent = '/';
+                titleEl.appendChild(sep);
+
+                const subBadge = document.createElement('span');
+                subBadge.className = 'text-blue-600 font-semibold flex items-center gap-1';
+                subBadge.innerHTML = `<i class="fa-solid fa-folder text-amber-400 text-xs"></i> ${currentSubcategory}`;
+                titleEl.appendChild(subBadge);
+            }
+
+            // Controla o menu de três pontinhos no cabeçalho
             if (headerMoreContainer) {
                 if (currentCategory === 'all') {
                     headerMoreContainer.classList.remove('hidden');
+                    if (menuAll) menuAll.classList.remove('hidden');
+                    if (menuCat) menuCat.classList.add('hidden');
+                } else if (!isSystemCat && !currentSubcategory) {
+                    headerMoreContainer.classList.remove('hidden');
+                    if (menuAll) menuAll.classList.add('hidden');
+                    if (menuCat) menuCat.classList.remove('hidden');
                 } else {
                     headerMoreContainer.classList.add('hidden');
                 }
@@ -919,6 +985,7 @@
             renderGrid();
         }
 
+        // ===== Tamanho da visualização (por categoria): grande (padrão), médio e pequeno =====
         const ICON_SIZES = {
             large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8',        cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
             medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10',      cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
@@ -1090,6 +1157,107 @@
             });
         });
 
+        // ===== Gestão de Subcategorias (armazenadas em categoryCustomizations[cat].subcategories) =====
+        function getCategorySubcategories(catName) {
+            const set = new Set();
+            // Subcategorias explícitas criadas pelo menu da categoria
+            const custom = categoryCustomizations[catName];
+            if (custom && Array.isArray(custom.subcategories)) {
+                custom.subcategories.forEach(s => { if (s && s.trim()) set.add(s.trim()); });
+            }
+            // Subcategorias existentes em atalhos dessa categoria
+            const isMob = isMobileDevice();
+            htmlFiles.forEach(item => {
+                const showDesktop = item.showDesktop !== false;
+                const showMobile = item.showMobile !== false;
+                if (!(isMob ? showMobile : showDesktop)) return;
+                if ((item.category || 'Geral').trim().toLowerCase() === catName.trim().toLowerCase()) {
+                    const sub = (item.subcategory || '').trim();
+                    if (sub) set.add(sub);
+                }
+            });
+            return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        function openAddSubcategoryModal(catName, oldSubName = '') {
+            document.getElementById('subcatParentCategory').value = catName;
+            document.getElementById('subcatOldName').value = oldSubName;
+            document.getElementById('subcatNameInput').value = oldSubName;
+            document.getElementById('subcategoryModalTitle').innerHTML = oldSubName
+                ? '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Subcategoria'
+                : '<i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria';
+            document.getElementById('subcategoryModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('subcatNameInput').focus(), 50);
+        }
+
+        function closeSubcategoryModal() {
+            document.getElementById('subcategoryModal').classList.add('hidden');
+        }
+
+        function handleSubcategorySubmit(e) {
+            e.preventDefault();
+            const catName = document.getElementById('subcatParentCategory').value.trim();
+            const oldSub = document.getElementById('subcatOldName').value.trim();
+            const newSub = document.getElementById('subcatNameInput').value.trim();
+            if (!catName || !newSub) return;
+
+            if (!categoryCustomizations[catName]) categoryCustomizations[catName] = {};
+            if (!Array.isArray(categoryCustomizations[catName].subcategories)) {
+                categoryCustomizations[catName].subcategories = getCategorySubcategories(catName);
+            }
+
+            let subs = categoryCustomizations[catName].subcategories;
+
+            if (oldSub) {
+                // Renomeia subcategoria nos atalhos e na lista
+                htmlFiles.forEach(item => {
+                    if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                        (item.subcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
+                        item.subcategory = newSub;
+                    }
+                });
+                subs = subs.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
+                if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
+                if (currentSubcategory && currentSubcategory.toLowerCase() === oldSub.toLowerCase()) {
+                    currentSubcategory = newSub;
+                }
+            } else {
+                // Cria nova subcategoria
+                if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) {
+                    subs.push(newSub);
+                }
+                // Entra automaticamente na categoria e na subcategoria criada
+                currentCategory = catName;
+                currentSubcategory = newSub;
+            }
+
+            categoryCustomizations[catName].subcategories = subs;
+            saveToStorage(true);
+            closeSubcategoryModal();
+            render();
+        }
+
+        function deleteSubcategoryPrompt(catName, subName) {
+            if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão na categoria "${catName}".`)) {
+                htmlFiles.forEach(item => {
+                    if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                        (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
+                        item.subcategory = '';
+                    }
+                });
+                if (categoryCustomizations[catName] && Array.isArray(categoryCustomizations[catName].subcategories)) {
+                    categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
+                        s => s.toLowerCase() !== subName.toLowerCase()
+                    );
+                }
+                if (currentSubcategory && currentSubcategory.toLowerCase() === subName.toLowerCase()) {
+                    currentSubcategory = null;
+                }
+                saveToStorage(true);
+                render();
+            }
+        }
+
         function renderCategories() {
             const categoryList = document.getElementById('categoryList');
             if (!categoryList) return;
@@ -1103,6 +1271,12 @@
             });
 
             const uniqueCategories = new Set(visibleFiles.map(s => (s.category || 'Geral').trim()));
+            // Inclui também categorias que tenham subcategorias criadas
+            Object.keys(categoryCustomizations).forEach(cat => {
+                if (categoryCustomizations[cat] && Array.isArray(categoryCustomizations[cat].subcategories) && categoryCustomizations[cat].subcategories.length > 0) {
+                    uniqueCategories.add(cat);
+                }
+            });
             const totalCategories = uniqueCategories.size;
 
             const createCatBtn = (label, iconClass, count, catVal, isSystem = true, catIndex = 0) => {
@@ -1116,6 +1290,7 @@
                     const catMenuId = `actionMenuCategory_${catIndex}`;
                     const isNearBottomCat = catIndex >= totalCategories - 2;
                     const catMenuPositionClass = isNearBottomCat ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
+                    const escapedCat = catVal.replace(/'/g, "\\'");
                     
                     actionMenuHtml = `
                         <div class="flex items-center gap-1 shrink-0 relative action-menu-container">
@@ -1123,14 +1298,17 @@
                             <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="sidebar-text md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
-                            <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-36 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
-                                <button type="button" onclick="event.stopPropagation(); openEditCategoryModal('${catVal.replace(/'/g, "\\'")}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                            <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
+                                <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus(); if(window.innerWidth < 768) collapseSidebar();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Nova Subcategoria
+                                </button>
+                                <button type="button" onclick="event.stopPropagation(); openEditCategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); openEditCategoryIconModal('${catVal.replace(/'/g, "\\'")}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                                <button type="button" onclick="event.stopPropagation(); openEditCategoryIconModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); deleteCategoryPrompt('${catVal.replace(/'/g, "\\'")}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                                <button type="button" onclick="event.stopPropagation(); deleteCategoryPrompt('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-trash text-red-500 pointer-events-none"></i> Remover
                                 </button>
                             </div>
@@ -1165,25 +1343,13 @@
             });
         }
 
-        // ===== Combobox de categorias e subcategorias =====
+        // ===== Combobox de categorias =====
         let comboInputId = null;
         let comboActiveIndex = -1;
 
         function getAllCategoryNames() {
             const set = new Set(['Geral']);
             htmlFiles.forEach(s => set.add((s.category || 'Geral').trim()));
-            return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-        }
-
-        function getAllSubcategoryNames(targetCategory) {
-            const set = new Set();
-            htmlFiles.forEach(s => {
-                const cat = (s.category || 'Geral').trim();
-                const sub = (s.subcategory || '').trim();
-                if (sub && (targetCategory === 'all' || cat.toLowerCase() === targetCategory.toLowerCase())) {
-                    set.add(sub);
-                }
-            });
             return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
@@ -1206,24 +1372,15 @@
             comboInputId = inputId;
             const list = getComboList();
             const typed = input.value.trim().toLowerCase();
-            const isSub = inputId.includes('Subcategory');
-            
-            let names = [];
-            if (isSub) {
-                const catVal = document.getElementById(inputId.includes('edit') ? 'editShortcutCategory' : 'shortcutCategory')?.value || currentCategory;
-                names = getAllSubcategoryNames(catVal);
-                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
-            } else {
-                const all = getAllCategoryNames();
-                names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
-            }
+            const all = getAllCategoryNames();
+            const names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
 
             list.innerHTML = '';
             comboActiveIndex = -1;
             if (names.length === 0) {
                 const hint = document.createElement('div');
                 hint.className = 'px-3 py-2 text-xs text-gray-400';
-                hint.textContent = isSub ? 'Nova subcategoria: "' + input.value.trim() + '"' : 'Nova categoria: "' + input.value.trim() + '"';
+                hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
                 list.appendChild(hint);
             }
             names.forEach(name => {
@@ -1276,10 +1433,6 @@
             openCategoryCombo(inputId, true);
         }
 
-        function toggleSubcategoryCombo(inputId) {
-            toggleCategoryCombo(inputId);
-        }
-
         function selectCategoryOption(name) {
             const input = document.getElementById(comboInputId);
             if (input) { input.value = name; input.focus(); }
@@ -1295,7 +1448,7 @@
         }
 
         function initCategoryCombos() {
-            ['shortcutCategory', 'editShortcutCategory', 'shortcutSubcategory', 'editShortcutSubcategory'].forEach(id => {
+            ['shortcutCategory', 'editShortcutCategory'].forEach(id => {
                 const input = document.getElementById(id);
                 if (!input) return;
                 input.addEventListener('focus', () => openCategoryCombo(id, true));
@@ -1348,9 +1501,7 @@
             if (!el) return;
             el.value = '';
             el.focus();
-            if (['shortcutCategory', 'editShortcutCategory', 'shortcutSubcategory', 'editShortcutSubcategory'].includes(id)) {
-                openCategoryCombo(id, true);
-            }
+            if (id === 'shortcutCategory' || id === 'editShortcutCategory') openCategoryCombo(id, true);
         }
 
         function openEditCategoryModal(catName) {
@@ -1383,7 +1534,7 @@
             if (oldCustom && oldCustom.image && !iconChanged) {
                 categoryCustomizations[newName] = { ...oldCustom };
             } else if (newIcon) {
-                categoryCustomizations[newName] = { icon: newIcon };
+                categoryCustomizations[newName] = { ...(oldCustom || {}), icon: newIcon };
             }
             if (newName !== oldName) {
                 delete categoryCustomizations[oldName];
@@ -1428,7 +1579,8 @@
                     canvas.height = size;
                     canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
 
-                    categoryCustomizations[catName] = { image: canvas.toDataURL('image/png') };
+                    const existingSubs = (categoryCustomizations[catName] && categoryCustomizations[catName].subcategories) || [];
+                    categoryCustomizations[catName] = { image: canvas.toDataURL('image/png'), subcategories: existingSubs };
                     saveToStorage(true);
                     closeEditCategoryIconModal();
                     render();
@@ -1458,7 +1610,8 @@
             }
 
             if (catName && newIcon) {
-                categoryCustomizations[catName] = { icon: newIcon };
+                const existingSubs = (categoryCustomizations[catName] && categoryCustomizations[catName].subcategories) || [];
+                categoryCustomizations[catName] = { icon: newIcon, subcategories: existingSubs };
                 saveToStorage(true);
                 render();
             }
@@ -1470,40 +1623,61 @@
                 htmlFiles.forEach(item => {
                     if ((item.category || 'Geral').trim() === catName) {
                         item.category = 'Geral';
+                        item.subcategory = '';
                     }
                 });
-                if (currentCategory === catName) currentCategory = 'favorites';
+                delete categoryCustomizations[catName];
+                if (currentCategory === catName) {
+                    currentCategory = 'favorites';
+                    currentSubcategory = null;
+                }
                 saveToStorage(true);
                 render();
             }
         }
 
-        // Renderização principal dos atalhos agrupados/separados por subcategoria na área direita
         function renderGrid() {
-            const container = document.getElementById('shortcutsContainer');
+            const grid = document.getElementById('shortcutsGrid');
+            const list = document.getElementById('shortcutsList');
             const empty = document.getElementById('emptyState');
             const viewMode = getViewMode(currentCategory);
             const sortOrder = getSortOrder(currentCategory);
 
-            if (!container) return;
+            if (!grid) return;
             updateCategoryHeader();
             updateViewButtonsStyle();
             updateSortButtonStyle();
 
             const isMob = isMobileDevice();
+            const isSystemCat = ['all', 'favorites', 'most_visited'].includes(currentCategory);
 
-            let filtered = htmlFiles.filter(item => {
+            let deviceFiltered = htmlFiles.filter(item => {
                 const showDesktop = item.showDesktop !== false;
                 const showMobile = item.showMobile !== false;
                 return isMob ? showMobile : showDesktop;
             });
 
+            let filtered = [];
+            let subcategoriesToShow = [];
+
             if (searchQuery.length > 0) {
-                filtered = filtered.filter(s => (s.title && s.title.toLowerCase().includes(searchQuery)));
+                // Na pesquisa, busca em todos os links
+                filtered = deviceFiltered.filter(s => (s.title && s.title.toLowerCase().includes(searchQuery)));
+            } else if (isSystemCat) {
+                if (currentCategory === 'favorites') filtered = deviceFiltered.filter(s => !!s.isFavorite);
+                else if (currentCategory === 'most_visited') filtered = deviceFiltered.filter(s => (s.visitCount || 0) > 0);
+                else filtered = deviceFiltered;
             } else {
-                if (currentCategory === 'favorites') filtered = filtered.filter(s => !!s.isFavorite);
-                else if (currentCategory === 'most_visited') filtered = filtered.filter(s => (s.visitCount || 0) > 0);
-                else if (currentCategory !== 'all') filtered = filtered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
+                // Dentro de uma categoria personalizada
+                const catItems = deviceFiltered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
+                if (currentSubcategory) {
+                    // Dentro de uma subcategoria específica: mostra apenas os links dela
+                    filtered = catItems.filter(s => (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase());
+                } else {
+                    // Na raiz da categoria: mostra as pastas das subcategorias + os links sem subcategoria
+                    subcategoriesToShow = getCategorySubcategories(currentCategory);
+                    filtered = catItems.filter(s => !(s.subcategory || '').trim());
+                }
             }
 
             const sortByClicks = currentCategory === 'favorites' || currentCategory === 'most_visited';
@@ -1518,133 +1692,171 @@
                 return sortOrder === 'asc' ? comparison : -comparison;
             });
 
-            document.getElementById('currentCategoryCount').textContent = `${filtered.length} itens`;
+            const totalCount = subcategoriesToShow.length + filtered.length;
+            document.getElementById('currentCategoryCount').textContent = `${totalCount} ${totalCount === 1 ? 'item' : 'itens'}`;
 
-            if (filtered.length === 0) {
-                container.innerHTML = '';
-                container.classList.add('hidden');
+            if (totalCount === 0) {
+                grid.classList.add('hidden');
+                list.classList.add('hidden');
                 empty.classList.remove('hidden');
                 return;
             }
             empty.classList.add('hidden');
-            container.classList.remove('hidden');
-            container.innerHTML = '';
 
-            // Agrupa por subcategoria (itens sem subcategoria vão para um grupo padrão vazio ou "Outros" se houver mistos)
-            const subGroups = {};
-            filtered.forEach(item => {
-                const sub = (item.subcategory || '').trim();
-                if (!subGroups[sub]) subGroups[sub] = [];
-                subGroups[sub].push(item);
-            });
+            const sz = ICON_SIZES[getIconSize(currentCategory)];
+            const escapedCat = currentCategory.replace(/'/g, "\\'");
 
-            const subKeys = Object.keys(subGroups).sort((a, b) => {
-                if (!a) return -1; // Sem subcategoria aparece primeiro
-                if (!b) return 1;
-                return a.localeCompare(b, 'pt-BR');
-            });
+            if (viewMode === 'grid') {
+                list.classList.add('hidden');
+                grid.classList.remove('hidden');
+                grid.className = 'grid ' + sz.cols;
 
-            subKeys.forEach(subKey => {
-                const groupItems = subGroups[subKey];
-                const groupWrapper = document.createElement('div');
-                groupWrapper.className = 'flex flex-col gap-2';
+                // Pastas de subcategorias no lado direito
+                const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
+                    const subCount = deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === subName.toLowerCase()
+                    ).length;
+                    const menuId = `actionMenuSubGrid_${idx}`;
+                    const escapedSub = subName.replace(/'/g, "\\'");
 
-                if (subKey) {
-                    const subHeader = document.createElement('div');
-                    subHeader.className = 'flex items-center gap-2 border-b border-gray-200 pb-1.5 mt-2';
-                    subHeader.innerHTML = `
-                        <i class="fa-solid fa-folder-tree text-blue-500 text-sm"></i>
-                        <h3 class="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase">${subKey}</h3>
-                        <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">${groupItems.length}</span>
+                    return `
+                        <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-amber-50/60 border border-amber-200/80 hover:border-amber-400 hover:shadow-sm overflow-visible"
+                             onclick="openSubcategory('${escapedSub}')">
+                            
+                            <span class="absolute top-1 left-1.5 text-[10px] font-semibold text-amber-700 bg-amber-100/90 px-1.5 rounded-full pointer-events-none">${subCount}</span>
+
+                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
+                                <i class="fa-solid fa-folder text-amber-400 text-2xl"></i>
+                            </div>
+                            <span class="${sz.text} text-gray-800 line-clamp-2 w-full font-semibold pointer-events-none mt-1 leading-tight">${subName}</span>
+                            
+                            <div class="absolute top-1 right-1 action-menu-container z-20">
+                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                </button>
+                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                </div>
+                            </div>
+                        </div>
                     `;
-                    groupWrapper.appendChild(subHeader);
-                }
+                }).join('');
 
-                const sz = ICON_SIZES[getIconSize(currentCategory)];
+                const linksHtml = filtered.map((item, index) => {
+                    const targetUrl = item.file || item.name;
+                    const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
+                    const menuId = `actionMenuGrid_${index}`;
+                    const isFav = !!item.isFavorite;
 
-                if (viewMode === 'grid') {
-                    const gridEl = document.createElement('div');
-                    gridEl.className = 'grid ' + sz.cols;
-                    gridEl.innerHTML = groupItems.map((item, index) => {
-                        const targetUrl = item.file || item.name;
-                        const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                        const menuId = `actionMenuGrid_${item.id}`;
-                        const isFav = !!item.isFavorite;
+                    return `
+                        <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
+                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                            
+                            <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
+                                <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
+                            </button>
 
-                        return `
-                            <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
-                                 data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
-                                
-                                <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
+                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
+                                <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
+                            </div>
+                            <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
+                            
+                            <div class="absolute top-1 right-1 action-menu-container z-20">
+                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                </button>
+                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
+                                    <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
+                                    <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                grid.innerHTML = subCardsHtml + linksHtml;
+            } else {
+                grid.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                const subListHtml = subcategoriesToShow.map((subName, idx) => {
+                    const subCount = deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === subName.toLowerCase()
+                    ).length;
+                    const menuId = `actionMenuSubList_${idx}`;
+                    const escapedSub = subName.replace(/'/g, "\\'");
+
+                    return `
+                        <div class="flex items-center justify-between ${sz.rowPad} bg-amber-50/40 hover:bg-amber-50 border-b border-gray-100 cursor-pointer transition-colors relative"
+                             onclick="openSubcategory('${escapedSub}')">
+                            <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
+                                <div class="${sz.lBox} flex items-center justify-center bg-amber-100 rounded shrink-0 pointer-events-none">
+                                    <i class="fa-solid fa-folder text-amber-500 text-sm pointer-events-none"></i>
+                                </div>
+                                <div class="min-w-0 flex-1 pointer-events-none">
+                                    <p class="text-xs font-semibold text-gray-800 truncate pointer-events-none">${subName}</p>
+                                    <p class="text-[10px] text-amber-700 truncate pointer-events-none">${subCount} ${subCount === 1 ? 'link' : 'links'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 action-menu-container z-20">
+                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                </button>
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const totalItems = filtered.length;
+                const linksListHtml = filtered.map((item, index) => {
+                    const targetUrl = item.file || item.name;
+                    const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
+                    const menuId = `actionMenuList_${index}`;
+                    const isNearBottom = index >= totalItems - 2;
+                    const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
+                    const isFav = !!item.isFavorite;
+
+                    return `
+                        <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
+                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                            <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
+                                <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
                                     <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
                                 </button>
-
-                                <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
-                                    <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
+                                <div class="${sz.lBox} flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
+                                    <img src="${iconUrl}" class="${sz.lImg} object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
                                 </div>
-                                <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
-                                
-                                <div class="absolute top-1 right-1 action-menu-container z-20">
-                                    <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
-                                        <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
-                                    </button>
-                                    <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                        <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
-                                        <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
-                                        <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
-                                        <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
-                                    </div>
+                                <div class="min-w-0 flex-1 pointer-events-none">
+                                    <p class="text-xs font-medium text-gray-800 truncate pointer-events-none">${item.title || item.name}</p>
+                                    <p class="text-[10px] text-gray-400 truncate pointer-events-none">${targetUrl}</p>
                                 </div>
                             </div>
-                        `;
-                    }).join('');
-                    groupWrapper.appendChild(gridEl);
-                } else {
-                    const listEl = document.createElement('div');
-                    listEl.className = 'flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible';
-                    const totalGroupItems = groupItems.length;
-                    listEl.innerHTML = groupItems.map((item, index) => {
-                        const targetUrl = item.file || item.name;
-                        const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                        const menuId = `actionMenuList_${item.id}`;
-                        const isNearBottom = index >= totalGroupItems - 2;
-                        const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
-                        const isFav = !!item.isFavorite;
-
-                        return `
-                            <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors relative"
-                                 data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
-                                <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
-                                    <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
-                                        <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
-                                    </button>
-                                    <div class="${sz.lBox} flex items-center justify-center bg-gray-100 rounded shrink-0 pointer-events-none">
-                                        <img src="${iconUrl}" class="${sz.lImg} object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/20'">
-                                    </div>
-                                    <div class="min-w-0 flex-1 pointer-events-none">
-                                        <p class="text-xs font-medium text-gray-800 truncate pointer-events-none">${item.title || item.name}</p>
-                                        <p class="text-[10px] text-gray-400 truncate pointer-events-none">${targetUrl}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 shrink-0 action-menu-container z-20">
-                                    <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
-                                        <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
-                                    </button>
-                                    <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                        <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
-                                        <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
-                                        <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
-                                        <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
-                                    </div>
+                            <div class="flex items-center gap-2 shrink-0 action-menu-container z-20">
+                                <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
+                                </button>
+                                <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
+                                    <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
+                                    <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteItem('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
                                 </div>
                             </div>
-                        `;
-                    }).join('');
-                    groupWrapper.appendChild(listEl);
-                }
+                        </div>
+                    `;
+                }).join('');
 
-                container.appendChild(groupWrapper);
-            });
+                list.innerHTML = subListHtml + linksListHtml;
+            }
         }
 
         function triggerShortcutIconChange(itemId) {
@@ -1680,7 +1892,6 @@
 
             const categoryWrapper = document.getElementById('shortcutCategoryWrapper');
             const categoryInput = document.getElementById('shortcutCategory');
-            const subcategoryInput = document.getElementById('shortcutSubcategory');
 
             if (currentCategory === 'all') {
                 categoryInput.value = '';
@@ -1690,13 +1901,9 @@
                 if (categoryWrapper) categoryWrapper.classList.add('hidden');
             }
 
-            // Se estiver em uma subcategoria específica ou visualizando um contexto, já preenche a subcategoria automaticamente
-            subcategoryInput.value = '';
-
             document.getElementById('shortcutModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('shortcutTitle').focus(), 50);
         }
-
         function closeModal() { closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
 
         function openEditShortcutModal(itemId) {
@@ -1770,7 +1977,9 @@
                 return;
             }
 
-            const subcategory = document.getElementById('shortcutSubcategory').value.trim();
+            // Se já estiver dentro de uma subcategoria, insere automaticamente nela sem precisar informar
+            const subcategory = currentSubcategory ? currentSubcategory : '';
+
             const isFav = document.getElementById('shortcutFavorite').checked;
             const showDesk = document.getElementById('shortcutDesktop').checked;
             const showMob = document.getElementById('shortcutMobile').checked;
@@ -1787,7 +1996,10 @@
             saveToStorage(true);
             e.target.reset();
             closeModal();
-            if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) currentCategory = category;
+            if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) {
+                currentCategory = category;
+                currentSubcategory = null;
+            }
             searchQuery = '';
             const searchEls = document.querySelectorAll('#searchInputDesktop, #searchInputMobile');
             searchEls.forEach(el => { el.value = ''; });
@@ -1892,6 +2104,7 @@
             if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
                 htmlFiles = [];
                 currentCategory = 'favorites';
+                currentSubcategory = null;
                 saveToStorage(true);
                 render();
             }
@@ -1947,6 +2160,7 @@
                 htmlFiles = [];
                 categoryCustomizations = {};
                 currentCategory = 'favorites';
+                currentSubcategory = null;
                 saveToStorage(false);
                 pendingPush = false;
                 idbSetMany({ dirty: 'false' });
