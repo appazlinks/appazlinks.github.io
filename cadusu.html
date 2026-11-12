@@ -50,7 +50,7 @@
         }
         .user-card.expired { border-left: 4px solid var(--danger); }
         .user-card.active { border-left: 4px solid #10b981; }
-        .user-name { font-weight: 700; font-size: 1rem; padding-right: 2.5rem; overflow-wrap: anywhere; }
+        .user-name { font-weight: 700; font-size: 1rem; padding-right: 2.75rem; overflow-wrap: anywhere; }
         .user-email { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
         .row { display: flex; align-items: baseline; gap: .4rem; font-size: .8rem; min-width: 0; }
         .row .lbl { color: var(--muted); flex-shrink: 0; }
@@ -60,25 +60,30 @@
         .badge-expired { background: #fee2e2; color: #991b1b; }
 
         /* Menu de três pontinhos */
-        .menu { position: absolute; top: .55rem; right: .55rem; }
+        .menu { position: absolute; top: .55rem; right: .55rem; z-index: 10; }
+        .menu.show { z-index: 30; }
         .dropbtn {
             background: #f1f5f9; color: #334155; border: 1px solid var(--border); border-radius: 6px;
-            width: 2rem; height: 2rem; font-size: 1.1rem; font-weight: bold; cursor: pointer; line-height: 1;
+            width: 2.25rem; height: 2.25rem; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
-        .dropbtn:hover { background: #e2e8f0; }
+        .dropbtn:hover, .dropbtn:active { background: #e2e8f0; }
         .dropdown-content {
-            display: none; position: absolute; right: 0; top: 2.3rem; min-width: 130px; background: #fff;
-            border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.15);
-            z-index: 20; overflow: hidden;
+            display: none; position: absolute; right: 0; top: 2.5rem; min-width: 145px; background: #fff;
+            border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.18);
+            z-index: 40; overflow: hidden;
         }
         .menu.show .dropdown-content { display: block; }
         .dropdown-content button {
             display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer;
-            padding: .6rem .75rem; font-size: .85rem; color: var(--text);
+            padding: .75rem .9rem; font-size: .9rem; color: var(--text);
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
-        .dropdown-content button:hover { background: #f1f5f9; }
+        .dropdown-content button + button { border-top: 1px solid #f1f5f9; }
+        .dropdown-content button:hover, .dropdown-content button:active { background: #f1f5f9; }
         .dropdown-content button.danger { color: var(--danger); }
-        .dropdown-content button.danger:hover { background: #fee2e2; }
+        .dropdown-content button.danger:hover, .dropdown-content button.danger:active { background: #fee2e2; }
 
         /* Computador (a partir de 768px): tabela. Celular: cards. */
         .table-view { display: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
@@ -189,18 +194,15 @@
             <button type="button" class="close-btn" onclick="fecharModais()">&times;</button>
         </div>
         <form id="formUsuario">
+            <input type="hidden" id="planilha">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="email">E-mail *</label>
-                    <input type="email" id="email" placeholder="usuario@exemplo.com" required autocapitalize="none">
+                    <input type="email" id="email" required autocapitalize="none">
                 </div>
                 <div class="form-group">
                     <label for="nome">Nome Completo *</label>
-                    <input type="text" id="nome" placeholder="Nome do Titular" required>
-                </div>
-                <div class="form-group">
-                    <label for="planilha">Link ou ID da Planilha do Google <span class="hint">(opcional: se vazio, copia automático)</span></label>
-                    <input type="text" id="planilha" placeholder="https://docs.google.com/spreadsheets/d/... ou ID" autocomplete="off" autocapitalize="none" spellcheck="false">
+                    <input type="text" id="nome" required>
                 </div>
                 <div class="form-group">
                     <label for="validade">Validade <span class="hint">(deixe vazio para sem vencimento)</span></label>
@@ -233,12 +235,11 @@
 </div>
 
 <script>
-    // URL do Web App do Apps Script (a mesma usada no index.html, termina em /exec)
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec';
 
     let usuarios = [];
     let chaveAdmin = sessionStorage.getItem('azlinks_admin_chave') || '';
-    let emailEmEdicao = null;   // null = novo cadastro
+    let emailEmEdicao = null;
     let emailParaExcluir = null;
 
     const $ = id => document.getElementById(id);
@@ -257,31 +258,26 @@
         return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
     }
 
-    // ===== Comunicação com o Apps Script =====
     async function chamar(op, extra) {
-        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'SUA_URL_DO_APPS_SCRIPT_AQUI') {
-            throw new Error('Preencha APPS_SCRIPT_URL no gerenciador.html com a URL do Web App.');
-        }
+        if (!APPS_SCRIPT_URL) throw new Error('URL do Apps Script não configurada.');
         let res;
         try {
-            // text/plain evita a pré-verificação CORS, que o Apps Script não responde
             res = await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(Object.assign({ acao: 'admin', op: op, chave: chaveAdmin }, extra || {}))
             });
         } catch (err) {
-            throw new Error('Não foi possível conectar ao Apps Script. Confira a internet e a URL.');
+            throw new Error('Não foi possível conectar ao Apps Script.');
         }
         let data;
         try { data = await res.json(); }
-        catch (err) { throw new Error('Resposta inesperada do Apps Script. Confira se a implantação está atualizada.'); }
+        catch (err) { throw new Error('Resposta inesperada do Apps Script.'); }
         if (data.status !== 'success') throw new Error(data.message || 'Erro no Apps Script');
         usuarios = data.usuarios || [];
         return data;
     }
 
-    // ===== Acesso =====
     function mostrarErro(id, msg) {
         const el = $(id);
         el.textContent = msg || '';
@@ -308,7 +304,6 @@
         }
     }
 
-    // ===== Lista em cards =====
     function render() {
         const termo = $('buscaNome').value.trim().toLowerCase();
         const hoje = hojeIso();
@@ -319,9 +314,9 @@
 
         const menuHtml = u => `
             <div class="menu">
-                <button type="button" class="dropbtn" data-menu title="Ações">⋮</button>
+                <button type="button" class="dropbtn" data-menu aria-label="Ações" title="Ações">⋮</button>
                 <div class="dropdown-content">
-                    <button type="button" data-editar="${esc(u.email)}">Editar</button>
+                    <button type="button" data-editar="${esc(u.email)}">Alterar</button>
                     <button type="button" class="danger" data-excluir="${esc(u.email)}">Excluir</button>
                 </div>
             </div>`;
@@ -343,13 +338,7 @@
             const vencida = !!u.validade && hoje > u.validade;
             return `
                 <div class="user-card ${vencida ? 'expired' : 'active'}">
-                    <div class="menu">
-                        <button type="button" class="dropbtn" data-menu title="Ações">⋮</button>
-                        <div class="dropdown-content">
-                            <button type="button" data-editar="${esc(u.email)}">Editar</button>
-                            <button type="button" class="danger" data-excluir="${esc(u.email)}">Excluir</button>
-                        </div>
-                    </div>
+                    ${menuHtml(u)}
                     <div class="user-name">${esc(u.nome)}</div>
                     <div class="user-email">${esc(u.email)}</div>
                     <div class="row"><span class="lbl">Planilha:</span><code title="${esc(u.planilha)}">${esc(u.planilha)}</code></div>
@@ -359,24 +348,48 @@
         }).join('');
     }
 
-    // Menu de três pontinhos e ações (delegação de eventos)
+    function fecharMenus() {
+        document.querySelectorAll('.menu.show').forEach(m => m.classList.remove('show'));
+    }
+
     document.addEventListener('click', e => {
         const menuBtn = e.target.closest('[data-menu]');
-        document.querySelectorAll('.menu.show').forEach(m => { if (!menuBtn || m !== menuBtn.parentElement) m.classList.remove('show'); });
-        if (menuBtn) { menuBtn.parentElement.classList.toggle('show'); return; }
+        if (menuBtn) {
+            e.stopPropagation();
+            const menu = menuBtn.parentElement;
+            const estavaAberto = menu.classList.contains('show');
+            fecharMenus();
+            if (!estavaAberto) menu.classList.add('show');
+            return;
+        }
 
         const ed = e.target.closest('[data-editar]');
-        if (ed) { abrirModalEditar(ed.getAttribute('data-editar')); return; }
-        const ex = e.target.closest('[data-excluir]');
-        if (ex) { abrirModalExcluir(ex.getAttribute('data-excluir')); return; }
+        if (ed) {
+            e.stopPropagation();
+            fecharMenus();
+            abrirModalEditar(ed.getAttribute('data-editar'));
+            return;
+        }
 
-        if (e.target.classList.contains('modal-overlay') && e.target.id !== 'modalChave') fecharModais();
+        const ex = e.target.closest('[data-excluir]');
+        if (ex) {
+            e.stopPropagation();
+            fecharMenus();
+            abrirModalExcluir(ex.getAttribute('data-excluir'));
+            return;
+        }
+
+        fecharMenus();
+
+        if (e.target.classList.contains('modal-overlay') && e.target.id !== 'modalChave') {
+            fecharModais();
+        }
     });
 
-    // ===== Cadastro / edição =====
     function abrirModalNovo() {
         emailEmEdicao = null;
         $('formUsuario').reset();
+        $('planilha').value = '';
         $('email').readOnly = false;
         $('modalTitulo').textContent = 'Cadastrar Usuário';
         mostrarErro('formErro', '');
@@ -385,15 +398,16 @@
     }
 
     function abrirModalEditar(email) {
-        const u = usuarios.find(x => x.email === email);
+        const alvo = String(email || '').trim().toLowerCase();
+        const u = usuarios.find(x => x.email.toLowerCase() === alvo);
         if (!u) return;
-        emailEmEdicao = email;
+        emailEmEdicao = u.email;
         $('email').value = u.email;
         $('email').readOnly = true;
         $('nome').value = u.nome;
-        $('planilha').value = u.planilha;
+        $('planilha').value = u.planilha || '';
         $('validade').value = u.validade || '';
-        $('modalTitulo').textContent = 'Editar Usuário';
+        $('modalTitulo').textContent = 'Alterar Usuário';
         mostrarErro('formErro', '');
         $('modalForm').classList.add('active');
         setTimeout(() => $('nome').focus(), 50);
@@ -402,9 +416,8 @@
     $('formUsuario').addEventListener('submit', async e => {
         e.preventDefault();
         const email = $('email').value.trim().toLowerCase();
-        // Impede duplicar um e-mail já cadastrado ao criar um novo
-        if (emailEmEdicao === null && usuarios.some(u => u.email === email)) {
-            mostrarErro('formErro', 'Este e-mail já está cadastrado. Use a opção Editar no cartão dele.');
+        if (emailEmEdicao === null && usuarios.some(u => u.email.toLowerCase() === email)) {
+            mostrarErro('formErro', 'Este e-mail já está cadastrado. Use a opção Alterar no cartão dele.');
             return;
         }
         const btn = $('btnSalvar');
@@ -428,11 +441,11 @@
         }
     });
 
-    // ===== Exclusão =====
     function abrirModalExcluir(email) {
-        const u = usuarios.find(x => x.email === email);
+        const alvo = String(email || '').trim().toLowerCase();
+        const u = usuarios.find(x => x.email.toLowerCase() === alvo);
         if (!u) return;
-        emailParaExcluir = email;
+        emailParaExcluir = u.email;
         $('textoExcluir').textContent = 'Deseja excluir o usuário ' + u.nome + ' (' + u.email + ')?';
         mostrarErro('excluirErro', '');
         $('modalExcluir').classList.add('active');
@@ -455,15 +468,20 @@
     });
 
     function fecharModais() {
-        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.add('active'));
+        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('active'));
         $('formUsuario').reset();
+        $('planilha').value = '';
         emailEmEdicao = null;
         emailParaExcluir = null;
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModais(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            fecharMenus();
+            fecharModais();
+        }
+    });
 
-    // ===== Início =====
     (async function iniciar() {
         if (chaveAdmin) {
             try {
