@@ -199,8 +199,8 @@
                     <input type="text" id="nome" placeholder="Nome do Titular" required>
                 </div>
                 <div class="form-group">
-                    <label for="planilha">Link ou ID da Planilha do Google *</label>
-                    <input type="text" id="planilha" placeholder="https://docs.google.com/spreadsheets/d/... ou ID" required autocomplete="off" autocapitalize="none" spellcheck="false">
+                    <label for="planilha">Link ou ID da Planilha do Google <span class="hint">(opcional: se vazio, copia automático)</span></label>
+                    <input type="text" id="planilha" placeholder="https://docs.google.com/spreadsheets/d/... ou ID" autocomplete="off" autocapitalize="none" spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label for="validade">Validade <span class="hint">(deixe vazio para sem vencimento)</span></label>
@@ -455,7 +455,7 @@
     });
 
     function fecharModais() {
-        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.remove('active'));
+        ['modalForm', 'modalExcluir'].forEach(id => $(id).classList.add('active'));
         $('formUsuario').reset();
         emailEmEdicao = null;
         emailParaExcluir = null;
