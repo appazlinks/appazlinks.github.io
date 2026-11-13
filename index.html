@@ -1189,7 +1189,7 @@
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
-                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + \')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
                         '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
                 }).join('');
             menu.classList.remove('hidden');
@@ -1526,7 +1526,6 @@
             list.style.left = rect.left + 'px';
             list.style.width = rect.width + 'px';
             list.classList.remove('hidden');
-            const listHeight = Math.min(list.scrollHeight, 208);
             list.style.top = (rect.bottom + 4) + 'px';
         }
 
@@ -2840,7 +2839,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
-                error.classList.add('hidden');
+                error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
             }
