@@ -214,7 +214,7 @@
 
     <div class="flex-1 flex overflow-hidden relative">
         <aside id="sidebar" 
-               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-16 hover:md:w-64 group z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-y-auto md:overflow-visible group-hover:md:overflow-y-auto">
+               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-20 hover:md:w-64 group z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-y-auto md:overflow-visible group-hover:md:overflow-y-auto">
             <div class="flex flex-col gap-1 w-full category-scroll pb-16 md:pb-0">
                 <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -1034,7 +1034,7 @@
                 }
             } else {
                 sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
-                sidebar.classList.add('md:w-16', 'hover:md:w-64', 'group');
+                sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
                 overlay.classList.add('hidden');
             }
         }
