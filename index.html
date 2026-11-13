@@ -2524,20 +2524,41 @@
             document.getElementById('shortcutIconFileInput').click();
         }
 
+        // REDIMENSIONAMENTO AUTOMÁTICO DE ÍCONES DE ATALHOS PARA TAMANHO COMPACTO
         function handleShortcutIconFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file || !editingShortcutIconId) return;
+            const input = e.target;
+            const file = input.files[0];
+            if (!file || !editingShortcutIconId) { input.value = ''; return; }
+
             const reader = new FileReader();
             reader.onload = function(evt) {
-                const base64String = evt.target.result;
-                const item = htmlFiles.find(f => f.id === editingShortcutIconId);
-                if (item) {
-                    item.customIcon = base64String;
-                    saveToStorage(true);
-                    render();
-                }
-                editingShortcutIconId = null;
-                e.target.value = '';
+                const img = new Image();
+                img.onload = function() {
+                    const size = 64; // Redimensiona automaticamente para 64x64px (otimizado e leve)
+                    const iw = img.naturalWidth || size;
+                    const ih = img.naturalHeight || size;
+                    const scale = Math.min(size / iw, size / ih);
+                    const w = iw * scale, h = ih * scale;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+
+                    const base64String = canvas.toDataURL('image/png');
+                    const item = htmlFiles.find(f => f.id === editingShortcutIconId);
+                    if (item) {
+                        item.customIcon = base64String;
+                        saveToStorage(true);
+                        render();
+                    }
+                    editingShortcutIconId = null;
+                    input.value = '';
+                };
+                img.onerror = function() {
+                    alert('Não foi possível ler esta imagem.');
+                    input.value = '';
+                };
+                img.src = evt.target.result;
             };
             reader.readAsDataURL(file);
         }
