@@ -189,10 +189,11 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0 pl-2">
-                <span id="syncIndicator" class="hidden text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 items-center gap-1">
-                    <i class="fa-solid fa-sync fa-spin"></i> Sincronizando...
+                <!-- Indicador de Sincronização discretizado/embutido para não ocupar espaço excessivo -->
+                <span id="syncIndicator" class="hidden text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 items-center gap-1 shrink-0">
+                    <i class="fa-solid fa-sync fa-spin"></i> <span class="hidden sm:inline">Sincronizando...</span>
                 </span>
-                <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full">0 itens</span>
+                <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full shrink-0">0 itens</span>
                 
                 <!-- Botão Três Pontinhos do Cabeçalho -->
                 <div id="categoryHeaderMoreContainer" class="relative dropdown-container shrink-0 hidden">
@@ -704,13 +705,17 @@
             pendingSyncCount++;
             const indicator = document.getElementById('syncIndicator');
             if (indicator) indicator.classList.remove('hidden');
+            if (indicator) indicator.classList.add('flex');
         }
 
         function endSync() {
             pendingSyncCount = Math.max(0, pendingSyncCount - 1);
             if (pendingSyncCount === 0) {
                 const indicator = document.getElementById('syncIndicator');
-                if (indicator) indicator.classList.add('hidden');
+                if (indicator) {
+                    indicator.classList.remove('flex');
+                    indicator.classList.add('hidden');
+                }
             }
         }
 
