@@ -106,7 +106,7 @@
 
                 <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
                 
-                <!-- Botão de Sincronização Desktop (Apenas Ícone) -->
+                <!-- Botão de Sincronização Desktop -->
                 <button type="button" onclick="syncFromGoogleSheets()" title="Sincronizar com o Google Sheets" id="syncBtnDesk" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer shrink-0">
                     <i id="syncIconDesk" class="fa-solid fa-rotate-right pointer-events-none"></i>
                 </button>
@@ -116,7 +116,7 @@
         <!-- Linha de Pesquisa e Botões Mobile -->
         <div class="flex items-center justify-between w-full gap-2">
             <div class="hidden md:flex items-center gap-2 flex-1">
-                <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer">
+                <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer md:hidden">
                     <i class="fa-solid fa-bars text-lg pointer-events-none"></i>
                 </button>
                 <div class="relative w-full">
@@ -132,7 +132,6 @@
                 <button type="button" onclick="openModal()" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-md text-xs font-medium shrink-0 cursor-pointer"><i class="fa-solid fa-plus pointer-events-none"></i> <span class="pointer-events-none">Novo</span></button>
                 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <!-- Botão de Ordenação Mobile -->
                     <button type="button" onclick="toggleSortOrder()" title="Ordenar A-Z / Z-A" id="btnSortMob" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-all flex items-center justify-center shrink-0 cursor-pointer">
                         <i id="sortIconMob" class="fa-solid fa-arrow-down-a-z pointer-events-none"></i>
                     </button>
@@ -148,7 +147,6 @@
 
                     <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
                     
-                    <!-- Botão de Sincronização Mobile (Apenas Ícone) -->
                     <button type="button" onclick="syncFromGoogleSheets()" title="Sincronizar com o Google Sheets" id="syncBtnMob" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer shrink-0">
                         <i id="syncIconMob" class="fa-solid fa-rotate-right pointer-events-none"></i>
                     </button>
@@ -177,7 +175,7 @@
                         <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
                     </h2>
                 </div>
-                <!-- Linha da Subcategoria / Sub-subcategoria (Breadcrumb interativo) -->
+                <!-- Linha da Subcategoria / Sub-subcategoria -->
                 <div id="currentSubcategoryRow" class="hidden flex items-center gap-1.5 min-w-0 pt-1 border-t border-gray-100 flex-wrap">
                     <button type="button" onclick="exitSubcategory()" title="Voltar um nível" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
                         <i class="fa-solid fa-arrow-left pointer-events-none text-xs"></i>
@@ -195,7 +193,6 @@
             <div class="flex items-center gap-2 shrink-0 pl-2">
                 <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full shrink-0">0 itens</span>
                 
-                <!-- Botão Três Pontinhos do Cabeçalho -->
                 <div id="categoryHeaderMoreContainer" class="relative dropdown-container shrink-0 hidden">
                     <button type="button" id="btnHeaderMore" title="Mais opções" class="p-1.5 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer">
                         <i class="fa-solid fa-ellipsis-vertical pointer-events-none"></i>
@@ -216,8 +213,8 @@
     </header>
 
     <div class="flex-1 flex overflow-hidden relative">
-        <aside id="sidebar" onmouseenter="expandSidebar()" onmouseleave="collapseSidebar()" 
-               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-16 z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh]">
+        <aside id="sidebar" 
+               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-64 z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh]">
             <div class="flex flex-col gap-1 w-full category-scroll pb-16 md:pb-0">
                 <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -230,7 +227,7 @@
             </div>
         </aside>
 
-        <div id="sidebarOverlay" onclick="collapseSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden"></div>
+        <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"></div>
 
         <main class="flex-1 flex flex-col p-3 md:p-4 overflow-y-auto safe-bottom-padding gap-4">
             <div id="shortcutsGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3"></div>
@@ -536,7 +533,7 @@
         </div>
     </div>
 
-    <!-- Modal Remover Atalho (Mensagem Melhorada) -->
+    <!-- Modal Remover Atalho -->
     <div id="deleteModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
             <div class="bg-red-50 px-5 py-3 border-b border-red-100 flex items-center justify-between">
@@ -893,9 +890,30 @@
                     }
 
                     if (data.categories && typeof data.categories === 'object') {
-                        const newCatStr = JSON.stringify(data.categories);
+                        // Mesclagem inteligente para preservar ícones locais e subcatCustom caso o servidor não os envie
+                        const mergedCategories = { ...data.categories };
+                        Object.keys(categoryCustomizations).forEach(catKey => {
+                            if (!mergedCategories[catKey]) {
+                                mergedCategories[catKey] = categoryCustomizations[catKey];
+                            } else {
+                                if (!mergedCategories[catKey].image && categoryCustomizations[catKey].image) {
+                                    mergedCategories[catKey].image = categoryCustomizations[catKey].image;
+                                }
+                                if (!mergedCategories[catKey].icon && categoryCustomizations[catKey].icon) {
+                                    mergedCategories[catKey].icon = categoryCustomizations[catKey].icon;
+                                }
+                                if (categoryCustomizations[catKey].subcatCustom) {
+                                    mergedCategories[catKey].subcatCustom = {
+                                        ...categoryCustomizations[catKey].subcatCustom,
+                                        ...(mergedCategories[catKey].subcatCustom || {})
+                                    };
+                                }
+                            }
+                        });
+
+                        const newCatStr = JSON.stringify(mergedCategories);
                         if (newCatStr !== JSON.stringify(categoryCustomizations)) {
-                            categoryCustomizations = data.categories;
+                            categoryCustomizations = mergedCategories;
                             idbSetMany({ categories: JSON.stringify(categoryCustomizations) });
                             changed = true;
                         }
@@ -987,24 +1005,11 @@
             applySidebarState(); 
         }
 
-        function expandSidebar() { if(window.innerWidth >= 768) { sidebarOpen = true; applySidebarState(); } }
-        function collapseSidebar() { sidebarOpen = false; applySidebarState(); }
-
         function applySidebarState() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            const textElements = document.querySelectorAll('.sidebar-text');
 
-            if (window.innerWidth >= 768) {
-                if (sidebarOpen) {
-                    sidebar.classList.replace('md:w-16', 'md:w-64');
-                    textElements.forEach(el => el.classList.remove('md:hidden'));
-                } else {
-                    sidebar.classList.replace('md:w-64', 'md:w-16');
-                    textElements.forEach(el => el.classList.add('md:hidden'));
-                }
-                overlay.classList.add('hidden');
-            } else {
+            if (window.innerWidth < 768) {
                 if (sidebarOpen) {
                     sidebar.classList.replace('-translate-x-full', 'translate-x-0');
                     overlay.classList.remove('hidden');
@@ -1012,6 +1017,8 @@
                     sidebar.classList.replace('translate-x-0', '-translate-x-full');
                     overlay.classList.add('hidden');
                 }
+            } else {
+                overlay.classList.add('hidden');
             }
         }
 
@@ -1022,7 +1029,7 @@
             renderCategories();
             applySidebarState();
             renderGrid();
-            if (window.innerWidth < 768) collapseSidebar();
+            if (window.innerWidth < 768) toggleMobileSidebar();
         }
 
         function openSubcategory(subName) {
@@ -1809,12 +1816,12 @@
                     
                     actionMenuHtml = `
                         <div class="flex items-center gap-1 shrink-0 relative action-menu-container">
-                            <span class="sidebar-text text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
-                            <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="sidebar-text p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                            <span class="text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
+                            <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
                             <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
-                                <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus(); if(window.innerWidth < 768) collapseSidebar();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                                <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria
                                 </button>
                                 <button type="button" onclick="event.stopPropagation(); openEditCategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
@@ -1830,7 +1837,7 @@
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="sidebar-text text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
+                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
@@ -1841,7 +1848,7 @@
                 btn.innerHTML = `
                     <span class="flex items-center gap-2 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="sidebar-text truncate pointer-events-none">${label}</span>
+                        <span class="truncate pointer-events-none">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
