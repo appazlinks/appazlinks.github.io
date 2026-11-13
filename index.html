@@ -173,13 +173,17 @@
                         <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
                     </h2>
                 </div>
-                <!-- Linha da Subcategoria (Aparece abaixo da categoria quando selecionada) -->
-                <div id="currentSubcategoryRow" class="hidden flex items-center gap-2 min-w-0 pt-1 border-t border-gray-100">
-                    <button type="button" onclick="exitSubcategory()" title="Voltar para categoria" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
+                <!-- Linha da Subcategoria / Sub-subcategoria (Breadcrumb interativo) -->
+                <div id="currentSubcategoryRow" class="hidden flex items-center gap-1.5 min-w-0 pt-1 border-t border-gray-100 flex-wrap">
+                    <button type="button" onclick="exitSubcategory()" title="Voltar um nível" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
                         <i class="fa-solid fa-arrow-left pointer-events-none text-xs"></i>
                     </button>
-                    <span id="currentSubcategoryBadge" class="text-blue-600 font-semibold text-xs flex items-center gap-1.5 truncate">
+                    <button type="button" id="currentSubcategoryBtn" onclick="goToLevel1Subcategory()" class="text-blue-600 hover:underline font-semibold text-xs flex items-center gap-1.5 truncate cursor-pointer">
                         <i class="fa-solid fa-folder text-amber-400"></i> <span id="currentSubcategoryText" class="truncate"></span>
+                    </button>
+                    <span id="currentSubsubSeparator" class="hidden text-gray-400 text-xs">/</span>
+                    <span id="currentSubsubcategoryBadge" class="hidden text-blue-700 font-semibold text-xs flex items-center gap-1.5 truncate">
+                        <i class="fa-solid fa-folder-open text-amber-500"></i> <span id="currentSubsubcategoryText" class="truncate"></span>
                     </span>
                 </div>
             </div>
@@ -190,7 +194,7 @@
                 </span>
                 <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full">0 itens</span>
                 
-                <!-- Botão Três Pontinhos do Cabeçalho (Todos ou dentro de Categoria) -->
+                <!-- Botão Três Pontinhos do Cabeçalho (Todos, dentro de Categoria ou dentro de Subcategoria Nível 1) -->
                 <div id="categoryHeaderMoreContainer" class="relative dropdown-container shrink-0 hidden">
                     <button type="button" id="btnHeaderMore" title="Mais opções" class="p-1.5 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer">
                         <i class="fa-solid fa-ellipsis-vertical pointer-events-none"></i>
@@ -202,9 +206,9 @@
                             <button type="button" onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-upload text-gray-400"></i> Importar</button>
                             <button type="button" onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-red-600 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-trash text-red-500"></i> Remover Todos</button>
                         </div>
-                        <!-- Opções exibidas quando uma categoria personalizada está selecionada -->
+                        <!-- Opções exibidas quando uma categoria personalizada ou subcategoria está selecionada -->
                         <div id="headerMenuCategoryOptions" class="hidden">
-                            <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria</button>
+                            <button type="button" onclick="openAddSubcategoryModal(currentCategory, '', currentSubcategory || ''); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</button>
                         </div>
                     </div>
                 </div>
@@ -334,7 +338,7 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar / Renomear Subcategoria -->
+    <!-- Modal Adicionar / Renomear Subcategoria (Nível 1 ou Nível 2) -->
     <div id="subcategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
             <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -343,6 +347,7 @@
             </div>
             <form onsubmit="handleSubcategorySubmit(event)" class="p-5 flex flex-col gap-3">
                 <input type="hidden" id="subcatParentCategory">
+                <input type="hidden" id="subcatParentSubcategory">
                 <input type="hidden" id="subcatOldName">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Subcategoria *</label>
@@ -384,12 +389,22 @@
                         <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('editShortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria</label>
-                    <div class="relative">
-                        <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
-                        <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
-                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria</label>
+                        <div class="relative">
+                            <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                            <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                            <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sub-subcategoria</label>
+                        <div class="relative">
+                            <input type="text" id="editShortcutSubsubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                            <button type="button" tabindex="-1" onclick="clearField('editShortcutSubsubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                            <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubsubcategory')" title="Ver sub-subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                        </div>
                     </div>
                 </div>
 
@@ -518,6 +533,10 @@
             return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
+        function escapeJsStr(str) {
+            return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
         function shareShortcut(itemId) {
             const item = htmlFiles.find(f => f.id === itemId);
             if (!item) return;
@@ -544,8 +563,9 @@
 
         let htmlFiles = [];
         let categoryCustomizations = {};
-        let currentCategory = 'all'; // Modificado para 'all' por padrão para já exibir todos os atalhos ao iniciar
-        let currentSubcategory = null;
+        let currentCategory = 'all';
+        let currentSubcategory = null;      // Nível 1
+        let currentSubsubcategory = null;   // Nível 2 (subcategoria dentro de subcategoria)
         let searchQuery = '';
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
@@ -682,7 +702,9 @@
                     htmlFiles = (JSON.parse(s) || []).map(item => ({
                         ...item,
                         showDesktop: item.showDesktop !== false,
-                        showMobile: item.showMobile !== false
+                        showMobile: item.showMobile !== false,
+                        subcategory: item.subcategory || '',
+                        subsubcategory: item.subsubcategory || ''
                     }));
                     categoryCustomizations = JSON.parse(c || '{}') || {};
                     pendingPush = d === 'true';
@@ -691,7 +713,9 @@
                 htmlFiles = (JSON.parse(localStorage.getItem('local_html_shortcuts')) || []).map(item => ({
                     ...item,
                     showDesktop: item.showDesktop !== false,
-                    showMobile: item.showMobile !== false
+                    showMobile: item.showMobile !== false,
+                    subcategory: item.subcategory || '',
+                    subsubcategory: item.subsubcategory || ''
                 }));
                 categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
                 await idbSetMany({
@@ -772,7 +796,8 @@
                             ...s,
                             showDesktop: s.showDesktop !== false,
                             showMobile: s.showMobile !== false,
-                            subcategory: s.subcategory || ''
+                            subcategory: s.subcategory || '',
+                            subsubcategory: s.subsubcategory || ''
                         }));
                         const newShortcutsStr = JSON.stringify(parsedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
@@ -910,6 +935,7 @@
         function filterCategory(cat) {
             currentCategory = cat;
             currentSubcategory = null;
+            currentSubsubcategory = null;
             renderCategories();
             applySidebarState();
             renderGrid();
@@ -917,12 +943,29 @@
         }
 
         function openSubcategory(subName) {
-            currentSubcategory = subName;
+            if (currentSubcategory && !currentSubsubcategory) {
+                // Já está dentro da Subcategoria Nível 1 -> entra na Subcategoria Nível 2 (sub-subcategoria)
+                currentSubsubcategory = subName;
+            } else {
+                currentSubcategory = subName;
+                currentSubsubcategory = null;
+            }
             renderGrid();
         }
 
+        function goToLevel1Subcategory() {
+            if (currentSubsubcategory) {
+                currentSubsubcategory = null;
+                renderGrid();
+            }
+        }
+
         function exitSubcategory() {
-            currentSubcategory = null;
+            if (currentSubsubcategory) {
+                currentSubsubcategory = null;
+            } else {
+                currentSubcategory = null;
+            }
             renderGrid();
         }
 
@@ -930,6 +973,9 @@
             const titleEl = document.getElementById('currentCategoryTitle');
             const subRow = document.getElementById('currentSubcategoryRow');
             const subText = document.getElementById('currentSubcategoryText');
+            const subsubSep = document.getElementById('currentSubsubSeparator');
+            const subsubBadge = document.getElementById('currentSubsubcategoryBadge');
+            const subsubText = document.getElementById('currentSubsubcategoryText');
             const headerMoreContainer = document.getElementById('categoryHeaderMoreContainer');
             const menuAll = document.getElementById('headerMenuAllOptions');
             const menuCat = document.getElementById('headerMenuCategoryOptions');
@@ -970,8 +1016,19 @@
                 if (currentSubcategory) {
                     subText.textContent = currentSubcategory;
                     subRow.classList.remove('hidden');
+
+                    if (currentSubsubcategory) {
+                        if (subsubSep) subsubSep.classList.remove('hidden');
+                        if (subsubBadge) subsubBadge.classList.remove('hidden');
+                        if (subsubText) subsubText.textContent = currentSubsubcategory;
+                    } else {
+                        if (subsubSep) subsubSep.classList.add('hidden');
+                        if (subsubBadge) subsubBadge.classList.add('hidden');
+                    }
                 } else {
                     subRow.classList.add('hidden');
+                    if (subsubSep) subsubSep.classList.add('hidden');
+                    if (subsubBadge) subsubBadge.classList.add('hidden');
                 }
             }
 
@@ -980,7 +1037,8 @@
                     headerMoreContainer.classList.remove('hidden');
                     if (menuAll) menuAll.classList.remove('hidden');
                     if (menuCat) menuCat.classList.add('hidden');
-                } else if (!isSystemCat && !currentSubcategory) {
+                } else if (!isSystemCat && !currentSubsubcategory) {
+                    // Permite criar subcategoria tanto na raiz da categoria quanto dentro de uma subcategoria (nível 1)
                     headerMoreContainer.classList.remove('hidden');
                     if (menuAll) menuAll.classList.add('hidden');
                     if (menuCat) menuCat.classList.remove('hidden');
@@ -1168,11 +1226,17 @@
             initSubcategoryCombos();
         });
 
+        // Retorna as subcategorias de nível 1 de uma categoria
         function getCategorySubcategories(catName) {
             const set = new Set();
             const custom = categoryCustomizations[catName];
             if (custom && Array.isArray(custom.subcategories)) {
                 custom.subcategories.forEach(s => { if (s && s.trim()) set.add(s.trim()); });
+            }
+            if (custom && custom.subsubcategories && typeof custom.subsubcategories === 'object') {
+                Object.keys(custom.subsubcategories).forEach(parentSub => {
+                    if (parentSub && parentSub.trim()) set.add(parentSub.trim());
+                });
             }
             const isMob = isMobileDevice();
             htmlFiles.forEach(item => {
@@ -1187,13 +1251,47 @@
             return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
-        function openAddSubcategoryModal(catName, oldSubName = '') {
+        // Retorna as sub-subcategorias (nível 2) dentro de uma subcategoria (nível 1)
+        function getSubcategoryChildren(catName, parentSubName) {
+            const set = new Set();
+            if (!catName || !parentSubName) return [];
+            const custom = categoryCustomizations[catName];
+            if (custom && custom.subsubcategories && typeof custom.subsubcategories === 'object') {
+                const key = Object.keys(custom.subsubcategories).find(k => k.trim().toLowerCase() === parentSubName.trim().toLowerCase());
+                if (key && Array.isArray(custom.subsubcategories[key])) {
+                    custom.subsubcategories[key].forEach(s => { if (s && s.trim()) set.add(s.trim()); });
+                }
+            }
+            const isMob = isMobileDevice();
+            htmlFiles.forEach(item => {
+                const showDesktop = item.showDesktop !== false;
+                const showMobile = item.showMobile !== false;
+                if (!(isMob ? showMobile : showDesktop)) return;
+                if ((item.category || 'Geral').trim().toLowerCase() === catName.trim().toLowerCase() &&
+                    (item.subcategory || '').trim().toLowerCase() === parentSubName.trim().toLowerCase()) {
+                    const subsub = (item.subsubcategory || '').trim();
+                    if (subsub) set.add(subsub);
+                }
+            });
+            return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        function openAddSubcategoryModal(catName, oldSubName = '', parentSubName = '') {
             document.getElementById('subcatParentCategory').value = catName;
+            document.getElementById('subcatParentSubcategory').value = parentSubName || '';
             document.getElementById('subcatOldName').value = oldSubName;
             document.getElementById('subcatNameInput').value = oldSubName;
-            document.getElementById('subcategoryModalTitle').innerHTML = oldSubName
-                ? '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Subcategoria'
-                : '<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria';
+
+            let modalTitle = '<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria';
+            if (oldSubName) {
+                modalTitle = parentSubName
+                    ? '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Sub-subcategoria'
+                    : '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Subcategoria';
+            } else if (parentSubName) {
+                modalTitle = `<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria em "${parentSubName}"`;
+            }
+
+            document.getElementById('subcategoryModalTitle').innerHTML = modalTitle;
             document.getElementById('subcategoryModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('subcatNameInput').focus(), 50);
         }
@@ -1205,6 +1303,7 @@
         function handleSubcategorySubmit(e) {
             e.preventDefault();
             const catName = document.getElementById('subcatParentCategory').value.trim();
+            const parentSub = document.getElementById('subcatParentSubcategory').value.trim();
             const oldSub = document.getElementById('subcatOldName').value.trim();
             const newSub = document.getElementById('subcatNameInput').value.trim();
             if (!catName || !newSub) return;
@@ -1213,53 +1312,140 @@
             if (!Array.isArray(categoryCustomizations[catName].subcategories)) {
                 categoryCustomizations[catName].subcategories = getCategorySubcategories(catName);
             }
-
-            let subs = categoryCustomizations[catName].subcategories;
-
-            if (oldSub) {
-                htmlFiles.forEach(item => {
-                    if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
-                        (item.subcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
-                        item.subcategory = newSub;
-                    }
-                });
-                subs = subs.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
-                if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
-                if (currentSubcategory && currentSubcategory.toLowerCase() === oldSub.toLowerCase()) {
-                    currentSubcategory = newSub;
-                }
-            } else {
-                if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) {
-                    subs.push(newSub);
-                }
-                currentCategory = catName;
-                currentSubcategory = newSub;
+            if (!categoryCustomizations[catName].subsubcategories || typeof categoryCustomizations[catName].subsubcategories !== 'object') {
+                categoryCustomizations[catName].subsubcategories = {};
             }
 
-            categoryCustomizations[catName].subcategories = subs;
+            if (parentSub) {
+                // Operação em Subcategoria de Nível 2 (dentro de parentSub)
+                const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                    .find(k => k.toLowerCase() === parentSub.toLowerCase()) || parentSub;
+
+                if (!Array.isArray(categoryCustomizations[catName].subsubcategories[parentKey])) {
+                    categoryCustomizations[catName].subsubcategories[parentKey] = getSubcategoryChildren(catName, parentKey);
+                }
+
+                let children = categoryCustomizations[catName].subsubcategories[parentKey];
+
+                if (oldSub) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === parentSub.toLowerCase() &&
+                            (item.subsubcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
+                            item.subsubcategory = newSub;
+                        }
+                    });
+                    children = children.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
+                    if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) children.push(newSub);
+                    if (currentSubsubcategory && currentSubsubcategory.toLowerCase() === oldSub.toLowerCase()) {
+                        currentSubsubcategory = newSub;
+                    }
+                } else {
+                    if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) {
+                        children.push(newSub);
+                    }
+                    currentCategory = catName;
+                    currentSubcategory = parentKey;
+                    currentSubsubcategory = newSub;
+                }
+
+                categoryCustomizations[catName].subsubcategories[parentKey] = children;
+            } else {
+                // Operação em Subcategoria de Nível 1
+                let subs = categoryCustomizations[catName].subcategories;
+
+                if (oldSub) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
+                            item.subcategory = newSub;
+                        }
+                    });
+                    subs = subs.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
+                    if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
+
+                    // Migra filhos (nível 2) caso a subcategoria pai tenha sido renomeada
+                    const oldKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                        .find(k => k.toLowerCase() === oldSub.toLowerCase());
+                    if (oldKey) {
+                        const existingChildren = categoryCustomizations[catName].subsubcategories[oldKey] || [];
+                        delete categoryCustomizations[catName].subsubcategories[oldKey];
+                        categoryCustomizations[catName].subsubcategories[newSub] = existingChildren;
+                    }
+
+                    if (currentSubcategory && currentSubcategory.toLowerCase() === oldSub.toLowerCase()) {
+                        currentSubcategory = newSub;
+                    }
+                } else {
+                    if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) {
+                        subs.push(newSub);
+                    }
+                    currentCategory = catName;
+                    currentSubcategory = newSub;
+                    currentSubsubcategory = null;
+                }
+
+                categoryCustomizations[catName].subcategories = subs;
+            }
+
             saveToStorage(true);
             closeSubcategoryModal();
             render();
         }
 
-        function deleteSubcategoryPrompt(catName, subName) {
-            if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão na categoria "${catName}".`)) {
-                htmlFiles.forEach(item => {
-                    if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
-                        (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
-                        item.subcategory = '';
+        function deleteSubcategoryPrompt(catName, subName, parentSubName = '') {
+            if (parentSubName) {
+                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão em "${parentSubName}".`)) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === parentSubName.toLowerCase() &&
+                            (item.subsubcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
+                            item.subsubcategory = '';
+                        }
+                    });
+                    if (categoryCustomizations[catName] && categoryCustomizations[catName].subsubcategories) {
+                        const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                            .find(k => k.toLowerCase() === parentSubName.toLowerCase());
+                        if (parentKey && Array.isArray(categoryCustomizations[catName].subsubcategories[parentKey])) {
+                            categoryCustomizations[catName].subsubcategories[parentKey] = categoryCustomizations[catName].subsubcategories[parentKey].filter(
+                                s => s.toLowerCase() !== subName.toLowerCase()
+                            );
+                        }
                     }
-                });
-                if (categoryCustomizations[catName] && Array.isArray(categoryCustomizations[catName].subcategories)) {
-                    categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
-                        s => s.toLowerCase() !== subName.toLowerCase()
-                    );
+                    if (currentSubsubcategory && currentSubsubcategory.toLowerCase() === subName.toLowerCase()) {
+                        currentSubsubcategory = null;
+                    }
+                    saveToStorage(true);
+                    render();
                 }
-                if (currentSubcategory && currentSubcategory.toLowerCase() === subName.toLowerCase()) {
-                    currentSubcategory = null;
+            } else {
+                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão na categoria "${catName}".`)) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
+                            item.subcategory = '';
+                            item.subsubcategory = '';
+                        }
+                    });
+                    if (categoryCustomizations[catName]) {
+                        if (Array.isArray(categoryCustomizations[catName].subcategories)) {
+                            categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
+                                s => s.toLowerCase() !== subName.toLowerCase()
+                            );
+                        }
+                        if (categoryCustomizations[catName].subsubcategories) {
+                            const oldKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                                .find(k => k.toLowerCase() === subName.toLowerCase());
+                            if (oldKey) delete categoryCustomizations[catName].subsubcategories[oldKey];
+                        }
+                    }
+                    if (currentSubcategory && currentSubcategory.toLowerCase() === subName.toLowerCase()) {
+                        currentSubcategory = null;
+                        currentSubsubcategory = null;
+                    }
+                    saveToStorage(true);
+                    render();
                 }
-                saveToStorage(true);
-                render();
             }
         }
 
@@ -1294,7 +1480,7 @@
                     const catMenuId = `actionMenuCategory_${catIndex}`;
                     const isNearBottomCat = catIndex >= totalCategories - 2;
                     const catMenuPositionClass = isNearBottomCat ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
-                    const escapedCat = catVal.replace(/'/g, "\\'");
+                    const escapedCat = escapeJsStr(catVal);
                     
                     actionMenuHtml = `
                         <div class="flex items-center gap-1 shrink-0 relative action-menu-container">
@@ -1347,7 +1533,7 @@
             });
         }
 
-        // ===== Combobox de categorias e subcategorias =====
+        // ===== Combobox de categorias, subcategorias e sub-subcategorias =====
         let comboInputId = null;
         let comboActiveIndex = -1;
 
@@ -1376,11 +1562,17 @@
             comboInputId = inputId;
             const list = getComboList();
             const typed = input.value.trim().toLowerCase();
-            const isSub = inputId.includes('Subcategory');
+            const isSub = inputId === 'editShortcutSubcategory';
+            const isSubsub = inputId === 'editShortcutSubsubcategory';
 
             let names = [];
-            if (isSub) {
-                const catVal = document.getElementById(inputId.includes('edit') ? 'editShortcutCategory' : 'shortcutCategory')?.value || currentCategory;
+            if (isSubsub) {
+                const catVal = document.getElementById('editShortcutCategory')?.value || currentCategory;
+                const subVal = document.getElementById('editShortcutSubcategory')?.value || '';
+                names = getSubcategoryChildren(catVal, subVal);
+                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
+            } else if (isSub) {
+                const catVal = document.getElementById('editShortcutCategory')?.value || currentCategory;
                 names = getCategorySubcategories(catVal);
                 if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
             } else {
@@ -1390,15 +1582,15 @@
 
             list.innerHTML = '';
             comboActiveIndex = -1;
-            if (names.length === 0 && !isSub) {
+            if (names.length === 0 && !isSub && !isSubsub) {
                 const hint = document.createElement('div');
                 hint.className = 'px-3 py-2 text-xs text-gray-400';
                 hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
                 list.appendChild(hint);
-            } else if (names.length === 0 && isSub) {
+            } else if (names.length === 0 && (isSub || isSubsub)) {
                 const hint = document.createElement('div');
                 hint.className = 'px-3 py-2 text-xs text-gray-400';
-                hint.textContent = 'Nenhuma subcategoria cadastrada';
+                hint.textContent = isSubsub ? 'Nenhuma sub-subcategoria cadastrada' : 'Nenhuma subcategoria cadastrada';
                 list.appendChild(hint);
             }
             names.forEach(name => {
@@ -1470,7 +1662,7 @@
         }
 
         function initSubcategoryCombos() {
-            ['editShortcutSubcategory'].forEach(id => {
+            ['editShortcutSubcategory', 'editShortcutSubsubcategory'].forEach(id => {
                 const input = document.getElementById(id);
                 if (!input) return;
                 input.addEventListener('focus', () => openCategoryCombo(id, true));
@@ -1536,7 +1728,7 @@
             if (!el) return;
             el.value = '';
             el.focus();
-            if (id === 'shortcutCategory' || id === 'editShortcutCategory' || id === 'editShortcutSubcategory') openCategoryCombo(id, true);
+            if (id === 'shortcutCategory' || id === 'editShortcutCategory' || id === 'editShortcutSubcategory' || id === 'editShortcutSubsubcategory') openCategoryCombo(id, true);
         }
 
         function openEditCategoryModal(catName) {
@@ -1614,8 +1806,12 @@
                     canvas.height = size;
                     canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
 
-                    const existingSubs = (categoryCustomizations[catName] && categoryCustomizations[catName].subcategories) || [];
-                    categoryCustomizations[catName] = { image: canvas.toDataURL('image/png'), subcategories: existingSubs };
+                    const existing = categoryCustomizations[catName] || {};
+                    categoryCustomizations[catName] = {
+                        ...existing,
+                        image: canvas.toDataURL('image/png')
+                    };
+                    delete categoryCustomizations[catName].icon;
                     saveToStorage(true);
                     closeEditCategoryIconModal();
                     render();
@@ -1645,8 +1841,12 @@
             }
 
             if (catName && newIcon) {
-                const existingSubs = (categoryCustomizations[catName] && categoryCustomizations[catName].subcategories) || [];
-                categoryCustomizations[catName] = { icon: newIcon, subcategories: existingSubs };
+                const existing = categoryCustomizations[catName] || {};
+                categoryCustomizations[catName] = {
+                    ...existing,
+                    icon: newIcon
+                };
+                delete categoryCustomizations[catName].image;
                 saveToStorage(true);
                 render();
             }
@@ -1659,12 +1859,14 @@
                     if ((item.category || 'Geral').trim() === catName) {
                         item.category = 'Geral';
                         item.subcategory = '';
+                        item.subsubcategory = '';
                     }
                 });
                 delete categoryCustomizations[catName];
                 if (currentCategory === catName) {
                     currentCategory = 'all';
                     currentSubcategory = null;
+                    currentSubsubcategory = null;
                 }
                 saveToStorage(true);
                 render();
@@ -1703,9 +1905,21 @@
                 else filtered = deviceFiltered;
             } else {
                 const catItems = deviceFiltered.filter(s => (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase());
-                if (currentSubcategory) {
-                    filtered = catItems.filter(s => (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase());
+                if (currentSubcategory && currentSubsubcategory) {
+                    // Dentro da Subcategoria Nível 2 (sub-subcategoria)
+                    filtered = catItems.filter(s =>
+                        (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase() &&
+                        (s.subsubcategory || '').trim().toLowerCase() === currentSubsubcategory.trim().toLowerCase()
+                    );
+                } else if (currentSubcategory) {
+                    // Dentro da Subcategoria Nível 1 -> mostra sub-subcategorias filhas + links diretos da subcategoria Nível 1
+                    subcategoriesToShow = getSubcategoryChildren(currentCategory, currentSubcategory);
+                    filtered = catItems.filter(s =>
+                        (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase() &&
+                        !(s.subsubcategory || '').trim()
+                    );
                 } else {
+                    // Raiz da Categoria -> mostra subcategorias Nível 1 + links diretos da categoria
                     subcategoriesToShow = getCategorySubcategories(currentCategory);
                     filtered = catItems.filter(s => !(s.subcategory || '').trim());
                 }
@@ -1735,7 +1949,26 @@
             empty.classList.add('hidden');
 
             const sz = ICON_SIZES[getIconSize(currentCategory)];
-            const escapedCat = currentCategory.replace(/'/g, "\\'");
+            const escapedCat = escapeJsStr(currentCategory);
+            const escapedParentSub = escapeJsStr(currentSubcategory || '');
+
+            // Função auxiliar para contar itens dentro de uma pasta (seja subcategoria Nível 1 ou Nível 2)
+            const getFolderItemCount = (folderName) => {
+                if (currentSubcategory) {
+                    // Estamos no Nível 1, folderName é uma sub-subcategoria (Nível 2)
+                    return deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase() &&
+                        (s.subsubcategory || '').trim().toLowerCase() === folderName.toLowerCase()
+                    ).length;
+                } else {
+                    // Estamos na raiz da categoria, folderName é uma subcategoria (Nível 1) -> conta links diretos + links em sub-subcategorias
+                    return deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === folderName.toLowerCase()
+                    ).length;
+                }
+            };
 
             if (viewMode === 'grid') {
                 list.classList.add('hidden');
@@ -1743,12 +1976,13 @@
                 grid.className = 'grid ' + sz.cols;
 
                 const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
-                    const subCount = deviceFiltered.filter(s =>
-                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
-                        (s.subcategory || '').trim().toLowerCase() === subName.toLowerCase()
-                    ).length;
+                    const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubGrid_${idx}`;
-                    const escapedSub = subName.replace(/'/g, "\\'");
+                    const escapedSub = escapeJsStr(subName);
+
+                    const addSubOptionHtml = !currentSubcategory ? `
+                        <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria</button>
+                    ` : '';
 
                     return `
                         <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-amber-50/60 border border-amber-200/80 hover:border-amber-400 hover:shadow-sm overflow-visible"
@@ -1765,9 +1999,10 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
-                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-40 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    ${addSubOptionHtml}
+                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}', '${escapedParentSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}', '${escapedParentSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
                                 </div>
                             </div>
                         </div>
@@ -1814,12 +2049,13 @@
                 list.classList.remove('hidden');
 
                 const subListHtml = subcategoriesToShow.map((subName, idx) => {
-                    const subCount = deviceFiltered.filter(s =>
-                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
-                        (s.subcategory || '').trim().toLowerCase() === subName.toLowerCase()
-                    ).length;
+                    const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubList_${idx}`;
-                    const escapedSub = subName.replace(/'/g, "\\'");
+                    const escapedSub = escapeJsStr(subName);
+
+                    const addSubOptionHtml = !currentSubcategory ? `
+                        <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria</button>
+                    ` : '';
 
                     return `
                         <div class="flex items-center justify-between ${sz.rowPad} bg-amber-50/40 hover:bg-amber-50 border-b border-gray-100 cursor-pointer transition-colors relative"
@@ -1837,9 +2073,10 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
-                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
-                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-40 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                    ${addSubOptionHtml}
+                                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}', '${escapedSub}', '${escapedParentSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Renomear</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteSubcategoryPrompt('${escapedCat}', '${escapedSub}', '${escapedParentSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash pointer-events-none"></i> Remover</button>
                                 </div>
                             </div>
                         </div>
@@ -1944,6 +2181,7 @@
             document.getElementById('editFileName').value = item.file || item.name;
             document.getElementById('editShortcutCategory').value = item.category || 'Geral';
             document.getElementById('editShortcutSubcategory').value = item.subcategory || '';
+            document.getElementById('editShortcutSubsubcategory').value = item.subsubcategory || '';
             document.getElementById('editShortcutFavorite').checked = !!item.isFavorite;
             document.getElementById('editShortcutDesktop').checked = item.showDesktop !== false;
             document.getElementById('editShortcutMobile').checked = item.showMobile !== false;
@@ -1962,6 +2200,7 @@
                 item.file = normalizeUrl(document.getElementById('editFileName').value);
                 item.category = document.getElementById('editShortcutCategory').value.trim() || 'Geral';
                 item.subcategory = document.getElementById('editShortcutSubcategory').value.trim();
+                item.subsubcategory = item.subcategory ? document.getElementById('editShortcutSubsubcategory').value.trim() : '';
                 item.isFavorite = document.getElementById('editShortcutFavorite').checked;
                 item.showDesktop = document.getElementById('editShortcutDesktop').checked;
                 item.showMobile = document.getElementById('editShortcutMobile').checked;
@@ -2008,6 +2247,7 @@
             }
 
             const subcategory = currentSubcategory ? currentSubcategory : '';
+            const subsubcategory = (currentSubcategory && currentSubsubcategory) ? currentSubsubcategory : '';
 
             const isFav = document.getElementById('shortcutFavorite').checked;
             const showDesk = document.getElementById('shortcutDesktop').checked;
@@ -2017,7 +2257,7 @@
 
             htmlFiles.push({
                 id: generateUniqueId(),
-                title, name: title, file, category, subcategory, customIcon: '',
+                title, name: title, file, category, subcategory, subsubcategory, customIcon: '',
                 visitCount: 0, isFavorite: isFav,
                 showDesktop: showDesk, showMobile: showMob
             });
@@ -2028,6 +2268,7 @@
             if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) {
                 currentCategory = category;
                 currentSubcategory = null;
+                currentSubsubcategory = null;
             }
             searchQuery = '';
             const searchEls = document.querySelectorAll('#searchInputDesktop, #searchInputMobile');
@@ -2082,10 +2323,11 @@
                     if (!Array.isArray(incoming)) throw new Error('Formato inválido');
 
                     const usedIds = new Set(htmlFiles.map(f => f.id));
-                    const exists = (url, cat, sub) => htmlFiles.some(f =>
+                    const exists = (url, cat, sub, subsub) => htmlFiles.some(f =>
                         String(f.file || '').trim().toLowerCase() === url.toLowerCase() &&
                         (f.category || 'Geral').trim() === cat &&
-                        (f.subcategory || '').trim() === (sub || '').trim());
+                        (f.subcategory || '').trim() === (sub || '').trim() &&
+                        (f.subsubcategory || '').trim() === (subsub || '').trim());
 
                     let added = 0, skipped = 0;
                     incoming.forEach(raw => {
@@ -2093,14 +2335,15 @@
                         const title = String((raw && (raw.title || raw.name)) || '').trim();
                         const category = String((raw && raw.category) || 'Geral').trim() || 'Geral';
                         const subcategory = String((raw && raw.subcategory) || '').trim();
-                        if (!url || !title || exists(url, category, subcategory)) { skipped++; return; }
+                        const subsubcategory = subcategory ? String((raw && raw.subsubcategory) || '').trim() : '';
+                        if (!url || !title || exists(url, category, subcategory, subsubcategory)) { skipped++; return; }
 
                         let id = raw.id && !usedIds.has(raw.id) ? raw.id : generateUniqueId();
                         usedIds.add(id);
 
                         htmlFiles.push({
                             ...raw,
-                            id, title, name: title, file: url, category, subcategory,
+                            id, title, name: title, file: url, category, subcategory, subsubcategory,
                             customIcon: raw.customIcon || '',
                             visitCount: raw.visitCount || 0,
                             isFavorite: !!raw.isFavorite,
@@ -2134,6 +2377,7 @@
                 htmlFiles = [];
                 currentCategory = 'all';
                 currentSubcategory = null;
+                currentSubsubcategory = null;
                 saveToStorage(true);
                 render();
             }
@@ -2190,6 +2434,7 @@
                 categoryCustomizations = {};
                 currentCategory = 'all';
                 currentSubcategory = null;
+                currentSubsubcategory = null;
                 saveToStorage(false);
                 pendingPush = false;
                 idbSetMany({ dirty: 'false' });
