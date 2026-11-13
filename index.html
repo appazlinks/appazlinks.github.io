@@ -76,7 +76,7 @@
             <div class="flex items-center gap-2">
                 <div class="flex items-center cursor-pointer select-none shrink-0 self-center" onclick="window.location.reload()">
                     <svg class="desktop-logo-svg" width="140" height="34" viewBox="0 0 180 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g onclick="event.stopPropagation(); window.open('gerenciador.html', '_blank');" style="cursor:pointer" role="button" aria-label="Abrir gerenciador"><title>Abrir gerenciador</title><rect width="40" height="40" rx="10" fill="#2563EB"/>
+                        <g onclick="event.stopPropagation(); window.open('https://azlinks.com.br/cadusu.html', '_blank');" style="cursor:pointer" role="button" aria-label="Abrir gerenciador"><title>Abrir gerenciador</title><rect width="40" height="40" rx="10" fill="#2563EB"/>
                         <path d="M12 28L20 14L28 28H23.5L20 21.5L16.5 28H12Z" fill="white"/>
                         <path d="M15 25H25" stroke="white" stroke-width="2"/></g>
                         <text class="desktop-logo-text" x="48" y="28" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="22" fill="#1E293B">AZ<tspan fill="#2563EB">Links</tspan></text>
@@ -2839,7 +2839,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
-                error.classList.remove('hidden');
+                error.classList.add('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
             }
@@ -2853,7 +2853,7 @@
             }
             if (result !== true) {
                 error.textContent = 'E-mail não cadastrado.';
-                error.classList.remove('hidden');
+                error.classList.add('hidden');
                 return;
             }
 
