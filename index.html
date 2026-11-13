@@ -116,7 +116,7 @@
         <!-- Linha de Pesquisa e Botões Mobile -->
         <div class="flex items-center justify-between w-full gap-2">
             <div class="hidden md:flex items-center gap-2 flex-1">
-                <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer md:hidden">
+                <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer">
                     <i class="fa-solid fa-bars text-lg pointer-events-none"></i>
                 </button>
                 <div class="relative w-full">
@@ -632,7 +632,7 @@
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
         let categoryIconSizes = JSON.parse(localStorage.getItem('local_category_icon_sizes')) || {};
-        let sidebarOpen = false;
+        let sidebarOpen = window.innerWidth >= 768;
         let itemToDeleteId = null;
         let editingShortcutIconId = null;
         let editingSubcatInfo = null;
@@ -890,23 +890,37 @@
                     }
 
                     if (data.categories && typeof data.categories === 'object') {
-                        // Mesclagem inteligente para preservar ícones locais e subcatCustom caso o servidor não os envie
-                        const mergedCategories = { ...data.categories };
+                        // Mesclagem profunda e inteligente preservando rigorosamente todas as personalizações locais (imagens, ícones e subcatCustom)
+                        const mergedCategories = { ...(data.categories || {}) };
                         Object.keys(categoryCustomizations).forEach(catKey => {
                             if (!mergedCategories[catKey]) {
                                 mergedCategories[catKey] = categoryCustomizations[catKey];
                             } else {
-                                if (!mergedCategories[catKey].image && categoryCustomizations[catKey].image) {
+                                if (categoryCustomizations[catKey].image) {
                                     mergedCategories[catKey].image = categoryCustomizations[catKey].image;
                                 }
-                                if (!mergedCategories[catKey].icon && categoryCustomizations[catKey].icon) {
+                                if (categoryCustomizations[catKey].icon) {
                                     mergedCategories[catKey].icon = categoryCustomizations[catKey].icon;
                                 }
                                 if (categoryCustomizations[catKey].subcatCustom) {
-                                    mergedCategories[catKey].subcatCustom = {
-                                        ...categoryCustomizations[catKey].subcatCustom,
-                                        ...(mergedCategories[catKey].subcatCustom || {})
-                                    };
+                                    const remoteSubCust = mergedCategories[catKey].subcatCustom || {};
+                                    const localSubCust = categoryCustomizations[catKey].subcatCustom || {};
+                                    mergedCategories[catKey].subcatCustom = { ...localSubCust, ...remoteSubCust };
+                                    Object.keys(localSubCust).forEach(subKey => {
+                                        const targetSubKey = Object.keys(mergedCategories[catKey].subcatCustom).find(k => k.trim().toLowerCase() === subKey.trim().toLowerCase()) || subKey;
+                                        if (localSubCust[subKey].image || localSubCust[subKey].icon) {
+                                            mergedCategories[catKey].subcatCustom[targetSubKey] = {
+                                                ...(mergedCategories[catKey].subcatCustom[targetSubKey] || {}),
+                                                ...localSubCust[subKey]
+                                            };
+                                        }
+                                    });
+                                }
+                                if (categoryCustomizations[catKey].subcategories) {
+                                    mergedCategories[catKey].subcategories = Array.from(new Set([
+                                        ...(mergedCategories[catKey].subcategories || []),
+                                        ...(categoryCustomizations[catKey].subcategories || [])
+                                    ]));
                                 }
                             }
                         });
@@ -1011,14 +1025,24 @@
 
             if (window.innerWidth < 768) {
                 if (sidebarOpen) {
-                    sidebar.classList.replace('-translate-x-full', 'translate-x-0');
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
                     overlay.classList.remove('hidden');
                 } else {
-                    sidebar.classList.replace('translate-x-0', '-translate-x-full');
+                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.add('-translate-x-full');
                     overlay.classList.add('hidden');
                 }
             } else {
-                overlay.classList.add('hidden');
+                if (sidebarOpen) {
+                    sidebar.classList.remove('-translate-x-full', 'absolute', 'md:w-0', 'md:p-0', 'opacity-0');
+                    sidebar.classList.add('translate-x-0', 'relative', 'md:w-64', 'opacity-100');
+                    overlay.classList.add('hidden');
+                } else {
+                    sidebar.classList.remove('translate-x-0', 'relative', 'md:w-64', 'opacity-100');
+                    sidebar.classList.add('-translate-x-full', 'absolute', 'md:w-0', 'md:p-0', 'opacity-0');
+                    overlay.classList.add('hidden');
+                }
             }
         }
 
@@ -1215,7 +1239,10 @@
             menu.style.top = (rect.bottom + 4) + 'px';
         }
 
-        window.addEventListener('resize', closeSizeMenu);
+        window.addEventListener('resize', () => {
+            closeSizeMenu();
+            applySidebarState();
+        });
         window.addEventListener('scroll', e => {
             const m = document.getElementById('sizeMenu');
             if (m && e.target === m) return;
@@ -2305,6 +2332,8 @@
                 const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubGrid_${idx}`;
+                    const isNearTopSub = idx < 2;
+                    const subMenuPositionClass = isNearTopSub ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2338,7 +2367,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown ${subMenuPositionClass} w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     ${addSubOptionHtml}
                                     ${moveFolderOptionHtml}
                                     <button type="button" onclick="event.stopPropagation(); openEditSubcatIconModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-500 pointer-events-none"></i> Alterar Ícone</button>
@@ -2354,6 +2383,8 @@
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkGrid_${index}`;
+                    const isNearTopLink = index < 2;
+                    const menuPositionClass = isNearTopLink ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
                     const isFav = !!item.isFavorite;
 
                     return `
@@ -2373,7 +2404,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute top-full right-0 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
                                     <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
                                     <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
@@ -2392,6 +2423,8 @@
                 const subListHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubList_${idx}`;
+                    const isNearTopSub = idx < 2;
+                    const subMenuPositionClass = isNearTopSub ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2426,7 +2459,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown ${subMenuPositionClass} w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     ${addSubOptionHtml}
                                     ${moveFolderOptionHtml}
                                     <button type="button" onclick="event.stopPropagation(); openEditSubcatIconModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-500 pointer-events-none"></i> Alterar Ícone</button>
@@ -2443,8 +2476,8 @@
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkList_${index}`;
-                    const isNearBottom = index >= totalItems - 2;
-                    const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
+                    const isNearTopLink = index < 2;
+                    const menuPositionClass = isNearTopLink ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
                     const isFav = !!item.isFavorite;
 
                     return `
