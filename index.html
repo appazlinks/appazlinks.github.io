@@ -1417,9 +1417,10 @@
         function handleSubcatIconFileSelect(e) {
             const input = e.target;
             const file = input.files[0];
-            if (!file || !editingSubcatInfo) { input.value = ''; return; }
+            const catName = document.getElementById('editSubcatParentCat').value || (editingSubcatInfo && editingSubcatInfo.catName);
+            const subName = document.getElementById('editSubcatName').value || (editingSubcatInfo && editingSubcatInfo.subName);
+            if (!file || !catName || !subName) { input.value = ''; return; }
 
-            const { catName, subName } = editingSubcatInfo;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const img = new Image();
@@ -1459,8 +1460,9 @@
         }
 
         function saveSubcatIcon() {
-            if (!editingSubcatInfo) return;
-            const { catName, subName } = editingSubcatInfo;
+            const catName = document.getElementById('editSubcatParentCat').value || (editingSubcatInfo && editingSubcatInfo.catName);
+            const subName = document.getElementById('editSubcatName').value || (editingSubcatInfo && editingSubcatInfo.subName);
+            if (!catName || !subName) return;
             const newIcon = document.getElementById('newSubcatIconClass').value.trim();
 
             if (!categoryCustomizations[catName]) categoryCustomizations[catName] = {};
@@ -2332,7 +2334,7 @@
                 const linksHtml = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                    const menuId = `actionMenuGrid_${index}`;
+                    const menuId = `actionMenuLinkGrid_${index}`;
                     const isFav = !!item.isFavorite;
 
                     return `
@@ -2421,7 +2423,7 @@
                 const linksListHtml = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
-                    const menuId = `actionMenuList_${index}`;
+                    const menuId = `actionMenuLinkList_${index}`;
                     const isNearBottom = index >= totalItems - 2;
                     const menuPositionClass = isNearBottom ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const isFav = !!item.isFavorite;
