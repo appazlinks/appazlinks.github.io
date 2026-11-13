@@ -656,7 +656,6 @@
         ];
 
         const categoryKeywordMap = {
-            '': 0, 'home': 0,
             'loja': 1, 'lojas': 1, 'compras': 1,
             'ia': 2, 'ai': 2, 'inteligência': 2,
             'noticia': 3, 'notícias': 3, 'news': 3,
@@ -693,7 +692,8 @@
             if (!catName || !subName) return null;
             const custom = categoryCustomizations[catName];
             if (custom && custom.subcatCustom && typeof custom.subcatCustom === 'object') {
-                const foundKey = Object.keys(custom.subcatCustom).find(k => k.trim().toLowerCase() === subName.trim().toLowerCase());
+                const target = subName.trim().toLowerCase();
+                const foundKey = Object.keys(custom.subcatCustom).find(k => k.trim().toLowerCase() === target);
                 if (foundKey) return custom.subcatCustom[foundKey];
             }
             return null;
@@ -1438,12 +1438,15 @@
                     if (!categoryCustomizations[catName]) categoryCustomizations[catName] = {};
                     if (!categoryCustomizations[catName].subcatCustom) categoryCustomizations[catName].subcatCustom = {};
 
-                    const existingSubCustom = categoryCustomizations[catName].subcatCustom[subName] || {};
-                    categoryCustomizations[catName].subcatCustom[subName] = {
+                    const target = subName.trim().toLowerCase();
+                    const existingKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === target) || subName;
+                    const existingSubCustom = categoryCustomizations[catName].subcatCustom[existingKey] || {};
+
+                    categoryCustomizations[catName].subcatCustom[existingKey] = {
                         ...existingSubCustom,
                         image: canvas.toDataURL('image/png')
                     };
-                    delete categoryCustomizations[catName].subcatCustom[subName].icon;
+                    delete categoryCustomizations[catName].subcatCustom[existingKey].icon;
 
                     saveToStorage(true);
                     closeEditSubcatIconModal();
@@ -1468,15 +1471,18 @@
             if (!categoryCustomizations[catName]) categoryCustomizations[catName] = {};
             if (!categoryCustomizations[catName].subcatCustom) categoryCustomizations[catName].subcatCustom = {};
 
-            const existingSubCustom = categoryCustomizations[catName].subcatCustom[subName] || {};
+            const target = subName.trim().toLowerCase();
+            const existingKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === target) || subName;
+            const existingSubCustom = categoryCustomizations[catName].subcatCustom[existingKey] || {};
+
             if (newIcon) {
-                categoryCustomizations[catName].subcatCustom[subName] = {
+                categoryCustomizations[catName].subcatCustom[existingKey] = {
                     ...existingSubCustom,
                     icon: newIcon
                 };
-                delete categoryCustomizations[catName].subcatCustom[subName].image;
+                delete categoryCustomizations[catName].subcatCustom[existingKey].image;
             } else {
-                delete categoryCustomizations[catName].subcatCustom[subName];
+                delete categoryCustomizations[catName].subcatCustom[existingKey];
             }
 
             saveToStorage(true);
@@ -1678,9 +1684,13 @@
                         categoryCustomizations[catName].subsubcategories[newSub] = existingChildren;
                     }
 
-                    if (categoryCustomizations[catName].subcatCustom && categoryCustomizations[catName].subcatCustom[oldSub]) {
-                        categoryCustomizations[catName].subcatCustom[newSub] = categoryCustomizations[catName].subcatCustom[oldSub];
-                        delete categoryCustomizations[catName].subcatCustom[oldSub];
+                    if (categoryCustomizations[catName].subcatCustom) {
+                        const targetOld = oldSub.trim().toLowerCase();
+                        const foundKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === targetOld);
+                        if (foundKey) {
+                            categoryCustomizations[catName].subcatCustom[newSub] = categoryCustomizations[catName].subcatCustom[foundKey];
+                            delete categoryCustomizations[catName].subcatCustom[foundKey];
+                        }
                     }
 
                     if (currentSubcategory && currentSubcategory.toLowerCase() === oldSub.toLowerCase()) {
@@ -1749,7 +1759,9 @@
                             if (oldKey) delete categoryCustomizations[catName].subsubcategories[oldKey];
                         }
                         if (categoryCustomizations[catName].subcatCustom) {
-                            delete categoryCustomizations[catName].subcatCustom[subName];
+                            const target = subName.trim().toLowerCase();
+                            const foundKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === target);
+                            if (foundKey) delete categoryCustomizations[catName].subcatCustom[foundKey];
                         }
                     }
                     if (currentSubcategory && currentSubcategory.toLowerCase() === subName.toLowerCase()) {
@@ -1797,8 +1809,8 @@
                     
                     actionMenuHtml = `
                         <div class="flex items-center gap-1 shrink-0 relative action-menu-container">
-                            <span class="sidebar-text md:hidden text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
-                            <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="sidebar-text md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                            <span class="sidebar-text text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
+                            <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="sidebar-text p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
                             <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
@@ -1818,7 +1830,7 @@
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="sidebar-text md:hidden text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
+                    actionMenuHtml = `<span class="sidebar-text text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
@@ -1829,7 +1841,7 @@
                 btn.innerHTML = `
                     <span class="flex items-center gap-2 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="sidebar-text md:hidden truncate pointer-events-none">${label}</span>
+                        <span class="sidebar-text truncate pointer-events-none">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
