@@ -335,7 +335,7 @@
         <!-- Sidebar Overlay para Mobile -->
         <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"></div>
 
-        <!-- Sidebar Lateral (Fixa e com largura ajustável em Desktop) -->
+        <!-- Sidebar Lateral -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 transform -translate-x-full md:translate-x-0 md:w-64">
             
             <!-- Topo da Sidebar -->
@@ -346,7 +346,6 @@
                     </div>
                     <span class="sidebar-text font-bold text-sm tracking-tight text-gray-900 truncate">AZ Links</span>
                 </div>
-                <!-- Botão Recolher/Expandir em Desktop -->
                 <button type="button" onclick="toggleMobileSidebar()" class="md:hidden text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -357,7 +356,7 @@
                 <!-- Preenchido via JavaScript -->
             </div>
 
-            <!-- Rodapé da Sidebar com Nome/Licença -->
+            <!-- Rodapé da Sidebar -->
             <div class="p-3 border-t border-gray-100 bg-gray-50/55 shrink-0 flex items-center justify-between text-xs text-gray-500">
                 <span id="footerLicenseName" class="truncate font-medium">Convidado</span>
                 <button type="button" onclick="openEmailModal(true)" class="text-gray-400 hover:text-blue-600 p-1 cursor-pointer" title="Trocar Usuário"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -370,7 +369,7 @@
             <!-- Header Superior -->
             <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
                 
-                <!-- Esquerda: Botão Menu Mobile e Busca -->
+                <!-- Esquerda: Busca -->
                 <div class="flex items-center gap-3 flex-1 max-w-md">
                     <button type="button" onclick="toggleMobileSidebar()" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer">
                         <i class="fa-solid fa-bars text-sm"></i>
@@ -389,47 +388,45 @@
                 <!-- Direita: Controles e Ações -->
                 <div class="flex items-center gap-2 shrink-0">
                     
-                    <!-- Botão Sincronizar -->
+                    <!-- Sincronizar -->
                     <button type="button" id="syncBtnDesk" onclick="syncFromGoogleSheets()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-colors" title="Sincronizar">
                         <i id="syncIconDesk" class="fa-solid fa-rotate-right pointer-events-none"></i>
                         <span class="hidden md:inline">Sync</span>
                     </button>
 
-                    <!-- Botão Visualização (Grid / Lista) -->
+                    <!-- Visualização (Grid / Lista) -->
                     <div class="hidden sm:flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200">
                         <button type="button" id="btnGridDesk" onclick="setViewMode('grid')" class="px-2.5 py-1 text-xs rounded-md font-semibold text-gray-700 hover:text-blue-600 cursor-pointer transition-colors" title="Grade"><i class="fa-solid fa-border-all"></i></button>
                         <button type="button" id="btnListDesk" onclick="setViewMode('list')" class="px-2.5 py-1 text-xs rounded-md font-semibold text-gray-700 hover:text-blue-600 cursor-pointer transition-colors" title="Lista"><i class="fa-solid fa-list"></i></button>
                     </div>
 
-                    <!-- Botão Ordenar A-Z / Z-A -->
+                    <!-- Ordenar -->
                     <button type="button" onclick="toggleSortOrder()" class="p-2 text-xs text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-colors" title="Ordenar Alfabeticamente">
                         <i id="sortIconDesk" class="fa-solid fa-arrow-down-a-z pointer-events-none"></i>
                     </button>
 
-                    <!-- Botão Tamanho dos Ícones -->
+                    <!-- Tamanho dos Ícones -->
                     <button type="button" data-size-btn onclick="toggleSizeMenu(event)" class="p-2 text-xs text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-colors" title="Tamanho dos Ícones">
                         <i class="fa-solid fa-text-height pointer-events-none"></i>
                     </button>
 
-                    <!-- Botão Novo Atalho -->
+                    <!-- Novo Atalho -->
                     <button type="button" onclick="openModal()" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm cursor-pointer transition-colors">
                         <i class="fa-solid fa-plus"></i>
                         <span class="hidden sm:inline">Novo Atalho</span>
                     </button>
 
-                    <!-- Menu Mais (Opções Globais) -->
+                    <!-- Menu Mais -->
                     <div class="relative dropdown-container">
                         <button type="button" id="btnHeaderMore" class="p-2 text-xs text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-colors">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                         </button>
                         <div id="headerMoreDropdown" class="absolute right-0 mt-1.5 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-1 text-xs z-50 hidden">
-                            <!-- Opções para Categoria "Todos" -->
                             <div id="headerMenuAllOptions">
                                 <button type="button" onclick="exportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-download text-blue-600"></i> Exportar Backup (.json)</button>
                                 <button type="button" onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-upload text-emerald-600"></i> Importar Backup (.json)</button>
                                 <button type="button" onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Apagar Tudo</button>
                             </div>
-                            <!-- Opções para Categoria Específica -->
                             <div id="headerMenuCategoryOptions" class="hidden">
                                 <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-folder-plus text-blue-600"></i> Nova Subcategoria</button>
                                 <button type="button" onclick="openEditCategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500"></i> Editar Categoria</button>
@@ -445,14 +442,13 @@
             <!-- Área de Conteúdo -->
             <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-4">
                 
-                <!-- Barra de Título da Categoria e Breadcrumb -->
+                <!-- Título e Breadcrumb -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 text-base">
                             <span id="currentCategoryTitle" class="flex items-center gap-2 font-bold text-gray-900 truncate"></span>
                         </div>
                         <div class="min-w-0">
-                            <!-- Breadcrumb de Subcategorias -->
                             <div id="currentSubcategoryRow" class="hidden flex items-center gap-1.5 text-xs text-gray-500 mb-0.5">
                                 <button type="button" onclick="exitSubcategory()" class="hover:text-blue-600 font-medium cursor-pointer transition-colors flex items-center gap-1">
                                     <span id="currentSubcategoryIconContainer"></span>
@@ -468,21 +464,14 @@
                         </div>
                     </div>
 
-                    <!-- Botão Voltar Nível se estiver dentro de subpasta -->
-                    <div id="categoryHeaderMoreContainer" class="hidden flex items-center gap-2">
-                        <!-- Gerenciado Dinamicamente -->
-                    </div>
+                    <div id="categoryHeaderMoreContainer" class="hidden flex items-center gap-2"></div>
                 </div>
 
-                <!-- Grid de Atalhos -->
-                <div id="shortcutsGrid" class="grid gap-3">
-                    <!-- Preenchido via JS -->
-                </div>
+                <!-- Grid -->
+                <div id="shortcutsGrid" class="grid gap-3"></div>
 
-                <!-- Lista de Atalhos -->
-                <div id="shortcutsList" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hidden">
-                    <!-- Preenchido via JS -->
-                </div>
+                <!-- Lista -->
+                <div id="shortcutsList" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hidden"></div>
 
                 <!-- Estado Vazio -->
                 <div id="emptyState" class="text-center py-16 px-4 hidden">
@@ -498,7 +487,7 @@
     </div>
 
     <!-- Menu de Ações Global Flutuante -->
-    <div id="globalActionMenu" class="fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-xs z-[100]"></div>
+    <div id="globalActionMenu" class="fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-xs"></div>
 
     <script>
         let APPS_SCRIPT_URL = '';
@@ -604,7 +593,6 @@
             if (!catName) return 'fa-solid fa-folder text-blue-500';
             if (catName === 'most_visited') return 'fa-solid fa-fire text-amber-500';
             if (catName === 'favorites') return 'fa-solid fa-star text-amber-400';
-            if (catName.trim().toLowerCase() === 'assistir mais tarde') return 'fa-solid fa-clock text-blue-500';
 
             if (categoryCustomizations[catName] && categoryCustomizations[catName].icon) {
                 return categoryCustomizations[catName].icon;
@@ -638,18 +626,28 @@
         function beginSync() {
             pendingSyncCount++;
             const iconDesk = document.getElementById('syncIconDesk');
+            const iconMob = document.getElementById('syncIconMob');
             const btnDesk = document.getElementById('syncBtnDesk');
+            const btnMob = document.getElementById('syncBtnMob');
+
             if (iconDesk) iconDesk.className = 'fa-solid fa-rotate-right fa-spin pointer-events-none text-amber-600';
+            if (iconMob) iconMob.className = 'fa-solid fa-rotate-right fa-spin pointer-events-none text-amber-600';
             if (btnDesk) btnDesk.classList.add('bg-amber-50', 'border-amber-200');
+            if (btnMob) btnMob.classList.add('bg-amber-50', 'border-amber-200');
         }
 
         function endSync() {
             pendingSyncCount = Math.max(0, pendingSyncCount - 1);
             if (pendingSyncCount === 0) {
                 const iconDesk = document.getElementById('syncIconDesk');
+                const iconMob = document.getElementById('syncIconMob');
                 const btnDesk = document.getElementById('syncBtnDesk');
+                const btnMob = document.getElementById('syncBtnMob');
+
                 if (iconDesk) iconDesk.className = 'fa-solid fa-rotate-right pointer-events-none text-gray-700';
+                if (iconMob) iconMob.className = 'fa-solid fa-rotate-right pointer-events-none text-gray-700';
                 if (btnDesk) btnDesk.classList.remove('bg-amber-50', 'border-amber-200');
+                if (btnMob) btnMob.classList.remove('bg-amber-50', 'border-amber-200');
             }
         }
 
@@ -736,6 +734,8 @@
                     categories: JSON.stringify(categoryCustomizations),
                     dirty: 'false'
                 });
+                localStorage.removeItem('local_html_shortcuts');
+                localStorage.removeItem('local_category_customizations');
             } catch (err) {
                 htmlFiles = [];
                 categoryCustomizations = {};
@@ -763,7 +763,7 @@
                     idbSetMany({ dirty: 'false' });
                 }
             } catch (err) {
-                console.error("Erro ao sincronizar:", err);
+                console.error("Erro ao sincronizar envio:", err);
             } finally {
                 isSyncing = false;
                 endSync();
@@ -797,31 +797,38 @@
                 
                 if (data.status === "success" && !pendingPush && versionAtStart === localVersion) {
                     let changed = false;
+                    
                     if (Array.isArray(data.shortcuts)) {
-                        const parsed = data.shortcuts.map(s => ({
+                        const parsedShortcuts = data.shortcuts.map(s => ({
                             ...s,
                             showDesktop: s.showDesktop !== false,
                             showMobile: s.showMobile !== false,
                             subcategory: s.subcategory || '',
                             subsubcategory: s.subsubcategory || ''
                         }));
-                        if (JSON.stringify(parsed) !== JSON.stringify(htmlFiles)) {
-                            htmlFiles = parsed;
+                        const newShortcutsStr = JSON.stringify(parsedShortcuts);
+                        if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
+                            htmlFiles = parsedShortcuts;
                             idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
                             changed = true;
                         }
                     }
+
                     if (data.categories && typeof data.categories === 'object') {
-                        if (JSON.stringify(data.categories) !== JSON.stringify(categoryCustomizations)) {
+                        const newCatStr = JSON.stringify(data.categories);
+                        if (newCatStr !== JSON.stringify(categoryCustomizations)) {
                             categoryCustomizations = data.categories;
                             idbSetMany({ categories: JSON.stringify(categoryCustomizations) });
                             changed = true;
                         }
                     }
-                    if (changed) render();
+
+                    if (changed) {
+                        render();
+                    }
                 }
             } catch (err) {
-                console.error("Erro ao puxar dados:", err);
+                console.error("Erro ao puxar dados do Sheets:", err);
             } finally {
                 isSyncing = false;
                 endSync();
@@ -831,7 +838,9 @@
         function startAutoSync() {
             if (syncInterval) clearInterval(syncInterval);
             syncInterval = setInterval(() => {
-                if (!document.hidden) syncFromGoogleSheets();
+                if (!document.hidden) {
+                    syncFromGoogleSheets();
+                }
             }, 10000);
         }
 
@@ -849,7 +858,9 @@
             localStorage.setItem('local_category_view_modes', JSON.stringify(categoryViewModes));
             localStorage.setItem('local_category_sort_orders', JSON.stringify(categorySortOrders));
             localStorage.setItem('local_category_icon_sizes', JSON.stringify(categoryIconSizes));
-            if (syncNow) syncToGoogleSheets();
+            if (syncNow) {
+                syncToGoogleSheets();
+            }
         }
 
         function openShortcut(url, itemId) {
@@ -898,19 +909,29 @@
             applySidebarState(); 
         }
 
+        function expandSidebar() { if(window.innerWidth >= 768) { sidebarOpen = true; applySidebarState(); } }
+        function collapseSidebar() { sidebarOpen = false; applySidebarState(); }
+
         function applySidebarState() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            const textElements = document.querySelectorAll('.sidebar-text');
 
             if (window.innerWidth >= 768) {
-                sidebar.classList.remove('-translate-x-full');
+                if (sidebarOpen) {
+                    sidebar.classList.replace('md:w-16', 'md:w-64');
+                    textElements.forEach(el => el.classList.remove('md:hidden'));
+                } else {
+                    sidebar.classList.replace('md:w-64', 'md:w-16');
+                    textElements.forEach(el => el.classList.add('md:hidden'));
+                }
                 overlay.classList.add('hidden');
             } else {
                 if (sidebarOpen) {
-                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.replace('-translate-x-full', 'translate-x-0');
                     overlay.classList.remove('hidden');
                 } else {
-                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.replace('translate-x-0', '-translate-x-full');
                     overlay.classList.add('hidden');
                 }
             }
@@ -923,10 +944,7 @@
             renderCategories();
             applySidebarState();
             renderGrid();
-            if (window.innerWidth < 768) {
-                sidebarOpen = false;
-                applySidebarState();
-            }
+            if (window.innerWidth < 768) collapseSidebar();
         }
 
         function openSubcategory(subName) {
@@ -937,6 +955,13 @@
                 currentSubsubcategory = null;
             }
             renderGrid();
+        }
+
+        function goToLevel1Subcategory() {
+            if (currentSubsubcategory) {
+                currentSubsubcategory = null;
+                renderGrid();
+            }
         }
 
         function exitSubcategory() {
@@ -1000,15 +1025,10 @@
 
                     if (subContainer) {
                         const subCustom = getSubcategoryCustom(currentCategory, currentSubcategory);
-                        const subLower = currentSubcategory.trim().toLowerCase();
                         if (subCustom && subCustom.image) {
                             subContainer.innerHTML = `<img src="${subCustom.image}" class="w-3.5 h-3.5 object-contain rounded shrink-0">`;
                         } else if (subCustom && subCustom.icon) {
                             subContainer.innerHTML = `<i class="${subCustom.icon}"></i>`;
-                        } else if (subLower.includes('youtube')) {
-                            subContainer.innerHTML = `<i class="fa-brands fa-youtube text-red-600"></i>`;
-                        } else if (subLower.includes('instagram')) {
-                            subContainer.innerHTML = `<i class="fa-brands fa-instagram text-pink-600"></i>`;
                         } else {
                             subContainer.innerHTML = `<i class="fa-solid fa-folder text-amber-400"></i>`;
                         }
@@ -1020,15 +1040,10 @@
                         if (subsubText) subsubText.textContent = currentSubsubcategory;
                         if (subsubContainer) {
                             const subsubCustom = getSubcategoryCustom(currentCategory, currentSubsubcategory);
-                            const subsubLower = currentSubsubcategory.trim().toLowerCase();
                             if (subsubCustom && subsubCustom.image) {
                                 subsubContainer.innerHTML = `<img src="${subsubCustom.image}" class="w-3.5 h-3.5 object-contain rounded shrink-0">`;
                             } else if (subsubCustom && subsubCustom.icon) {
                                 subsubContainer.innerHTML = `<i class="${subsubCustom.icon}"></i>`;
-                            } else if (subsubLower.includes('youtube')) {
-                                subsubContainer.innerHTML = `<i class="fa-brands fa-youtube text-red-600"></i>`;
-                            } else if (subsubLower.includes('instagram')) {
-                                subsubContainer.innerHTML = `<i class="fa-brands fa-instagram text-pink-600"></i>`;
                             } else {
                                 subsubContainer.innerHTML = `<i class="fa-solid fa-folder-open text-amber-500"></i>`;
                             }
@@ -1066,9 +1081,9 @@
         }
 
         const ICON_SIZES = {
-            large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7', cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
-            medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9', cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
-            small:  { label: 'Pequeno', cols: 'gap-2 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12', cardPad: 'p-1.5 py-1.5', cardMin: 'min-h-[64px]', box: 'w-6 h-6', img: 'w-5 h-5', text: 'text-[10px]', rowPad: 'px-3 py-1',   lBox: 'w-5 h-5', lImg: 'w-3.5 h-3.5' }
+            large:  { label: 'Grande',  cols: 'gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8',        cardPad: 'p-3 py-3',  cardMin: 'min-h-[100px]', box: 'w-10 h-10', img: 'w-8 h-8', text: 'text-xs',      rowPad: 'px-4 py-2.5', lBox: 'w-7 h-7', lImg: 'w-5 h-5' },
+            medium: { label: 'Médio',   cols: 'gap-2.5 grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10',      cardPad: 'p-2 py-2',  cardMin: 'min-h-[80px]',  box: 'w-8 h-8',   img: 'w-6 h-6', text: 'text-[11px]', rowPad: 'px-3 py-1.5', lBox: 'w-6 h-6', lImg: 'w-4 h-4' },
+            small:  { label: 'Pequeno', cols: 'gap-2 grid-cols-4 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-11 xl:grid-cols-12',        cardPad: 'p-1.5 py-1.5', cardMin: 'min-h-[64px]', box: 'w-6 h-6', img: 'w-5 h-5', text: 'text-[10px]', rowPad: 'px-3 py-1',   lBox: 'w-5 h-5', lImg: 'w-3.5 h-3.5' }
         };
 
         function getIconSize(cat) {
@@ -1097,7 +1112,8 @@
             if (!menu) {
                 menu = document.createElement('div');
                 menu.id = 'sizeMenu';
-                menu.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-sm w-36 z-[100]';
+                menu.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-sm w-36';
+                menu.style.zIndex = '100';
                 document.body.appendChild(menu);
             }
             const current = getIconSize(currentCategory);
@@ -1109,10 +1125,17 @@
                 }).join('');
             menu.classList.remove('hidden');
             const rect = btn.getBoundingClientRect();
-            const w = 144;
+            const w = menu.offsetWidth || 144;
             menu.style.left = Math.max(4, Math.min(rect.right - w, window.innerWidth - w - 4)) + 'px';
             menu.style.top = (rect.bottom + 4) + 'px';
         }
+
+        window.addEventListener('resize', closeSizeMenu);
+        window.addEventListener('scroll', e => {
+            const m = document.getElementById('sizeMenu');
+            if (m && e.target === m) return;
+            closeSizeMenu();
+        }, true);
 
         function getViewMode(cat) {
             return categoryViewModes[cat] || 'grid';
@@ -1132,33 +1155,41 @@
         function updateSortButtonStyle() {
             const order = getSortOrder(currentCategory);
             const iconDesk = document.getElementById('sortIconDesk');
+            const iconMob = document.getElementById('sortIconMob');
+
             const iconClass = order === 'asc' ? 'fa-solid fa-arrow-down-a-z' : 'fa-solid fa-arrow-down-z-a';
             if (iconDesk) iconDesk.className = iconClass + ' pointer-events-none';
+            if (iconMob) iconMob.className = iconClass + ' pointer-events-none';
         }
 
         function updateViewButtonsStyle() {
             const mode = getViewMode(currentCategory);
             const gridBtnDesk = document.getElementById('btnGridDesk');
             const listBtnDesk = document.getElementById('btnListDesk');
+            const gridBtnMob = document.getElementById('btnGridMob');
+            const listBtnMob = document.getElementById('btnListMob');
 
-            if (gridBtnDesk) {
+            [gridBtnDesk, gridBtnMob].forEach(btn => {
+                if (!btn) return;
                 if (mode === 'grid') {
-                    gridBtnDesk.classList.add('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
-                    gridBtnDesk.classList.remove('text-gray-700');
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
+                    btn.classList.remove('text-gray-700');
                 } else {
-                    gridBtnDesk.classList.remove('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
-                    gridBtnDesk.classList.add('text-gray-700');
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
+                    btn.classList.add('text-gray-700');
                 }
-            }
-            if (listBtnDesk) {
+            });
+
+            [listBtnDesk, listBtnMob].forEach(btn => {
+                if (!btn) return;
                 if (mode === 'list') {
-                    listBtnDesk.classList.add('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
-                    listBtnDesk.classList.remove('text-gray-700');
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
+                    btn.classList.remove('text-gray-700');
                 } else {
-                    listBtnDesk.classList.remove('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
-                    listBtnDesk.classList.add('text-gray-700');
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600', 'font-semibold');
+                    btn.classList.add('text-gray-700');
                 }
-            }
+            });
         }
 
         function toggleDropdown(id) {
@@ -1166,7 +1197,9 @@
             if (!el) return;
             const isHidden = el.classList.contains('hidden');
             closeAllDropdowns();
-            if (isHidden) el.classList.remove('hidden');
+            if (isHidden) {
+                el.classList.remove('hidden');
+            }
         }
 
         function closeAllDropdowns() {
@@ -1191,22 +1224,25 @@
             if (!menu) {
                 menu = document.createElement('div');
                 menu.id = 'globalActionMenu';
-                menu.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-xs z-[100]';
+                menu.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl py-1 text-xs';
+                menu.style.zIndex = '100';
                 document.body.appendChild(menu);
             }
             menu.innerHTML = htmlContent;
             menu.classList.remove('hidden');
 
             const rect = btnElement.getBoundingClientRect();
-            const w = 160;
-            const h = 150;
+            const w = menu.offsetWidth || 160;
+            const h = menu.offsetHeight || 150;
             
             let left = rect.right - w;
             if (left < 4) left = 4;
             if (left + w > window.innerWidth - 4) left = window.innerWidth - w - 4;
 
             let top = rect.bottom + 4;
-            if (top + h > window.innerHeight - 4) top = rect.top - h - 4;
+            if (top + h > window.innerHeight - 4) {
+                top = rect.top - h - 4;
+            }
 
             menu.style.left = left + 'px';
             menu.style.top = top + 'px';
@@ -1239,7 +1275,7 @@
                 `;
             } else if (type === 'category') {
                 html = `
-                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeGlobalActionMenu();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                    <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeGlobalActionMenu(); if(window.innerWidth < 768) collapseSidebar();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria
                     </button>
                     <button type="button" onclick="event.stopPropagation(); openEditCategoryModal('${escapedCat}'); closeGlobalActionMenu();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
@@ -1253,14 +1289,21 @@
                     </button>
                 `;
             }
+
             openGlobalActionMenu(event, html, btn);
         }
 
-        window.addEventListener('click', (e) => {
+        function handleOutsideInteraction(e) {
             if (!e.target.closest('#sizeMenu') && !e.target.closest('[data-size-btn]')) closeSizeMenu();
-            if (!e.target.closest('#globalActionMenu') && !e.target.closest('button[onclick*="toggleActionMenu"]')) closeGlobalActionMenu();
-            if (!e.target.closest('.dropdown-container')) closeAllDropdowns();
-        });
+            if (!e.target.closest('#globalActionMenu') && !e.target.closest('button[onclick*="toggleActionMenu"]')) {
+                closeGlobalActionMenu();
+            }
+            if (!e.target.closest('.dropdown-container')) {
+                closeAllDropdowns();
+            }
+        }
+        window.addEventListener('click', handleOutsideInteraction);
+        window.addEventListener('touchstart', handleOutsideInteraction, { passive: true });
 
         window.addEventListener('DOMContentLoaded', () => {
             const btn = document.getElementById('btnHeaderMore');
@@ -1270,6 +1313,7 @@
                     toggleDropdown('headerMoreDropdown');
                 });
             }
+            initSubcategoryCombos();
         });
 
         function getCategorySubcategories(catName) {
@@ -1325,6 +1369,17 @@
             document.getElementById('subcatParentSubcategory').value = parentSubName || '';
             document.getElementById('subcatOldName').value = oldSubName;
             document.getElementById('subcatNameInput').value = oldSubName;
+
+            let modalTitle = '<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria';
+            if (oldSubName) {
+                modalTitle = parentSubName
+                    ? '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Sub-subcategoria'
+                    : '<i class="fa-solid fa-pen text-blue-600"></i> Renomear Subcategoria';
+            } else if (parentSubName) {
+                modalTitle = `<i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria em "${parentSubName}"`;
+            }
+
+            document.getElementById('subcategoryModalTitle').innerHTML = modalTitle;
             document.getElementById('subcategoryModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('subcatNameInput').focus(), 50);
         }
@@ -1390,6 +1445,10 @@
                     render();
                     input.value = '';
                 };
+                img.onerror = function() {
+                    alert('Não foi possível ler esta imagem.');
+                    input.value = '';
+                };
                 img.src = evt.target.result;
             };
             reader.readAsDataURL(file);
@@ -1409,7 +1468,10 @@
             const existingSubCustom = categoryCustomizations[catName].subcatCustom[existingKey] || {};
 
             if (newIcon) {
-                categoryCustomizations[catName].subcatCustom[existingKey] = { ...existingSubCustom, icon: newIcon };
+                categoryCustomizations[catName].subcatCustom[existingKey] = {
+                    ...existingSubCustom,
+                    icon: newIcon
+                };
                 delete categoryCustomizations[catName].subcatCustom[existingKey].image;
             } else {
                 delete categoryCustomizations[catName].subcatCustom[existingKey];
@@ -1426,6 +1488,7 @@
             document.getElementById('moveSubTargetTitle').textContent = subName;
             document.getElementById('moveSubDestinationInput').value = '';
             document.getElementById('moveSubcategoryModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('moveSubDestinationInput').focus(), 50);
         }
 
         function closeMoveSubcategoryModal() {
@@ -1433,24 +1496,113 @@
         }
 
         function toggleMoveSubcategoryCombo() {
-            // Lógica auxiliar de movimento de pasta
+            const inputId = 'moveSubDestinationInput';
+            const catName = document.getElementById('moveSubCatName').value;
+            const currentSubToMove = document.getElementById('moveSubOldParent').value.trim().toLowerCase();
+            const list = getComboList();
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            comboInputId = inputId;
+
+            let subs = getCategorySubcategories(catName).filter(s => s.trim().toLowerCase() !== currentSubToMove);
+            const typed = input.value.trim().toLowerCase();
+            if (typed) subs = subs.filter(n => n.toLowerCase().includes(typed));
+
+            list.innerHTML = '';
+            comboActiveIndex = -1;
+            if (subs.length === 0) {
+                const hint = document.createElement('div');
+                hint.className = 'px-3 py-2 text-xs text-gray-400';
+                hint.textContent = 'Nenhuma outra subcategoria disponível';
+                list.appendChild(hint);
+            }
+            subs.forEach(name => {
+                const opt = document.createElement('button');
+                opt.type = 'button';
+                opt.setAttribute('role', 'option');
+                opt.dataset.value = name;
+                opt.className = 'combo-option w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 text-gray-700';
+                const label = document.createElement('span');
+                label.className = 'truncate';
+                label.textContent = name;
+                opt.appendChild(label);
+                opt.onmousedown = ev => ev.preventDefault();
+                opt.onclick = () => selectCategoryOption(name);
+                list.appendChild(opt);
+            });
+
+            const rect = input.getBoundingClientRect();
+            list.style.left = rect.left + 'px';
+            list.style.width = rect.width + 'px';
+            list.classList.remove('hidden');
+            list.style.top = (rect.bottom + 4) + 'px';
         }
 
         function handleMoveSubcategorySubmit(e) {
             e.preventDefault();
             const catName = document.getElementById('moveSubCatName').value.trim();
             const subToMove = document.getElementById('moveSubOldParent').value.trim();
-            const newDest = document.getElementById('moveSubDestinationInput').value.trim();
-            if (!catName || !subToMove || !newDest) return;
+            const newDestinationParent = document.getElementById('moveSubDestinationInput').value.trim();
+
+            if (!catName || !subToMove || !newDestinationParent) return;
+            if (subToMove.toLowerCase() === newDestinationParent.toLowerCase()) {
+                alert('A subcategoria de destino não pode ser a própria pasta.');
+                return;
+            }
+
+            if (!categoryCustomizations[catName]) categoryCustomizations[catName] = {};
+            if (!categoryCustomizations[catName].subsubcategories) categoryCustomizations[catName].subsubcategories = {};
+
+            const subsubMap = categoryCustomizations[catName].subsubcategories;
+
+            let childrenToMove = [];
+            const oldKey = Object.keys(subsubMap).find(k => k.toLowerCase() === subToMove.toLowerCase());
+            if (oldKey) {
+                childrenToMove = subsubMap[oldKey] || [];
+                delete subsubMap[oldKey];
+            }
+
+            const childSetFromItems = new Set(childrenToMove);
+            htmlFiles.forEach(item => {
+                if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                    (item.subcategory || '').trim().toLowerCase() === subToMove.toLowerCase() &&
+                    (item.subsubcategory || '').trim()) {
+                    childSetFromItems.add(item.subsubcategory.trim());
+                }
+            });
+            childrenToMove = Array.from(childSetFromItems);
+
+            const destKey = Object.keys(subsubMap).find(k => k.toLowerCase() === newDestinationParent.toLowerCase()) || newDestinationParent;
+            if (!Array.isArray(subsubMap[destKey])) {
+                subsubMap[destKey] = getSubcategoryChildren(catName, destKey);
+            }
+
+            if (!subsubMap[destKey].some(s => s.toLowerCase() === subToMove.toLowerCase())) {
+                subsubMap[destKey].push(subToMove);
+            }
 
             htmlFiles.forEach(item => {
                 if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
                     (item.subcategory || '').trim().toLowerCase() === subToMove.toLowerCase()) {
-                    item.subcategory = newDest;
+                    
+                    const currentSubsub = (item.subsubcategory || '').trim();
+                    if (!currentSubsub) {
+                        item.subsubcategory = subToMove;
+                    }
+                    item.subcategory = newDestinationParent;
                 }
             });
+
+            if (Array.isArray(categoryCustomizations[catName].subcategories)) {
+                categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
+                    s => s.toLowerCase() !== subToMove.toLowerCase()
+                );
+            }
+
             saveToStorage(true);
             closeMoveSubcategoryModal();
+            currentSubcategory = newDestinationParent;
+            currentSubsubcategory = null;
             render();
         }
 
@@ -1466,19 +1618,85 @@
             if (!Array.isArray(categoryCustomizations[catName].subcategories)) {
                 categoryCustomizations[catName].subcategories = getCategorySubcategories(catName);
             }
-            if (!categoryCustomizations[catName].subsubcategories) categoryCustomizations[catName].subsubcategories = {};
+            if (!categoryCustomizations[catName].subsubcategories || typeof categoryCustomizations[catName].subsubcategories !== 'object') {
+                categoryCustomizations[catName].subsubcategories = {};
+            }
 
             if (parentSub) {
-                const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories).find(k => k.toLowerCase() === parentSub.toLowerCase()) || parentSub;
+                const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                    .find(k => k.toLowerCase() === parentSub.toLowerCase()) || parentSub;
+
                 if (!Array.isArray(categoryCustomizations[catName].subsubcategories[parentKey])) {
                     categoryCustomizations[catName].subsubcategories[parentKey] = getSubcategoryChildren(catName, parentKey);
                 }
+
                 let children = categoryCustomizations[catName].subsubcategories[parentKey];
-                if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) children.push(newSub);
+
+                if (oldSub) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === parentSub.toLowerCase() &&
+                            (item.subsubcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
+                            item.subsubcategory = newSub;
+                        }
+                    });
+                    children = children.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
+                    if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) children.push(newSub);
+                    if (currentSubsubcategory && currentSubsubcategory.toLowerCase() === oldSub.toLowerCase()) {
+                        currentSubsubcategory = newSub;
+                    }
+                } else {
+                    if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) {
+                        children.push(newSub);
+                    }
+                    currentCategory = catName;
+                    currentSubcategory = parentKey;
+                    currentSubsubcategory = newSub;
+                }
+
                 categoryCustomizations[catName].subsubcategories[parentKey] = children;
             } else {
                 let subs = categoryCustomizations[catName].subcategories;
-                if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
+
+                if (oldSub) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === oldSub.toLowerCase()) {
+                            item.subcategory = newSub;
+                        }
+                    });
+                    subs = subs.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
+                    if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
+
+                    const oldKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                        .find(k => k.toLowerCase() === oldSub.toLowerCase());
+                    if (oldKey) {
+                        const existingChildren = categoryCustomizations[catName].subsubcategories[oldKey] || [];
+                        delete categoryCustomizations[catName].subsubcategories[oldKey];
+                        categoryCustomizations[catName].subsubcategories[newSub] = existingChildren;
+                    }
+
+                    if (categoryCustomizations[catName].subcatCustom) {
+                        const targetOld = oldSub.trim().toLowerCase();
+                        const foundKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === targetOld);
+                        if (foundKey) {
+                            categoryCustomizations[catName].subcatCustom[newSub] = categoryCustomizations[catName].subcatCustom[foundKey];
+                            delete categoryCustomizations[catName].subcatCustom[foundKey];
+                        }
+                    }
+
+                    if (currentSubcategory && currentSubcategory.toLowerCase() === oldSub.toLowerCase()) {
+                        currentSubcategory = newSub;
+                    }
+                } else {
+                    if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) {
+                        subs.push(newSub);
+                    }
+                    currentCategory = catName;
+                    currentSubcategory = newSub;
+                    currentSubsubcategory = null;
+                }
+
                 categoryCustomizations[catName].subcategories = subs;
             }
 
@@ -1488,16 +1706,63 @@
         }
 
         function deleteSubcategoryPrompt(catName, subName, parentSubName = '') {
-            if (confirm(`Deseja remover a subcategoria "${subName}"?`)) {
-                htmlFiles.forEach(item => {
-                    if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
-                        (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
-                        item.subcategory = '';
-                        item.subsubcategory = '';
+            if (parentSubName) {
+                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão em "${parentSubName}".`)) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === parentSubName.toLowerCase() &&
+                            (item.subsubcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
+                            item.subsubcategory = '';
+                        }
+                    });
+                    if (categoryCustomizations[catName] && categoryCustomizations[catName].subsubcategories) {
+                        const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                            .find(k => k.toLowerCase() === parentSubName.toLowerCase());
+                        if (parentKey && Array.isArray(categoryCustomizations[catName].subsubcategories[parentKey])) {
+                            categoryCustomizations[catName].subsubcategories[parentKey] = categoryCustomizations[catName].subsubcategories[parentKey].filter(
+                                s => s.toLowerCase() !== subName.toLowerCase()
+                            );
+                        }
                     }
-                });
-                saveToStorage(true);
-                render();
+                    if (currentSubsubcategory && currentSubsubcategory.toLowerCase() === subName.toLowerCase()) {
+                        currentSubsubcategory = null;
+                    }
+                    saveToStorage(true);
+                    render();
+                }
+            } else {
+                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão na categoria "${catName}".`)) {
+                    htmlFiles.forEach(item => {
+                        if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
+                            (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
+                            item.subcategory = '';
+                            item.subsubcategory = '';
+                        }
+                    });
+                    if (categoryCustomizations[catName]) {
+                        if (Array.isArray(categoryCustomizations[catName].subcategories)) {
+                            categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
+                                s => s.toLowerCase() !== subName.toLowerCase()
+                            );
+                        }
+                        if (categoryCustomizations[catName].subsubcategories) {
+                            const oldKey = Object.keys(categoryCustomizations[catName].subsubcategories)
+                                .find(k => k.toLowerCase() === subName.toLowerCase());
+                            if (oldKey) delete categoryCustomizations[catName].subsubcategories[oldKey];
+                        }
+                        if (categoryCustomizations[catName].subcatCustom) {
+                            const target = subName.trim().toLowerCase();
+                            const foundKey = Object.keys(categoryCustomizations[catName].subcatCustom).find(k => k.trim().toLowerCase() === target);
+                            if (foundKey) delete categoryCustomizations[catName].subcatCustom[foundKey];
+                        }
+                    }
+                    if (currentSubcategory && currentSubcategory.toLowerCase() === subName.toLowerCase()) {
+                        currentSubcategory = null;
+                        currentSubsubcategory = null;
+                    }
+                    saveToStorage(true);
+                    render();
+                }
             }
         }
 
@@ -1520,7 +1785,7 @@
                 }
             });
 
-            const createCatBtn = (label, iconClass, count, catVal, isSystem = true) => {
+            const createCatBtn = (label, iconClass, count, catVal, isSystem = true, catIndex = 0) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => filterCategory(catVal);
@@ -1531,14 +1796,14 @@
                     const escapedCat = escapeJsStr(catVal);
                     actionMenuHtml = `
                         <div class="flex items-center gap-1 shrink-0 relative">
-                            <span class="text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
-                            <button type="button" onclick="toggleActionMenu(event, 'category', '', '${escapedCat}', '')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
+                            <span class="sidebar-text text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
+                            <button type="button" onclick="toggleActionMenu(event, 'category', '', '${escapedCat}', '')" title="Ações" class="sidebar-text p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
+                    actionMenuHtml = `<span class="sidebar-text text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
@@ -1549,7 +1814,7 @@
                 btn.innerHTML = `
                     <span class="flex items-center gap-2 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="truncate pointer-events-none">${label}</span>
+                        <span class="sidebar-text truncate pointer-events-none">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
@@ -1560,9 +1825,9 @@
             categoryList.appendChild(createCatBtn('Favoritos', 'fa-solid fa-star text-amber-400', visibleFiles.filter(s => !!s.isFavorite).length, 'favorites', true));
             categoryList.appendChild(createCatBtn('Mais Visitados', 'fa-solid fa-fire text-amber-500', visibleFiles.filter(s => (s.visitCount || 0) > 0).length, 'most_visited', true));
 
-            Array.from(uniqueCategories).sort().forEach((cat) => {
+            Array.from(uniqueCategories).sort().forEach((cat, index) => {
                 const count = visibleFiles.filter(s => (s.category || 'Geral').trim() === cat).length;
-                categoryList.appendChild(createCatBtn(cat, getCategoryIcon(cat), count, cat, false));
+                categoryList.appendChild(createCatBtn(cat, getCategoryIcon(cat), count, cat, false, index));
             });
         }
 
@@ -1580,7 +1845,8 @@
             if (!list) {
                 list = document.createElement('div');
                 list.id = 'categoryComboList';
-                list.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl overflow-y-auto py-1 text-sm z-[100]';
+                list.className = 'fixed hidden bg-white border border-gray-200 rounded-md shadow-xl overflow-y-auto py-1 text-sm';
+                list.style.zIndex = '100';
                 list.style.maxHeight = '208px';
                 document.body.appendChild(list);
             }
@@ -1593,15 +1859,53 @@
             comboInputId = inputId;
             const list = getComboList();
             const typed = input.value.trim().toLowerCase();
-            const all = getAllCategoryNames();
-            const names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            const isSub = inputId === 'editShortcutSubcategory';
+            const isSubsub = inputId === 'editShortcutSubsubcategory';
+
+            let names = [];
+            if (isSubsub) {
+                const catVal = document.getElementById('editShortcutCategory')?.value || currentCategory;
+                const subVal = document.getElementById('editShortcutSubcategory')?.value || '';
+                names = getSubcategoryChildren(catVal, subVal);
+                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
+            } else if (isSub) {
+                const catVal = document.getElementById('editShortcutCategory')?.value || currentCategory;
+                names = getCategorySubcategories(catVal);
+                if (typed) names = names.filter(n => n.toLowerCase().includes(typed));
+            } else {
+                const all = getAllCategoryNames();
+                names = (showAll || !typed) ? all : all.filter(n => n.toLowerCase().includes(typed));
+            }
 
             list.innerHTML = '';
+            comboActiveIndex = -1;
+            if (names.length === 0 && !isSub && !isSubsub) {
+                const hint = document.createElement('div');
+                hint.className = 'px-3 py-2 text-xs text-gray-400';
+                hint.textContent = 'Nova categoria: "' + input.value.trim() + '" (será criada ao salvar)';
+                list.appendChild(hint);
+            } else if (names.length === 0 && (isSub || isSubsub)) {
+                const hint = document.createElement('div');
+                hint.className = 'px-3 py-2 text-xs text-gray-400';
+                hint.textContent = isSubsub ? 'Nenhuma sub-subcategoria cadastrada' : 'Nenhuma subcategoria cadastrada';
+                list.appendChild(hint);
+            }
             names.forEach(name => {
+                const isCurrent = name.toLowerCase() === typed;
                 const opt = document.createElement('button');
                 opt.type = 'button';
-                opt.className = 'w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 text-gray-700';
-                opt.textContent = name;
+                opt.setAttribute('role', 'option');
+                opt.dataset.value = name;
+                opt.className = 'combo-option w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (isCurrent ? 'text-blue-700 font-medium' : 'text-gray-700');
+                const label = document.createElement('span');
+                label.className = 'truncate';
+                label.textContent = name;
+                opt.appendChild(label);
+                if (isCurrent) {
+                    const check = document.createElement('i');
+                    check.className = 'fa-solid fa-check text-xs text-blue-600 shrink-0';
+                    opt.appendChild(check);
+                }
                 opt.onmousedown = ev => ev.preventDefault();
                 opt.onclick = () => selectCategoryOption(name);
                 list.appendChild(opt);
@@ -1611,17 +1915,28 @@
             list.style.left = rect.left + 'px';
             list.style.width = rect.width + 'px';
             list.classList.remove('hidden');
-            list.style.top = (rect.bottom + 4) + 'px';
+            const listHeight = Math.min(list.scrollHeight, 208);
+            const spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < listHeight + 8 && rect.top > spaceBelow) {
+                list.style.top = Math.max(4, rect.top - listHeight - 4) + 'px';
+            } else {
+                list.style.top = (rect.bottom + 4) + 'px';
+            }
         }
 
         function closeCategoryCombo() {
             const list = document.getElementById('categoryComboList');
             if (list) list.classList.add('hidden');
+            comboInputId = null;
+            comboActiveIndex = -1;
         }
 
         function toggleCategoryCombo(inputId) {
             const list = document.getElementById('categoryComboList');
-            if (list && !list.classList.contains('hidden')) { closeCategoryCombo(); return; }
+            const isOpen = list && !list.classList.contains('hidden') && comboInputId === inputId;
+            if (isOpen) { closeCategoryCombo(); return; }
+            const input = document.getElementById(inputId);
+            if (input) input.focus();
             openCategoryCombo(inputId, true);
         }
 
@@ -1635,11 +1950,82 @@
             closeCategoryCombo();
         }
 
+        function setComboActive(idx) {
+            const opts = document.querySelectorAll('#categoryComboList .combo-option');
+            if (!opts.length) return;
+            comboActiveIndex = (idx + opts.length) % opts.length;
+            opts.forEach((o, i) => o.classList.toggle('bg-blue-50', i === comboActiveIndex));
+            opts[comboActiveIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function initSubcategoryCombos() {
+            ['editShortcutSubcategory', 'editShortcutSubsubcategory'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('focus', () => openCategoryCombo(id, true));
+                input.addEventListener('click', () => {
+                    const list = document.getElementById('categoryComboList');
+                    if (!list || list.classList.contains('hidden')) openCategoryCombo(id, true);
+                });
+                input.addEventListener('input', () => openCategoryCombo(id, false));
+            });
+        }
+
+        function initCategoryCombos() {
+            ['shortcutCategory', 'editShortcutCategory'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('focus', () => openCategoryCombo(id, true));
+                input.addEventListener('click', () => {
+                    const list = document.getElementById('categoryComboList');
+                    if (!list || list.classList.contains('hidden')) openCategoryCombo(id, true);
+                });
+                input.addEventListener('input', () => openCategoryCombo(id, false));
+                input.addEventListener('keydown', ev => {
+                    const list = document.getElementById('categoryComboList');
+                    const isOpen = list && !list.classList.contains('hidden');
+                    if (ev.key === 'ArrowDown') {
+                        ev.preventDefault();
+                        if (!isOpen) openCategoryCombo(id, true);
+                        setComboActive(comboActiveIndex + 1);
+                    } else if (ev.key === 'ArrowUp') {
+                        ev.preventDefault();
+                        if (!isOpen) openCategoryCombo(id, true);
+                        setComboActive(comboActiveIndex - 1);
+                    } else if (ev.key === 'Enter' && isOpen && comboActiveIndex >= 0) {
+                        ev.preventDefault();
+                        const opts = document.querySelectorAll('#categoryComboList .combo-option');
+                        if (opts[comboActiveIndex]) selectCategoryOption(opts[comboActiveIndex].dataset.value);
+                    } else if (ev.key === 'Escape' && isOpen) {
+                        ev.stopPropagation();
+                        closeCategoryCombo();
+                    } else if (ev.key === 'Tab') {
+                        closeCategoryCombo();
+                    }
+                });
+            });
+            document.addEventListener('mousedown', ev => {
+                const list = document.getElementById('categoryComboList');
+                if (!list || list.classList.contains('hidden')) return;
+                const input = comboInputId && document.getElementById(comboInputId);
+                const wrapper = input && input.parentElement;
+                if (list.contains(ev.target) || (wrapper && wrapper.contains(ev.target))) return;
+                closeCategoryCombo();
+            });
+            window.addEventListener('resize', closeCategoryCombo);
+            window.addEventListener('scroll', ev => {
+                const list = document.getElementById('categoryComboList');
+                if (list && ev.target === list) return;
+                closeCategoryCombo();
+            }, true);
+        }
+
         function clearField(id) {
             const el = document.getElementById(id);
             if (!el) return;
             el.value = '';
             el.focus();
+            if (id === 'shortcutCategory' || id === 'editShortcutCategory' || id === 'editShortcutSubcategory' || id === 'editShortcutSubsubcategory') openCategoryCombo(id, true);
         }
 
         function openEditCategoryModal(catName) {
@@ -1658,16 +2044,28 @@
             const oldName = document.getElementById('editCategoryOldName').value;
             const newName = document.getElementById('editCategoryNewName').value.trim();
             const newIcon = document.getElementById('editCategoryIconClass').value.trim();
+
             if (!newName) return;
 
             htmlFiles.forEach(item => {
-                if ((item.category || 'Geral').trim() === oldName) item.category = newName;
+                if ((item.category || 'Geral').trim() === oldName) {
+                    item.category = newName;
+                }
             });
 
-            if (newIcon) {
-                categoryCustomizations[newName] = { ...(categoryCustomizations[oldName] || {}), icon: newIcon };
+            const oldCustom = categoryCustomizations[oldName];
+            const iconChanged = newIcon !== getCategoryIcon(oldName);
+            if (oldCustom && oldCustom.image && !iconChanged) {
+                categoryCustomizations[newName] = { ...oldCustom };
+            } else if (newIcon) {
+                categoryCustomizations[newName] = { ...(oldCustom || {}), icon: newIcon };
             }
-            if (newName !== oldName) delete categoryCustomizations[oldName];
+            if (newName !== oldName) {
+                delete categoryCustomizations[oldName];
+                if (categorySortOrders[oldName]) { categorySortOrders[newName] = categorySortOrders[oldName]; delete categorySortOrders[oldName]; }
+                if (categoryViewModes[oldName]) { categoryViewModes[newName] = categoryViewModes[oldName]; delete categoryViewModes[oldName]; }
+                if (categoryIconSizes[oldName]) { categoryIconSizes[newName] = categoryIconSizes[oldName]; delete categoryIconSizes[oldName]; }
+            }
 
             if (currentCategory === oldName) currentCategory = newName;
             saveToStorage(true);
@@ -1689,23 +2087,36 @@
             const input = e.target;
             const file = input.files[0];
             const catName = document.getElementById('editCategoryIconName').value;
-            if (!file || !catName) return;
+            if (!file || !catName) { input.value = ''; return; }
 
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const img = new Image();
                 img.onload = function() {
                     const size = 96;
+                    const iw = img.naturalWidth || size;
+                    const ih = img.naturalHeight || size;
+                    const scale = Math.min(size / iw, size / ih);
+                    const w = iw * scale, h = ih * scale;
                     const canvas = document.createElement('canvas');
                     canvas.width = size;
                     canvas.height = size;
-                    canvas.getContext('2d').drawImage(img, 0, 0, size, size);
+                    canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
 
-                    categoryCustomizations[catName] = { ...(categoryCustomizations[catName] || {}), image: canvas.toDataURL('image/png') };
+                    const existing = categoryCustomizations[catName] || {};
+                    categoryCustomizations[catName] = {
+                        ...existing,
+                        image: canvas.toDataURL('image/png')
+                    };
                     delete categoryCustomizations[catName].icon;
                     saveToStorage(true);
                     closeEditCategoryIconModal();
                     render();
+                    input.value = '';
+                };
+                img.onerror = function() {
+                    alert('Não foi possível ler esta imagem. Escolha outro arquivo.');
+                    input.value = '';
                 };
                 img.src = evt.target.result;
             };
@@ -1719,8 +2130,19 @@
         function saveCategoryIcon() {
             const catName = document.getElementById('editCategoryIconName').value;
             const newIcon = document.getElementById('newCategoryIconClass').value.trim();
+
+            const current = categoryCustomizations[catName];
+            if (catName && current && current.image && newIcon === getCategoryIcon(catName)) {
+                closeEditCategoryIconModal();
+                return;
+            }
+
             if (catName && newIcon) {
-                categoryCustomizations[catName] = { ...(categoryCustomizations[catName] || {}), icon: newIcon };
+                const existing = categoryCustomizations[catName] || {};
+                categoryCustomizations[catName] = {
+                    ...existing,
+                    icon: newIcon
+                };
                 delete categoryCustomizations[catName].image;
                 saveToStorage(true);
                 render();
@@ -1729,12 +2151,20 @@
         }
 
         function deleteCategoryPrompt(catName) {
-            if (confirm(`Deseja remover a categoria "${catName}"?`)) {
+            if (confirm(`Deseja remover a categoria "${catName}"? Os atalhos serão movidos para "Geral".`)) {
                 htmlFiles.forEach(item => {
-                    if ((item.category || 'Geral').trim() === catName) item.category = 'Geral';
+                    if ((item.category || 'Geral').trim() === catName) {
+                        item.category = 'Geral';
+                        item.subcategory = '';
+                        item.subsubcategory = '';
+                    }
                 });
                 delete categoryCustomizations[catName];
-                if (currentCategory === catName) currentCategory = 'all';
+                if (currentCategory === catName) {
+                    currentCategory = 'all';
+                    currentSubcategory = null;
+                    currentSubsubcategory = null;
+                }
                 saveToStorage(true);
                 render();
             }
@@ -1789,7 +2219,12 @@
                 }
             }
 
+            const sortByClicks = currentCategory === 'favorites' || currentCategory === 'most_visited';
             filtered.sort((a, b) => {
+                if (sortByClicks) {
+                    const visitDiff = (b.visitCount || 0) - (a.visitCount || 0);
+                    if (visitDiff !== 0) return visitDiff;
+                }
                 const titleA = (a.title || a.name || '').toLowerCase();
                 const titleB = (b.title || b.name || '').toLowerCase();
                 const comparison = titleA.localeCompare(titleB);
@@ -1811,10 +2246,18 @@
             const escapedCat = escapeJsStr(currentCategory);
 
             const getFolderItemCount = (folderName) => {
-                return deviceFiltered.filter(s =>
-                    (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
-                    (s.subcategory || '').trim().toLowerCase() === folderName.toLowerCase()
-                ).length;
+                if (currentSubcategory) {
+                    return deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === currentSubcategory.trim().toLowerCase() &&
+                        (s.subsubcategory || '').trim().toLowerCase() === folderName.toLowerCase()
+                    ).length;
+                } else {
+                    return deviceFiltered.filter(s =>
+                        (s.category || 'Geral').trim().toLowerCase() === currentCategory.trim().toLowerCase() &&
+                        (s.subcategory || '').trim().toLowerCase() === folderName.toLowerCase()
+                    ).length;
+                }
             };
 
             if (viewMode === 'grid') {
@@ -1826,25 +2269,25 @@
                     const subCount = getFolderItemCount(subName);
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
-                    const subLower = subName.trim().toLowerCase();
 
                     let subIconHtml = `<i class="fa-solid fa-folder text-amber-400 text-2xl"></i>`;
                     if (subCustom && subCustom.image) {
                         subIconHtml = `<img src="${subCustom.image}" class="${sz.img} object-contain">`;
                     } else if (subCustom && subCustom.icon) {
                         subIconHtml = `<i class="${subCustom.icon} text-2xl"></i>`;
-                    } else if (subLower.includes('youtube')) {
-                        subIconHtml = `<i class="fa-brands fa-youtube text-red-600 text-2xl"></i>`;
-                    } else if (subLower.includes('instagram')) {
-                        subIconHtml = `<i class="fa-brands fa-instagram text-pink-600 text-2xl"></i>`;
                     }
 
                     return `
                         <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-amber-50/60 border border-amber-200/80 hover:border-amber-400 hover:shadow-sm"
                              onclick="openSubcategory('${escapedSub}')">
+                            
                             <span class="absolute top-1 left-1.5 text-[10px] font-semibold text-amber-700 bg-amber-100/90 px-1.5 rounded-full pointer-events-none">${subCount}</span>
-                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">${subIconHtml}</div>
+
+                            <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
+                                ${subIconHtml}
+                            </div>
                             <span class="${sz.text} text-gray-800 line-clamp-2 w-full font-semibold pointer-events-none mt-1 leading-tight">${subName}</span>
+                            
                             <div class="absolute top-1 right-1 z-20">
                                 <button type="button" onclick="toggleActionMenu(event, 'subcat', '', '${escapedCat}', '${escapedSub}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
@@ -1862,13 +2305,16 @@
                     return `
                         <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm"
                              data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                            
                             <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
                                 <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
                             </button>
+
                             <div class="${sz.box} my-auto flex items-center justify-center pointer-events-none shrink-0">
                                 <img src="${iconUrl}" class="${sz.img} object-contain" onerror="this.src='https://via.placeholder.com/32'">
                             </div>
                             <span class="${sz.text} text-gray-700 line-clamp-2 w-full font-medium pointer-events-none mt-1 leading-tight">${item.title || item.name}</span>
+                            
                             <div class="absolute top-1 right-1 z-20">
                                 <button type="button" onclick="toggleActionMenu(event, 'link', '${item.id}', '', '')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
@@ -1887,27 +2333,24 @@
                     const subCount = getFolderItemCount(subName);
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
-                    const subLower = subName.trim().toLowerCase();
 
                     let subListIconHtml = `<i class="fa-solid fa-folder text-amber-500 text-sm pointer-events-none"></i>`;
                     if (subCustom && subCustom.image) {
                         subListIconHtml = `<img src="${subCustom.image}" class="${sz.lImg} object-contain pointer-events-none">`;
                     } else if (subCustom && subCustom.icon) {
                         subListIconHtml = `<i class="${subCustom.icon} text-sm pointer-events-none"></i>`;
-                    } else if (subLower.includes('youtube')) {
-                        subListIconHtml = `<i class="fa-brands fa-youtube text-red-600 text-sm pointer-events-none"></i>`;
-                    } else if (subLower.includes('instagram')) {
-                        subListIconHtml = `<i class="fa-brands fa-instagram text-pink-600 text-sm pointer-events-none"></i>`;
                     }
 
                     return `
                         <div class="flex items-center justify-between ${sz.rowPad} bg-amber-50/40 hover:bg-amber-50 border-b border-gray-100 cursor-pointer transition-colors relative"
                              onclick="openSubcategory('${escapedSub}')">
                             <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
-                                <div class="${sz.lBox} flex items-center justify-center bg-amber-100 rounded shrink-0 pointer-events-none">${subListIconHtml}</div>
+                                <div class="${sz.lBox} flex items-center justify-center bg-amber-100 rounded shrink-0 pointer-events-none">
+                                    ${subListIconHtml}
+                                </div>
                                 <div class="min-w-0 flex-1 pointer-events-none">
                                     <p class="text-xs font-semibold text-gray-800 truncate pointer-events-none">${subName}</p>
-                                    <p class="text-[10px] text-amber-700 truncate pointer-events-none">${subCount} links</p>
+                                    <p class="text-[10px] text-amber-700 truncate pointer-events-none">${subCount} ${subCount === 1 ? 'link' : 'links'}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 z-20">
@@ -1962,9 +2405,10 @@
             if (!file || !editingShortcutIconId) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
+                const base64String = evt.target.result;
                 const item = htmlFiles.find(f => f.id === editingShortcutIconId);
                 if (item) {
-                    item.customIcon = evt.target.result;
+                    item.customIcon = base64String;
                     saveToStorage(true);
                     render();
                 }
@@ -1979,8 +2423,11 @@
             const form = document.querySelector('#shortcutModal form');
             if (form) form.reset();
 
-            const categoryInput = document.getElementById('shortcutCategory');
+            document.getElementById('shortcutDesktop').checked = true;
+            document.getElementById('shortcutMobile').checked = true;
+
             const categoryWrapper = document.getElementById('shortcutCategoryWrapper');
+            const categoryInput = document.getElementById('shortcutCategory');
 
             if (currentCategory === 'all') {
                 categoryInput.value = '';
@@ -1993,8 +2440,7 @@
             document.getElementById('shortcutModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('shortcutTitle').focus(), 50);
         }
-
-        function closeModal() { document.getElementById('shortcutModal').classList.add('hidden'); }
+        function closeModal() { closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
 
         function openEditShortcutModal(itemId) {
             const item = htmlFiles.find(f => f.id === itemId);
@@ -2011,7 +2457,7 @@
             document.getElementById('editShortcutModal').classList.remove('hidden');
         }
 
-        function closeEditShortcutModal() { document.getElementById('editShortcutModal').classList.add('hidden'); }
+        function closeEditShortcutModal() { closeCategoryCombo(); document.getElementById('editShortcutModal').classList.add('hidden'); }
 
         function handleEditFormSubmit(e) {
             e.preventDefault();
@@ -2023,7 +2469,7 @@
                 item.file = normalizeUrl(cleanUrlInput(document.getElementById('editFileName').value));
                 item.category = document.getElementById('editShortcutCategory').value.trim() || 'Geral';
                 item.subcategory = document.getElementById('editShortcutSubcategory').value.trim();
-                item.subsubcategory = document.getElementById('editShortcutSubsubcategory').value.trim();
+                item.subsubcategory = item.subcategory ? document.getElementById('editShortcutSubsubcategory').value.trim() : '';
                 item.isFavorite = document.getElementById('editShortcutFavorite').checked;
                 item.showDesktop = document.getElementById('editShortcutDesktop').checked;
                 item.showMobile = document.getElementById('editShortcutMobile').checked;
@@ -2053,61 +2499,154 @@
             e.preventDefault();
             const title = document.getElementById('shortcutTitle').value.trim();
             const file = normalizeUrl(cleanUrlInput(document.getElementById('fileName').value));
-            let category = currentCategory !== 'all' ? currentCategory : (document.getElementById('shortcutCategory').value.trim() || 'Geral');
+            
+            let category = '';
+            if (currentCategory !== 'all') {
+                category = currentCategory;
+            } else {
+                const catInput = document.getElementById('shortcutCategory');
+                category = (catInput && catInput.value.trim()) ? catInput.value.trim() : '';
+            }
+
+            if (!category) {
+                alert('Selecione ou digite uma categoria.');
+                const ci = document.getElementById('shortcutCategory');
+                if (ci) ci.focus();
+                return;
+            }
+
+            const subcategory = currentSubcategory ? currentSubcategory : '';
+            const subsubcategory = (currentSubcategory && currentSubsubcategory) ? currentSubsubcategory : '';
+
+            const isFav = document.getElementById('shortcutFavorite').checked;
+            const showDesk = document.getElementById('shortcutDesktop').checked;
+            const showMob = document.getElementById('shortcutMobile').checked;
 
             if (!title || !file) return;
 
             htmlFiles.push({
                 id: generateUniqueId(),
-                title, name: title, file, category, subcategory: '', subsubcategory: '', customIcon: '',
-                visitCount: 0, isFavorite: document.getElementById('shortcutFavorite').checked,
-                showDesktop: document.getElementById('shortcutDesktop').checked,
-                showMobile: document.getElementById('shortcutMobile').checked
+                title, name: title, file, category, subcategory, subsubcategory, customIcon: '',
+                visitCount: 0, isFavorite: isFav,
+                showDesktop: showDesk, showMobile: showMob
             });
+            const newId = htmlFiles[htmlFiles.length - 1].id;
             saveToStorage(true);
             e.target.reset();
             closeModal();
+            if (!['all', 'favorites', 'most_visited'].includes(currentCategory) && category !== currentCategory) {
+                currentCategory = category;
+                currentSubcategory = null;
+                currentSubsubcategory = null;
+            }
+            searchQuery = '';
+            const searchEls = document.querySelectorAll('#searchInputDesktop, #searchInputMobile');
+            searchEls.forEach(el => { el.value = ''; });
             render();
+            highlightNewShortcut(newId);
+        }
+
+        function highlightNewShortcut(id) {
+            setTimeout(() => {
+                const el = document.querySelector('[data-item-id="' + id + '"]');
+                if (!el) return;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-2', 'ring-blue-500');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500'), 2500);
+            }, 50);
         }
 
         function exportBackup() {
-            const blob = new Blob([JSON.stringify({ shortcuts: htmlFiles, categories: categoryCustomizations }, null, 2)], { type: 'application/json' });
+            const backupPayload = {
+                shortcuts: htmlFiles,
+                categories: categoryCustomizations,
+                viewModes: categoryViewModes,
+                sortOrders: categorySortOrders,
+                iconSizes: categoryIconSizes
+            };
+            const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
             const a = document.createElement('a');
             a.href = url;
-            a.download = `links_backup_${Date.now()}.json`;
+            a.download = `links_backup_${stamp}.json`;
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function triggerImportBackup() { document.getElementById('importFileInput').click(); }
         
         function handleImportBackup(e) {
-            const file = e.target.files[0];
+            const input = e.target;
+            const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
                     const imported = JSON.parse(evt.target.result);
                     const incoming = Array.isArray(imported) ? imported : imported.shortcuts;
-                    if (Array.isArray(incoming)) {
-                        htmlFiles = incoming;
-                        if (imported.categories) categoryCustomizations = imported.categories;
-                        saveToStorage(true);
-                        render();
-                        alert('Backup importado com sucesso!');
+                    if (!Array.isArray(incoming)) throw new Error('Formato inválido');
+
+                    const usedIds = new Set(htmlFiles.map(f => f.id));
+                    const exists = (url, cat, sub, subsub) => htmlFiles.some(f =>
+                        String(f.file || '').trim().toLowerCase() === url.toLowerCase() &&
+                        (f.category || 'Geral').trim() === cat &&
+                        (f.subcategory || '').trim() === (sub || '').trim() &&
+                        (f.subsubcategory || '').trim() === (subsub || '').trim());
+
+                    let added = 0, skipped = 0;
+                    incoming.forEach(raw => {
+                        const url = normalizeUrl(cleanUrlInput(raw && raw.file));
+                        const title = String((raw && (raw.title || raw.name)) || '').trim();
+                        const category = String((raw && raw.category) || 'Geral').trim() || 'Geral';
+                        const subcategory = String((raw && raw.subcategory) || '').trim();
+                        const subsubcategory = subcategory ? String((raw && raw.subsubcategory) || '').trim() : '';
+                        if (!url || !title || exists(url, category, subcategory, subsubcategory)) { skipped++; return; }
+
+                        let id = raw.id && !usedIds.has(raw.id) ? raw.id : generateUniqueId();
+                        usedIds.add(id);
+
+                        htmlFiles.push({
+                            ...raw,
+                            id, title, name: title, file: url, category, subcategory, subsubcategory,
+                            customIcon: raw.customIcon || '',
+                            visitCount: raw.visitCount || 0,
+                            isFavorite: !!raw.isFavorite,
+                            showDesktop: raw.showDesktop !== false,
+                            showMobile: raw.showMobile !== false
+                        });
+                        added++;
+                    });
+
+                    if (!Array.isArray(imported)) {
+                        if (imported.categories && typeof imported.categories === 'object') Object.assign(categoryCustomizations, imported.categories);
+                        if (imported.viewModes && typeof imported.viewModes === 'object') Object.assign(categoryViewModes, imported.viewModes);
+                        if (imported.sortOrders && typeof imported.sortOrders === 'object') Object.assign(categorySortOrders, imported.sortOrders);
+                        if (imported.iconSizes && typeof imported.iconSizes === 'object') Object.assign(categoryIconSizes, imported.iconSizes);
                     }
+
+                    saveToStorage(true);
+                    render();
+                    alert(`${added} link(s) importado(s)` + (skipped ? `, ${skipped} ignorado(s) (já existiam ou eram inválidos).` : '.'));
                 } catch (err) {
-                    alert('Erro ao ler arquivo de backup.');
+                    alert('Erro ao ler o arquivo. Use um backup .json exportado pelo aplicativo.');
+                } finally {
+                    input.value = '';
                 }
-                e.target.value = '';
             };
             reader.readAsText(file);
         }
 
         function confirmClearAllShortcuts() {
-            if (confirm('Tem certeza que deseja apagar todos os atalhos?')) {
+            if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
                 htmlFiles = [];
+                currentCategory = 'all';
+                currentSubcategory = null;
+                currentSubsubcategory = null;
                 saveToStorage(true);
                 render();
             }
@@ -2122,10 +2661,24 @@
 
         async function fetchUsuario(email) {
             const fail = (userMessage, detail) => { const e = new Error(detail || userMessage); e.userMessage = userMessage; return e; };
-            if (!APPS_SCRIPT_CENTRAL_URL) throw fail('URL não configurada.');
-            const res = await fetchWithTimeout(APPS_SCRIPT_CENTRAL_URL + '?acao=usuario&email=' + encodeURIComponent(email) + '&_t=' + Date.now());
-            const data = await res.json();
-            if (data.status !== 'success') throw fail('Erro ao consultar usuário');
+            if (!APPS_SCRIPT_CENTRAL_URL || APPS_SCRIPT_CENTRAL_URL === APPS_SCRIPT_URL_PLACEHOLDER) {
+                throw fail('URL do Apps Script não configurada.');
+            }
+            const sep = APPS_SCRIPT_CENTRAL_URL.includes('?') ? '&' : '?';
+            const url = APPS_SCRIPT_CENTRAL_URL + sep + 'acao=usuario&email=' + encodeURIComponent(String(email || '').trim()) + '&_t=' + Date.now();
+            let res;
+            try {
+                res = await fetchWithTimeout(url);
+            } catch (err) {
+                throw fail('Não foi possível conectar ao Apps Script.', err && err.message);
+            }
+            let data;
+            try {
+                data = await res.json();
+            } catch (err) {
+                throw fail('O Apps Script não devolveu os dados esperados.', err && err.message);
+            }
+            if (data.status !== 'success') throw fail('Erro no Apps Script: ' + (data.message || 'falha ao consultar usuário'));
             return data;
         }
 
@@ -2136,13 +2689,32 @@
 
         function applyUser(user) {
             if (!user) return false;
+
             const expired = !!user.vencida || (!!user.vencimento && todayIso() > user.vencimento);
-            if (expired) return 'expired';
+            if (expired) {
+                APPS_SCRIPT_URL = '';
+                APPS_SCRIPT_PLANILHA = '';
+                return 'expired';
+            }
+
+            const previousEmail = localStorage.getItem('local_user_email');
+            if (previousEmail && previousEmail !== user.email) {
+                htmlFiles = [];
+                categoryCustomizations = {};
+                currentCategory = 'all';
+                currentSubcategory = null;
+                currentSubsubcategory = null;
+                saveToStorage(false);
+                pendingPush = false;
+                idbSetMany({ dirty: 'false' });
+            }
 
             APPS_SCRIPT_URL = APPS_SCRIPT_CENTRAL_URL;
             APPS_SCRIPT_PLANILHA = user.planilha || '';
             localStorage.setItem('local_user_email', user.email);
-            localStorage.setItem('local_user_data', JSON.stringify(user));
+            localStorage.setItem('local_user_data', JSON.stringify({
+                email: user.email, nome: user.nome, planilha: user.planilha, vencimento: user.vencimento || ''
+            }));
 
             const footerName = document.getElementById('footerLicenseName');
             if (footerName) footerName.textContent = user.nome || user.email;
@@ -2151,20 +2723,33 @@
 
         function getExpectedPassword() {
             const now = new Date();
-            return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
         }
 
         function openEmailModal(canCancel, message) {
-            document.getElementById('loginEmail').value = localStorage.getItem('local_user_email') || '';
-            document.getElementById('loginPassword').value = '';
+            const input = document.getElementById('loginEmail');
+            const passInput = document.getElementById('loginPassword');
             const error = document.getElementById('loginEmailError');
-            if (message) { error.textContent = message; error.classList.remove('hidden'); }
-            else { error.classList.add('hidden'); }
-            document.getElementById('emailCancelBtn').classList.toggle('hidden', !canCancel);
+            const cancelBtn = document.getElementById('emailCancelBtn');
+            input.value = localStorage.getItem('local_user_email') || '';
+            passInput.value = '';
+            if (message) {
+                error.textContent = message;
+                error.classList.remove('hidden');
+            } else {
+                error.classList.add('hidden');
+            }
+            cancelBtn.classList.toggle('hidden', !canCancel);
             document.getElementById('emailModal').classList.remove('hidden');
+            input.focus();
         }
 
-        function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.add('hidden');
+        }
 
         function showLicenseBlock() {
             closeAllDropdowns();
@@ -2183,35 +2768,84 @@
             const password = document.getElementById('loginPassword').value.trim();
             const error = document.getElementById('loginEmailError');
 
-            if (password !== getExpectedPassword()) {
+            const expectedPass = getExpectedPassword();
+            if (password !== expectedPass) {
                 error.textContent = 'Senha incorreta.';
                 error.classList.remove('hidden');
                 return;
             }
 
+            error.classList.add('hidden');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            let data;
+            try {
+                data = await fetchUsuario(email);
+            } catch (err) {
+                error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
+                error.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+            if (submitBtn) submitBtn.disabled = false;
+
+            const result = data.encontrado ? applyUser(data.usuario) : false;
+            if (result === 'expired') {
+                closeEmailModal();
+                showLicenseBlock();
+                return;
+            }
+            if (result !== true) {
+                error.textContent = 'E-mail não cadastrado.';
+                error.classList.add('hidden');
+                return;
+            }
+
+            closeEmailModal();
+            render();
+            await syncFromGoogleSheets();
+            startAutoSync();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && isSyncConfigured()) {
+                syncFromGoogleSheets();
+            }
+        });
+
+        window.addEventListener('online', () => {
+            if (isSyncConfigured()) syncFromGoogleSheets();
+        });
+
+        async function refreshUserPermissions() {
+            const email = localStorage.getItem('local_user_email');
+            if (!email || !navigator.onLine) return;
             try {
                 const data = await fetchUsuario(email);
-                const result = data.encontrado ? applyUser(data.usuario) : false;
-                if (result === 'expired') { closeEmailModal(); showLicenseBlock(); return; }
-                if (result !== true) { error.textContent = 'E-mail não cadastrado.'; error.classList.remove('hidden'); return; }
-
-                closeEmailModal();
-                render();
-                await syncFromGoogleSheets();
-                startAutoSync();
-            } catch (err) {
-                error.textContent = err.userMessage || 'Erro ao conectar.';
-                error.classList.remove('hidden');
-            }
+                if (!data.encontrado) {
+                    localStorage.removeItem('local_user_data');
+                    APPS_SCRIPT_URL = '';
+                    openEmailModal(false, 'Acesso não encontrado.');
+                    return;
+                }
+                const result = applyUser(data.usuario);
+                if (result === 'expired') {
+                    localStorage.removeItem('local_user_data');
+                    showLicenseBlock();
+                }
+            } catch (err) {}
         }
 
         window.onload = async function() {
+            initCategoryCombos();
+            initSubcategoryCombos();
             await loadLocalData();
             render();
             let cached = null;
             try { cached = JSON.parse(localStorage.getItem('local_user_data') || 'null'); } catch (e) {}
             const result = cached ? applyUser(cached) : false;
             if (result === true) {
+                refreshUserPermissions();
                 await syncFromGoogleSheets();
                 startAutoSync();
             } else if (result === 'expired') {
