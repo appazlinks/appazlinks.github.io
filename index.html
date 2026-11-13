@@ -214,7 +214,7 @@
 
     <div class="flex-1 flex overflow-hidden relative">
         <aside id="sidebar" 
-               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-64 z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-hidden">
+               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-16 hover:md:w-64 group z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-hidden">
             <div class="flex flex-col gap-1 w-full category-scroll pb-16 md:pb-0">
                 <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -1033,15 +1033,9 @@
                     overlay.classList.add('hidden');
                 }
             } else {
-                if (sidebarOpen) {
-                    sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0', 'opacity-0');
-                    sidebar.classList.add('w-64', 'opacity-100', 'border-r');
-                    overlay.classList.add('hidden');
-                } else {
-                    sidebar.classList.remove('w-64', 'opacity-100', 'border-r');
-                    sidebar.classList.add('w-0', 'p-0', 'border-r-0', 'opacity-0');
-                    overlay.classList.add('hidden');
-                }
+                sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
+                sidebar.classList.add('md:w-16', 'hover:md:w-64', 'group');
+                overlay.classList.add('hidden');
             }
         }
 
@@ -1322,11 +1316,24 @@
 
         function toggleActionMenu(event, menuId) {
             event.stopPropagation();
+            const btn = event.currentTarget;
             const menu = document.getElementById(menuId);
             const isHidden = menu.classList.contains('hidden');
             closeAllActionMenus();
             if (isHidden) {
                 menu.classList.remove('hidden');
+                menu.classList.remove('bottom-full', 'top-full', 'mb-1', 'mt-1');
+                
+                // Smart positioning relative to viewport to avoid getting cut off (last item, top row, etc.)
+                const btnRect = btn.getBoundingClientRect();
+                const menuHeight = menu.offsetHeight || 160;
+                const spaceBelow = window.innerHeight - btnRect.bottom;
+                
+                if (spaceBelow < menuHeight + 10 && btnRect.top > spaceBelow) {
+                    menu.classList.add('absolute', 'right-0', 'bottom-full', 'mb-1');
+                } else {
+                    menu.classList.add('absolute', 'right-0', 'top-full', 'mt-1');
+                }
             }
         }
 
@@ -1831,22 +1838,20 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => filterCategory(catVal);
-                btn.className = `cat-btn flex items-center justify-between px-3 py-2 rounded-md text-sm w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`;
+                btn.className = `cat-btn flex items-center justify-center md:justify-between px-3 py-2 rounded-md text-sm w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`;
                 
                 let actionMenuHtml = '';
                 if (!isSystem) {
                     const catMenuId = `actionMenuCategory_${catIndex}`;
-                    const isNearBottomCat = catIndex >= totalCategories - 2;
-                    const catMenuPositionClass = isNearBottomCat ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const escapedCat = escapeJsStr(catVal);
                     
                     actionMenuHtml = `
-                        <div class="flex items-center gap-1 shrink-0 relative action-menu-container">
+                        <div class="flex items-center gap-1 shrink-0 relative action-menu-container md:hidden md:group-hover:flex">
                             <span class="text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
                             <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
-                            <div id="${catMenuId}" class="action-menu-dropdown ${catMenuPositionClass} w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
+                            <div id="${catMenuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
                                 <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria
                                 </button>
@@ -1863,18 +1868,18 @@
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
+                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full md:hidden md:group-hover:inline-block">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
                 const iconHtml = customImage
-                    ? `<img src="${customImage}" alt="" class="w-4 h-4 object-contain rounded shrink-0 pointer-events-none">`
-                    : `<i class="${iconClass} shrink-0 pointer-events-none"></i>`;
+                    ? `<img src="${customImage}" alt="" class="w-5 h-5 object-contain rounded shrink-0 pointer-events-none">`
+                    : `<i class="${iconClass} text-lg shrink-0 pointer-events-none"></i>`;
 
                 btn.innerHTML = `
-                    <span class="flex items-center gap-2 truncate flex-1 min-w-0 pointer-events-none">
+                    <span class="flex items-center gap-3 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="truncate pointer-events-none">${label}</span>
+                        <span class="truncate pointer-events-none md:hidden md:group-hover:inline">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
@@ -2328,12 +2333,9 @@
                 grid.classList.remove('hidden');
                 grid.className = 'grid ' + sz.cols;
 
-                const totalSubs = subcategoriesToShow.length;
                 const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubGrid_${idx}`;
-                    const isNearBottomSub = idx >= Math.floor(totalSubs / 2);
-                    const subMenuPositionClass = isNearBottomSub ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2367,7 +2369,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown ${subMenuPositionClass} w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     ${addSubOptionHtml}
                                     ${moveFolderOptionHtml}
                                     <button type="button" onclick="event.stopPropagation(); openEditSubcatIconModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-500 pointer-events-none"></i> Alterar Ícone</button>
@@ -2379,13 +2381,10 @@
                     `;
                 }).join('');
 
-                const totalLinks = filtered.length;
                 const linksHtml = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkGrid_${index}`;
-                    const isNearBottomLink = index >= Math.floor(totalLinks / 2);
-                    const menuPositionClass = isNearBottomLink ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const isFav = !!item.isFavorite;
 
                     return `
@@ -2405,7 +2404,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
                                     <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
                                     <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
@@ -2421,12 +2420,9 @@
                 grid.classList.add('hidden');
                 list.classList.remove('hidden');
 
-                const totalSubs = subcategoriesToShow.length;
                 const subListHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubList_${idx}`;
-                    const isNearBottomSub = idx >= Math.floor(totalSubs / 2);
-                    const subMenuPositionClass = isNearBottomSub ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2461,7 +2457,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown ${subMenuPositionClass} w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     ${addSubOptionHtml}
                                     ${moveFolderOptionHtml}
                                     <button type="button" onclick="event.stopPropagation(); openEditSubcatIconModal('${escapedCat}', '${escapedSub}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-500 pointer-events-none"></i> Alterar Ícone</button>
@@ -2473,13 +2469,10 @@
                     `;
                 }).join('');
 
-                const totalItems = filtered.length;
                 const linksListHtml = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkList_${index}`;
-                    const isNearBottomLink = index >= Math.floor(totalItems / 2);
-                    const menuPositionClass = isNearBottomLink ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const isFav = !!item.isFavorite;
 
                     return `
@@ -2501,7 +2494,7 @@
                                 <button type="button" onclick="toggleActionMenu(event, '${menuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                                 </button>
-                                <div id="${menuId}" class="action-menu-dropdown ${menuPositionClass} w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
+                                <div id="${menuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-36 bg-white border rounded shadow-lg hidden z-[60] py-1 text-left text-xs">
                                     <button type="button" onclick="event.stopPropagation(); shareShortcut('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-share-nodes text-emerald-600 pointer-events-none"></i> Compartilhar</button>
                                     <button type="button" onclick="event.stopPropagation(); openEditShortcutModal('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar</button>
                                     <button type="button" onclick="event.stopPropagation(); triggerShortcutIconChange('${item.id}'); closeAllActionMenus();" class="w-full px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer"><i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone</button>
