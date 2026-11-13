@@ -302,7 +302,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
-                    <div class="relative"><input type="text" id="fileName" required autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('fileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
+                    <div class="relative"><input type="text" id="fileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('fileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div id="shortcutCategoryWrapper">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
@@ -431,7 +431,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
-                    <div class="relative"><input type="text" id="editFileName" required autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editFileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
+                    <div class="relative"><input type="text" id="editFileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editFileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
@@ -535,18 +535,26 @@
         </div>
     </div>
 
-    <!-- Modal Remover Atalho -->
+    <!-- Modal Remover Atalho (Mensagem Melhorada) -->
     <div id="deleteModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
-            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Confirmar Remoção</h3>
+            <div class="bg-red-50 px-5 py-3 border-b border-red-100 flex items-center justify-between">
+                <h3 class="font-semibold text-red-700 text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-red-500"></i> Confirmar Exclusão</h3>
                 <button type="button" onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-5 flex flex-col gap-4">
-                <p id="deleteMessage" class="text-sm text-gray-600">Deseja remover este atalho?</p>
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-red-600">
+                        <i class="fa-solid fa-trash-can text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">Deseja realmente excluir este atalho?</p>
+                        <p id="deleteMessage" class="text-xs text-gray-500 mt-1 leading-relaxed">Esta ação removerá permanentemente o acesso rápido da sua lista e sincronizará com a nuvem.</p>
+                    </div>
+                </div>
                 <div class="flex items-center justify-end gap-2 pt-3 border-t">
-                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
-                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md font-medium">Remover</button>
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Cancelar</button>
+                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm transition-colors flex items-center gap-1.5"><i class="fa-solid fa-trash text-[11px]"></i> Sim, excluir</button>
                 </div>
             </div>
         </div>
@@ -570,6 +578,11 @@
             const v = String(value || '').trim();
             if (!v) return '';
             return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(v) ? v : 'https://' + v;
+        }
+
+        function cleanUrlInput(value) {
+            if (!value) return '';
+            return String(value).trim().replace(/\s+/g, '');
         }
 
         function getFaviconUrl(targetUrl) {
@@ -1176,7 +1189,7 @@
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
-                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + \')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
                         '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
                 }).join('');
             menu.classList.remove('hidden');
@@ -1374,7 +1387,6 @@
             document.getElementById('subcategoryModal').classList.add('hidden');
         }
 
-        // Alterar Ícone da Subcategoria
         function openEditSubcatIconModal(catName, subName) {
             editingSubcatInfo = { catName, subName };
             document.getElementById('editSubcatParentCat').value = catName;
@@ -2511,7 +2523,7 @@
             if (item) {
                 item.title = document.getElementById('editShortcutTitle').value.trim();
                 item.name = item.title;
-                item.file = normalizeUrl(document.getElementById('editFileName').value);
+                item.file = normalizeUrl(cleanUrlInput(document.getElementById('editFileName').value));
                 item.category = document.getElementById('editShortcutCategory').value.trim() || 'Geral';
                 item.subcategory = document.getElementById('editShortcutSubcategory').value.trim();
                 item.subsubcategory = item.subcategory ? document.getElementById('editShortcutSubsubcategory').value.trim() : '';
@@ -2528,7 +2540,7 @@
             const item = htmlFiles.find(f => f.id === itemId);
             if (!item) return;
             itemToDeleteId = itemId;
-            document.getElementById('deleteMessage').textContent = `Deseja remover o atalho "${item.title || item.name}"?`;
+            document.getElementById('deleteMessage').textContent = `O atalho "${item.title || item.name}" será excluído permanentemente.`;
             document.getElementById('confirmDeleteBtn').onclick = () => {
                 htmlFiles = htmlFiles.filter(f => f.id !== itemToDeleteId);
                 saveToStorage(true);
@@ -2543,7 +2555,7 @@
         function handleFormSubmit(e) {
             e.preventDefault();
             const title = document.getElementById('shortcutTitle').value.trim();
-            const file = normalizeUrl(document.getElementById('fileName').value);
+            const file = normalizeUrl(cleanUrlInput(document.getElementById('fileName').value));
             
             let category = '';
             if (currentCategory !== 'all') {
@@ -2645,7 +2657,7 @@
 
                     let added = 0, skipped = 0;
                     incoming.forEach(raw => {
-                        const url = normalizeUrl(raw && raw.file);
+                        const url = normalizeUrl(cleanUrlInput(raw && raw.file));
                         const title = String((raw && (raw.title || raw.name)) || '').trim();
                         const category = String((raw && raw.category) || 'Geral').trim() || 'Geral';
                         const subcategory = String((raw && raw.subcategory) || '').trim();
@@ -2828,7 +2840,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
-                error.classList.remove('hidden');
+                error.classList.add('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
             }
