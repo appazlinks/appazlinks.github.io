@@ -633,7 +633,6 @@
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
         let categoryIconSizes = JSON.parse(localStorage.getItem('local_category_icon_sizes')) || {};
         let sidebarOpen = window.innerWidth >= 768;
-        let desktopSidebarPinned = false; // Estado fixo do menu no desktop
         let itemToDeleteId = null;
         let editingShortcutIconId = null;
         let editingSubcatInfo = null;
@@ -1015,11 +1014,7 @@
         }
 
         function toggleMobileSidebar() { 
-            if (window.innerWidth >= 768) {
-                desktopSidebarPinned = !desktopSidebarPinned;
-            } else {
-                sidebarOpen = !sidebarOpen;
-            }
+            sidebarOpen = !sidebarOpen; 
             applySidebarState(); 
         }
 
@@ -1038,15 +1033,9 @@
                     overlay.classList.add('hidden');
                 }
             } else {
-                overlay.classList.add('hidden');
                 sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
-                if (desktopSidebarPinned) {
-                    sidebar.classList.remove('md:w-20', 'hover:md:w-64', 'group');
-                    sidebar.classList.add('md:w-64');
-                } else {
-                    sidebar.classList.remove('md:w-64');
-                    sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
-                }
+                sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
+                overlay.classList.add('hidden');
             }
         }
 
@@ -1335,6 +1324,7 @@
                 menu.classList.remove('hidden');
                 menu.classList.remove('bottom-full', 'top-full', 'mb-1', 'mt-1');
                 
+                // Smart positioning relative to viewport to avoid getting cut off (last item, top row, etc.)
                 const btnRect = btn.getBoundingClientRect();
                 const menuHeight = menu.offsetHeight || 160;
                 const spaceBelow = window.innerHeight - btnRect.bottom;
