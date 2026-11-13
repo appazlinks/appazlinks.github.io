@@ -214,7 +214,7 @@
 
     <div class="flex-1 flex overflow-hidden relative">
         <aside id="sidebar" 
-               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-64 z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh]">
+               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-64 z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-hidden">
             <div class="flex flex-col gap-1 w-full category-scroll pb-16 md:pb-0">
                 <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -890,7 +890,6 @@
                     }
 
                     if (data.categories && typeof data.categories === 'object') {
-                        // Mesclagem profunda e inteligente preservando rigorosamente todas as personalizações locais (imagens, ícones e subcatCustom)
                         const mergedCategories = { ...(data.categories || {}) };
                         Object.keys(categoryCustomizations).forEach(catKey => {
                             if (!mergedCategories[catKey]) {
@@ -1025,22 +1024,22 @@
 
             if (window.innerWidth < 768) {
                 if (sidebarOpen) {
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.add('translate-x-0');
+                    sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
+                    sidebar.classList.add('translate-x-0', 'w-64');
                     overlay.classList.remove('hidden');
                 } else {
-                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.remove('translate-x-0', 'w-64');
                     sidebar.classList.add('-translate-x-full');
                     overlay.classList.add('hidden');
                 }
             } else {
                 if (sidebarOpen) {
-                    sidebar.classList.remove('-translate-x-full', 'absolute', 'md:w-0', 'md:p-0', 'opacity-0');
-                    sidebar.classList.add('translate-x-0', 'relative', 'md:w-64', 'opacity-100');
+                    sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0', 'opacity-0');
+                    sidebar.classList.add('w-64', 'opacity-100', 'border-r');
                     overlay.classList.add('hidden');
                 } else {
-                    sidebar.classList.remove('translate-x-0', 'relative', 'md:w-64', 'opacity-100');
-                    sidebar.classList.add('-translate-x-full', 'absolute', 'md:w-0', 'md:p-0', 'opacity-0');
+                    sidebar.classList.remove('w-64', 'opacity-100', 'border-r');
+                    sidebar.classList.add('w-0', 'p-0', 'border-r-0', 'opacity-0');
                     overlay.classList.add('hidden');
                 }
             }
@@ -2329,11 +2328,12 @@
                 grid.classList.remove('hidden');
                 grid.className = 'grid ' + sz.cols;
 
+                const totalSubs = subcategoriesToShow.length;
                 const subCardsHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubGrid_${idx}`;
-                    const isNearTopSub = idx < 2;
-                    const subMenuPositionClass = isNearTopSub ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
+                    const isNearBottomSub = idx >= Math.floor(totalSubs / 2);
+                    const subMenuPositionClass = isNearBottomSub ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2379,12 +2379,13 @@
                     `;
                 }).join('');
 
+                const totalLinks = filtered.length;
                 const linksHtml = filtered.map((item, index) => {
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkGrid_${index}`;
-                    const isNearTopLink = index < 2;
-                    const menuPositionClass = isNearTopLink ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
+                    const isNearBottomLink = index >= Math.floor(totalLinks / 2);
+                    const menuPositionClass = isNearBottomLink ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const isFav = !!item.isFavorite;
 
                     return `
@@ -2420,11 +2421,12 @@
                 grid.classList.add('hidden');
                 list.classList.remove('hidden');
 
+                const totalSubs = subcategoriesToShow.length;
                 const subListHtml = subcategoriesToShow.map((subName, idx) => {
                     const subCount = getFolderItemCount(subName);
                     const menuId = `actionMenuSubList_${idx}`;
-                    const isNearTopSub = idx < 2;
-                    const subMenuPositionClass = isNearTopSub ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
+                    const isNearBottomSub = idx >= Math.floor(totalSubs / 2);
+                    const subMenuPositionClass = isNearBottomSub ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const escapedSub = escapeJsStr(subName);
                     const subCustom = getSubcategoryCustom(currentCategory, subName);
 
@@ -2476,8 +2478,8 @@
                     const targetUrl = item.file || item.name;
                     const iconUrl = item.customIcon || getFaviconUrl(targetUrl);
                     const menuId = `actionMenuLinkList_${index}`;
-                    const isNearTopLink = index < 2;
-                    const menuPositionClass = isNearTopLink ? 'absolute right-0 top-full mt-1' : 'absolute right-0 bottom-full mb-1';
+                    const isNearBottomLink = index >= Math.floor(totalItems / 2);
+                    const menuPositionClass = isNearBottomLink ? 'absolute right-0 bottom-full mb-1' : 'absolute right-0 top-full mt-1';
                     const isFav = !!item.isFavorite;
 
                     return `
