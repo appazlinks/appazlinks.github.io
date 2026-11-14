@@ -65,6 +65,10 @@
             .desktop-logo-svg { width: 190px !important; height: 46px !important; }
             .category-scroll { max-height: calc(100vh - 100px); }
             .safe-bottom-padding { padding-bottom: 2rem !important; }
+            
+            #sidebar:not(:hover):not(.sidebar-expanded) .sidebar-text {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -596,7 +600,7 @@
         }
 
         function escapeJsStr(str) {
-            return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return String(str || '').replace(/\/g, '\\').replace(/'/g, "\'");
         }
 
         function shareShortcut(itemId) {
@@ -632,7 +636,7 @@
         let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
         let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
         let categoryIconSizes = JSON.parse(localStorage.getItem('local_category_icon_sizes')) || {};
-        let sidebarOpen = window.innerWidth >= 768;
+        let sidebarOpen = false;
         let itemToDeleteId = null;
         let editingShortcutIconId = null;
         let editingSubcatInfo = null;
@@ -1033,8 +1037,13 @@
                     overlay.classList.add('hidden');
                 }
             } else {
-                sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
-                sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
+                if (sidebarOpen) {
+                    sidebar.classList.remove('md:w-20');
+                    sidebar.classList.add('md:w-64', 'sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('md:w-64', 'sidebar-expanded');
+                    sidebar.classList.add('md:w-20');
+                }
                 overlay.classList.add('hidden');
             }
         }
@@ -1222,7 +1231,7 @@
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
-                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize('' + k + '')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
                         '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
                 }).join('');
             menu.classList.remove('hidden');
@@ -1324,7 +1333,6 @@
                 menu.classList.remove('hidden');
                 menu.classList.remove('bottom-full', 'top-full', 'mb-1', 'mt-1');
                 
-                // Smart positioning relative to viewport to avoid getting cut off (last item, top row, etc.)
                 const btnRect = btn.getBoundingClientRect();
                 const menuHeight = menu.offsetHeight || 160;
                 const spaceBelow = window.innerHeight - btnRect.bottom;
@@ -1846,12 +1854,12 @@
                     const escapedCat = escapeJsStr(catVal);
                     
                     actionMenuHtml = `
-                        <div class="flex items-center gap-1 shrink-0 relative action-menu-container md:hidden md:group-hover:flex">
+                        <div class="flex items-center gap-1 shrink-0 relative action-menu-container sidebar-text">
                             <span class="text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
                             <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
-                            <div id="${catMenuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-md shadow-xl hidden z-[60] py-1 text-left">
+                            <div id="${catMenuId}" class="action-menu-dropdown absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-md shadow-lg hidden z-[60] py-1 text-left">
                                 <button type="button" onclick="event.stopPropagation(); openAddSubcategoryModal('${escapedCat}'); closeAllActionMenus();" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Subcategoria
                                 </button>
@@ -1868,7 +1876,7 @@
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full md:hidden md:group-hover:inline-block">${count}</span>`;
+                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full sidebar-text">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
@@ -1879,7 +1887,7 @@
                 btn.innerHTML = `
                     <span class="flex items-center gap-3 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="truncate pointer-events-none md:hidden md:group-hover:inline">${label}</span>
+                        <span class="truncate pointer-events-none sidebar-text">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
