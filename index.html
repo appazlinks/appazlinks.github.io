@@ -1,617 +1,702 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZLinks - Gerenciador de Atalhos</title>
-    <!-- Tailwind CSS -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>azlinks</title>
+    <!-- Favicon Moderno -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%232563eb'/><path d='M30 50l20-20v15h20v10H50v15z' fill='%23ffffff'/><circle cx='70' cy='70' r='8' fill='%2360a5fa'/></svg>">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="azlinks-192x192.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Segoe UI"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        .sidebar-pinned { width: 16rem; }
-        .sidebar-collapsed { width: 5rem; }
-        @media (max-width: 767px) {
-            .sidebar-pinned, .sidebar-collapsed { width: 16rem; }
+        body { 
+            background-color: #f3f3f3; 
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cdcdcd; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a6a6a6; }
+
+        button, [onclick] {
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+
+        .category-scroll {
+            max-height: calc(100dvh - 70px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .safe-bottom-padding {
+            padding-bottom: calc(env(safe-area-inset-bottom) + 6rem) !important;
+        }
+
+        footer {
+            padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+        }
+
+        @media (min-width: 768px) {
+            .desktop-logo-text { font-size: 32px !important; }
+            .desktop-logo-svg { width: 190px !important; height: 46px !important; }
+            .category-scroll { max-height: calc(100vh - 100px); }
+            .safe-bottom-padding { padding-bottom: 2rem !important; }
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="flex flex-col h-[100dvh] min-h-[100dvh] font-sans overflow-hidden text-slate-800">
 
-    <!-- Overlay Mobile -->
-    <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
-
-    <!-- Layout Principal -->
-    <div class="flex flex-1 min-h-screen relative">
-
-        <!-- Sidebar / Menu Lateral -->
-        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 md:w-20 hover:md:w-64 group bg-white border-r border-gray-200 flex flex-col transition-all duration-300 -translate-x-full md:translate-x-0 overflow-hidden shadow-sm">
-            <!-- Topo do Menu -->
-            <div class="p-4 border-b border-gray-100 flex items-center justify-between shrink-0 h-16">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                        <i class="fa-solid fa-link text-base"></i>
-                    </div>
-                    <span class="font-bold text-gray-800 text-base truncate group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap">AZLinks</span>
+    <!-- Barra Superior -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 p-3 flex flex-col items-start md:items-stretch gap-3 shadow-sm z-20 shrink-0">
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center cursor-pointer select-none shrink-0 self-center" onclick="window.location.reload()">
+                    <svg class="desktop-logo-svg" width="140" height="34" viewBox="0 0 180 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g onclick="event.stopPropagation(); window.open('https://azlinks.com.br/cadusu.html', '_blank');" style="cursor:pointer" role="button" aria-label="Abrir gerenciador"><title>Abrir gerenciador</title><rect width="40" height="40" rx="10" fill="#2563EB"/>
+                        <path d="M12 28L20 14L28 28H23.5L20 21.5L16.5 28H12Z" fill="white"/>
+                        <path d="M15 25H25" stroke="white" stroke-width="2"/></g>
+                        <text class="desktop-logo-text" x="48" y="28" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="22" fill="#1E293B">AZ<tspan fill="#2563EB">Links</tspan></text>
+                    </svg>
                 </div>
-                <button type="button" onclick="toggleMobileSidebar()" class="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+            </div>
+
+            <!-- Botões Desktop -->
+            <div class="hidden md:flex items-center justify-end w-full gap-2">
+                <button type="button" onclick="openModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium shadow-sm transition-all cursor-pointer">
+                    <i class="fa-solid fa-plus pointer-events-none"></i> <span class="pointer-events-none">Novo</span>
+                </button>
+
+                <!-- Botão de Ordenação Desktop -->
+                <button type="button" onclick="toggleSortOrder()" title="Ordenar A-Z / Z-A" id="btnSortDesk" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-all flex items-center justify-center cursor-pointer">
+                    <i id="sortIconDesk" class="fa-solid fa-arrow-down-a-z pointer-events-none"></i>
+                </button>
+
+                <div class="flex items-center bg-gray-100 border border-gray-200 rounded p-0.5 gap-0.5">
+                    <button type="button" onclick="setViewMode('grid')" title="Visualização em Grade" id="btnGridDesk" class="p-1.5 text-xs rounded text-gray-700 hover:bg-white transition-all cursor-pointer">
+                        <i class="fa-solid fa-border-all"></i>
+                    </button>
+                    <button type="button" onclick="setViewMode('list')" title="Visualização em Lista" id="btnListDesk" class="p-1.5 text-xs rounded text-gray-700 hover:bg-white transition-all cursor-pointer">
+                        <i class="fa-solid fa-list"></i>
+                    </button>
+                </div>
+
+                <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
+                
+                <!-- Botão de Sincronização Desktop -->
+                <button type="button" onclick="syncFromGoogleSheets()" title="Sincronizar com o Google Sheets" id="syncBtnDesk" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                    <i id="syncIconDesk" class="fa-solid fa-rotate-right pointer-events-none"></i>
                 </button>
             </div>
+        </div>
 
-            <!-- Lista de Categorias -->
-            <div id="categoryList" class="flex-1 overflow-y-auto p-3 space-y-1">
-                <!-- Preenchido dinamicamente via JS -->
-            </div>
-
-            <!-- Rodapé do Menu Lateral -->
-            <div class="p-3 border-t border-gray-100 space-y-2 shrink-0 bg-white">
-                <button type="button" onclick="openModal()" class="w-full flex items-center gap-3 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors shadow-sm cursor-pointer">
-                    <i class="fa-solid fa-plus shrink-0 text-base"></i>
-                    <span class="truncate group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap">Novo Atalho</span>
+        <!-- Linha de Pesquisa e Botões Mobile -->
+        <div class="flex items-center justify-between w-full gap-2">
+            <div class="hidden md:flex items-center gap-2 flex-1">
+                <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-bars text-lg pointer-events-none"></i>
                 </button>
-                <div class="flex items-center justify-between pt-1 px-1 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <span id="footerLicenseName" class="text-xs text-gray-500 truncate">Usuário</span>
-                    <button type="button" onclick="exportBackup()" title="Exportar Backup" class="p-1.5 text-gray-400 hover:text-blue-600 rounded cursor-pointer">
-                        <i class="fa-solid fa-download text-xs"></i>
-                    </button>
+                <div class="relative w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="searchInputDesktop" placeholder="Pesquisar atalhos..." 
+                           class="w-full pl-9 pr-8 py-1.5 bg-gray-50 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all search-input">
+                    <button type="button" onclick="clearSearch()" class="clear-search-btn absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden text-sm"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
-        </aside>
 
-        <!-- Conteúdo Principal -->
-        <main class="flex-1 flex flex-col min-w-0">
-            <!-- Cabeçalho -->
-            <header class="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex items-center justify-between gap-4 h-16">
-                <div class="flex items-center gap-3 min-w-0">
-                    <button type="button" onclick="toggleMobileSidebar()" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer">
-                        <i class="fa-solid fa-bars text-lg"></i>
+            <!-- Botões Mobile -->
+            <div class="flex md:hidden items-center justify-between w-full overflow-x-auto pb-1 gap-2">
+                <button type="button" onclick="openModal()" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-md text-xs font-medium shrink-0 cursor-pointer"><i class="fa-solid fa-plus pointer-events-none"></i> <span class="pointer-events-none">Novo</span></button>
+                
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onclick="toggleSortOrder()" title="Ordenar A-Z / Z-A" id="btnSortMob" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-all flex items-center justify-center shrink-0 cursor-pointer">
+                        <i id="sortIconMob" class="fa-solid fa-arrow-down-a-z pointer-events-none"></i>
                     </button>
-                    <div class="min-w-0 flex items-center gap-2">
-                        <h1 id="currentCategoryTitle" class="text-base sm:text-lg font-bold text-gray-800 truncate flex items-center gap-2">
-                            <span>Todos os Atalhos</span>
-                        </h1>
-                        <span id="currentCategoryCount" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full shrink-0 font-medium">0 itens</span>
-                    </div>
-                </div>
 
-                <!-- Barra de Pesquisa Desktop -->
-                <div class="hidden md:flex items-center flex-1 max-w-md mx-4">
-                    <div class="relative w-full">
-                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text" id="searchInputDesktop" placeholder="Pesquisar atalhos..." class="search-input w-full pl-9 pr-8 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors">
-                        <button type="button" onclick="clearSearch()" class="clear-search-btn absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden cursor-pointer">
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                    <div class="flex items-center bg-gray-100 border border-gray-200 rounded p-0.5 gap-0.5 shrink-0">
+                        <button type="button" onclick="setViewMode('grid')" title="Grade" id="btnGridMob" class="p-1.5 text-xs rounded text-gray-700 hover:bg-white transition-all cursor-pointer">
+                            <i class="fa-solid fa-border-all"></i>
                         </button>
-                    </div>
-                </div>
-
-                <!-- Ações do Topo -->
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="syncFromGoogleSheets()" id="syncBtnDesk" title="Sincronizar" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer border border-transparent">
-                        <i id="syncIconDesk" class="fa-solid fa-rotate-right text-sm"></i>
-                    </button>
-                    <div class="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200">
-                        <button type="button" id="btnGridDesk" onclick="setViewMode('grid')" title="Grade" class="px-2.5 py-1 text-xs font-semibold rounded-md text-blue-600 bg-white shadow-sm cursor-pointer">
-                            <i class="fa-solid fa-grip"></i>
-                        </button>
-                        <button type="button" id="btnListDesk" onclick="setViewMode('list')" title="Lista" class="px-2.5 py-1 text-xs font-semibold rounded-md text-gray-700 cursor-pointer">
+                        <button type="button" onclick="setViewMode('list')" title="Lista" id="btnListMob" class="p-1.5 text-xs rounded text-gray-700 hover:bg-white transition-all cursor-pointer">
                             <i class="fa-solid fa-list"></i>
                         </button>
                     </div>
-                    <button type="button" onclick="toggleSortOrder()" title="Ordenar" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer border border-gray-200 bg-white">
-                        <i id="sortIconDesk" class="fa-solid fa-arrow-down-a-z text-sm"></i>
-                    </button>
-                    <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer border border-gray-200 bg-white">
-                        <i class="fa-solid fa-text-height text-sm"></i>
-                    </button>
 
-                    <!-- Dropdown Mais Opções (Cabeçalho) -->
-                    <div class="relative dropdown-container hidden" id="categoryHeaderMoreContainer">
-                        <button type="button" id="btnHeaderMore" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer border border-gray-200 bg-white">
-                            <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                        </button>
-                        <div id="headerMoreDropdown" class="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-xl hidden z-50 py-1 text-xs text-left">
-                            <div id="headerMenuCategoryOptions" class="hidden">
-                                <button type="button" onclick="openAddSubcategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer">
-                                    <i class="fa-solid fa-folder-plus text-blue-600 pointer-events-none"></i> Nova Subcategoria
-                                </button>
-                                <button type="button" onclick="openEditCategoryModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer">
-                                    <i class="fa-solid fa-pen text-blue-500 pointer-events-none"></i> Editar Categoria
-                                </button>
-                                <button type="button" onclick="openEditCategoryIconModal(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer">
-                                    <i class="fa-solid fa-image text-gray-400 pointer-events-none"></i> Alterar Ícone
-                                </button>
-                                <button type="button" onclick="deleteCategoryPrompt(currentCategory); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer">
-                                    <i class="fa-solid fa-trash text-red-500 pointer-events-none"></i> Remover Categoria
-                                </button>
-                            </div>
-                            <div id="headerMenuAllOptions" class="hidden">
-                                <button type="button" onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer">
-                                    <i class="fa-solid fa-upload text-blue-600 pointer-events-none"></i> Importar Backup (.json)
-                                </button>
-                                <button type="button" onclick="exportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-gray-700 cursor-pointer">
-                                    <i class="fa-solid fa-download text-emerald-600 pointer-events-none"></i> Exportar Backup (.json)
-                                </button>
-                                <button type="button" onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 flex items-center gap-2 text-red-600 cursor-pointer">
-                                    <i class="fa-solid fa-trash text-red-500 pointer-events-none"></i> Apagar Tudo
-                                </button>
-                            </div>
+                    <button type="button" data-size-btn onclick="toggleSizeMenu(event)" title="Tamanho da visualização" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-blue-600 transition-all flex items-center justify-center shrink-0 cursor-pointer"><i class="fa-solid fa-maximize pointer-events-none"></i></button>
+                    
+                    <button type="button" onclick="syncFromGoogleSheets()" title="Sincronizar com o Google Sheets" id="syncBtnMob" class="p-2 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                        <i id="syncIconMob" class="fa-solid fa-rotate-right pointer-events-none"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pesquisa Mobile -->
+        <div class="flex md:hidden items-center gap-2 w-full">
+            <button type="button" onclick="toggleMobileSidebar()" title="Menu" class="p-2 text-gray-600 hover:text-blue-600 focus:outline-none rounded-md hover:bg-gray-100 transition-colors shrink-0 cursor-pointer">
+                <i class="fa-solid fa-bars text-lg pointer-events-none"></i>
+            </button>
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInputMobile" placeholder="Pesquisar atalhos..." 
+                       class="w-full pl-9 pr-8 py-1.5 bg-gray-50 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all search-input">
+                <button type="button" onclick="clearSearch()" class="clear-search-btn absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <!-- Cabeçalho Categoria -->
+        <div class="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200/80 shadow-sm w-full">
+            <div class="flex flex-col gap-1 min-w-0 flex-1">
+                <div class="flex items-center gap-2 min-w-0">
+                    <h2 id="currentCategoryTitle" class="font-semibold text-gray-800 text-xs md:text-base flex items-center gap-2 truncate">
+                        <i class="fa-solid fa-folder-open text-blue-600"></i> Todos os Atalhos
+                    </h2>
+                </div>
+                <!-- Linha da Subcategoria / Sub-subcategoria -->
+                <div id="currentSubcategoryRow" class="hidden flex items-center gap-1.5 min-w-0 pt-1 border-t border-gray-100 flex-wrap">
+                    <button type="button" onclick="exitSubcategory()" title="Voltar um nível" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-arrow-left pointer-events-none text-xs"></i>
+                    </button>
+                    <button type="button" id="currentSubcategoryBtn" onclick="goToLevel1Subcategory()" class="text-blue-600 hover:underline font-semibold text-xs flex items-center gap-1.5 truncate cursor-pointer">
+                        <span id="currentSubcategoryIconContainer"><i class="fa-solid fa-folder text-amber-400"></i></span> <span id="currentSubcategoryText" class="truncate"></span>
+                    </button>
+                    <span id="currentSubsubSeparator" class="hidden text-gray-400 text-xs">/</span>
+                    <span id="currentSubsubcategoryBadge" class="hidden text-blue-700 font-semibold text-xs flex items-center gap-1.5 truncate">
+                        <span id="currentSubsubIconContainer"><i class="fa-solid fa-folder-open text-amber-500"></i></span> <span id="currentSubsubcategoryText" class="truncate"></span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0 pl-2">
+                <span id="currentCategoryCount" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full shrink-0">0 itens</span>
+                
+                <div id="categoryHeaderMoreContainer" class="relative dropdown-container shrink-0 hidden">
+                    <button type="button" id="btnHeaderMore" title="Mais opções" class="p-1.5 text-xs rounded bg-gray-100 border border-gray-200 text-gray-700 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer">
+                        <i class="fa-solid fa-ellipsis-vertical pointer-events-none"></i>
+                    </button>
+                    <div id="headerMoreDropdown" class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg hidden z-30 py-1 text-xs">
+                        <div id="headerMenuAllOptions">
+                            <button type="button" onclick="exportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-download text-gray-400"></i> Exportar</button>
+                            <button type="button" onclick="triggerImportBackup(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-upload text-gray-400"></i> Importar</button>
+                            <button type="button" onclick="confirmClearAllShortcuts(); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-red-600 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-trash text-red-500"></i> Remover Todos</button>
+                        </div>
+                        <div id="headerMenuCategoryOptions" class="hidden">
+                            <button type="button" onclick="openAddSubcategoryModal(currentCategory, '', currentSubcategory || ''); closeAllDropdowns();" class="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria</button>
                         </div>
                     </div>
                 </div>
-            </header>
-
-            <!-- Subheader para Subcategorias / Trilha -->
-            <div id="currentSubcategoryRow" class="hidden bg-white border-b border-gray-100 px-4 py-2 flex items-center gap-2 text-xs text-gray-600">
-                <button type="button" onclick="exitSubcategory()" class="hover:text-blue-600 font-medium flex items-center gap-1 cursor-pointer">
-                    <i class="fa-solid fa-arrow-left"></i> Voltar
-                </button>
-                <span class="text-gray-300">/</span>
-                <span id="currentSubcategoryIconContainer" class="inline-flex items-center"></span>
-                <button type="button" onclick="goToLevel1Subcategory()" class="font-semibold text-gray-800 hover:text-blue-600 cursor-pointer">
-                    <span id="currentSubcategoryText">Subcategoria</span>
-                </button>
-                <span id="currentSubsubSeparator" class="text-gray-300 hidden">/</span>
-                <span id="currentSubsubcategoryBadge" class="hidden items-center gap-1.5 font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                    <span id="currentSubsubIconContainer" class="inline-flex items-center"></span>
-                    <span id="currentSubsubcategoryText">Sub-sub</span>
-                </span>
             </div>
+        </div>
+    </header>
 
-            <!-- Pesquisa Mobile -->
-            <div class="md:hidden p-3 bg-white border-b border-gray-100">
-                <div class="relative w-full">
-                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="searchInputMobile" placeholder="Pesquisar atalhos..." class="search-input w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="clearSearch()" class="clear-search-btn absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hidden cursor-pointer">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Área de Exibição dos Atalhos -->
-            <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
-                <div id="shortcutsGrid" class="grid gap-3"></div>
-                <div id="shortcutsList" class="hidden bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm"></div>
-
-                <!-- Estado Vazio -->
-                <div id="emptyState" class="hidden flex flex-col items-center justify-center py-16 text-center">
-                    <div class="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center text-2xl mb-4">
-                        <i class="fa-solid fa-folder-open"></i>
+    <div class="flex-1 flex overflow-hidden relative">
+        <aside id="sidebar" 
+               class="fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:relative bg-gray-50/95 backdrop-blur-md border-r border-gray-200 p-3 flex flex-col justify-between transition-all duration-300 w-64 md:w-20 hover:md:w-64 group z-40 md:z-30 shadow-lg md:shadow-none max-h-[100dvh] overflow-y-auto md:overflow-visible group-hover:md:overflow-y-auto">
+            <div class="flex flex-col gap-1 w-full category-scroll pb-16 md:pb-0">
+                <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-sliders text-white text-sm"></i></span>
+                        <div id="sidebarTitle" class="text-sm font-bold text-white uppercase tracking-widest truncate">Filtros</div>
                     </div>
-                    <p class="text-gray-600 font-medium mb-1">Nenhum atalho encontrado</p>
-                    <p class="text-xs text-gray-400 mb-4">Adicione um novo atalho usando o botão abaixo.</p>
-                    <button type="button" onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
-                        Adicionar Atalho
-                    </button>
+                    <button type="button" onclick="toggleMobileSidebar()" title="Fechar" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full text-white/90 hover:bg-white/20 transition-colors shrink-0"><i class="fa-solid fa-xmark text-base"></i></button>
                 </div>
+                <div id="categoryList" class="flex flex-col gap-1 mt-1"></div>
+            </div>
+        </aside>
+
+        <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"></div>
+
+        <main class="flex-1 flex flex-col p-3 md:p-4 overflow-y-auto safe-bottom-padding gap-4">
+            <div id="shortcutsGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3"></div>
+            <div id="shortcutsList" class="hidden flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible"></div>
+            
+            <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400">
+                <i class="fa-regular fa-folder-open text-5xl mb-3 text-gray-300"></i>
+                <p class="text-base font-medium">Nenhum atalho encontrado</p>
             </div>
         </main>
     </div>
 
-    <!-- Modais e Inputs Ocultos -->
-    <input type="file" id="importFileInput" class="hidden" accept=".json" onchange="handleImportBackup(event)">
-    <input type="file" id="categoryIconFileInput" class="hidden" accept="image/*" onchange="handleCategoryIconFileSelect(event)">
-    <input type="file" id="subcatIconFileInput" class="hidden" accept="image/*" onchange="handleSubcatIconFileSelect(event)">
-    <input type="file" id="shortcutIconFileInput" class="hidden" accept="image/*" onchange="handleShortcutIconFileSelect(event)">
+    <!-- Rodapé -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 flex items-center justify-between text-xs text-gray-500 z-40 shadow-md md:relative">
+        <div onclick="openEmailModal(true)" title="Trocar de e-mail" class="flex items-center gap-2 truncate cursor-pointer hover:text-blue-600 transition-colors w-full justify-center md:justify-start">
+            <i class="fa-solid fa-shield-halved text-blue-600 shrink-0"></i>
+            <span class="truncate">Licenciado para: <strong id="footerLicenseName" class="text-gray-700">Sebastião Torquato</strong></span>
+        </div>
+    </footer>
 
-    <!-- Modal Novo Atalho -->
-    <div id="shortcutModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-link text-blue-600"></i> Novo Atalho
-                </h3>
-                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="handleImportBackup(event)">
+    <input type="file" id="shortcutIconFileInput" accept="image/*" class="hidden" onchange="handleShortcutIconFileSelect(event)">
+    <input type="file" id="categoryIconFileInput" accept="image/*" class="hidden" onchange="handleCategoryIconFileSelect(event)">
+    <input type="file" id="subcatIconFileInput" accept="image/*" class="hidden" onchange="handleSubcatIconFileSelect(event)">
+
+    <!-- Tela de licença vencida -->
+    <div id="licenseBlock" class="fixed inset-0 bg-white z-[70] hidden flex items-center justify-center p-6">
+        <div class="w-full max-w-md border-2 border-red-500 rounded-lg p-6 flex flex-col items-center text-center gap-4">
+            <i class="fa-solid fa-lock text-red-500 text-4xl"></i>
+            <p id="licenseBlockMessage" class="text-red-600 font-semibold text-lg leading-snug"></p>
+            <button type="button" onclick="useAnotherEmail()" class="mt-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Entrar com outro e-mail</button>
+        </div>
+    </div>
+
+    <!-- Modal de acesso por e-mail -->
+    <div id="emailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-envelope text-blue-600"></i> Acessar com e-mail</h3>
             </div>
-            <form onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+            <form onsubmit="handleEmailSubmit(event)" class="p-5 flex flex-col gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Título</label>
-                    <input type="text" id="shortcutTitle" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Ex: Google">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">E-mail cadastrado *</label>
+                    <input type="email" id="loginEmail" required autocomplete="email" autocapitalize="none" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">URL / Link</label>
-                    <input type="text" id="fileName" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="https://exemplo.com">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Senha *</label>
+                    <input type="password" id="loginPassword" required maxlength="8" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <p id="loginEmailError" class="hidden text-xs text-red-600 mt-0.5"></p>
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" id="emailCancelBtn" onclick="closeEmailModal()" class="hidden px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Atalho -->
+    <div id="shortcutModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-file-code text-blue-600"></i> Adicionar Atalho</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleFormSubmit(event)" class="p-5 flex flex-col gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Título do Atalho *</label>
+                    <div class="relative"><input type="text" id="shortcutTitle" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('shortcutTitle')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
+                    <div class="relative"><input type="text" id="fileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('fileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div id="shortcutCategoryWrapper">
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="shortcutCategory" autocomplete="off" class="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Selecione ou digite...">
-                        <button type="button" onclick="toggleCategoryCombo('shortcutCategory')" class="absolute right-2.5 text-gray-400 hover:text-gray-600 cursor-pointer">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                        </button>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
+                    <div class="relative">
+                        <input type="text" id="shortcutCategory" required autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('shortcutCategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('shortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
-                <div class="flex items-center gap-6 pt-2">
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="shortcutFavorite" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Favorito
-                    </label>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="shortcutDesktop" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Exibir no Desktop
-                    </label>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="shortcutMobile" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Exibir no Mobile
-                    </label>
+
+                <div class="flex flex-wrap items-center gap-4 py-1.5 border-t border-b border-gray-100 my-1">
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="shortcutFavorite" class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-400">
+                        <label for="shortcutFavorite" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-star text-amber-400"></i> Favoritos</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="shortcutDesktop" checked class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                        <label for="shortcutDesktop" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-desktop text-gray-500"></i> Computador</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="shortcutMobile" checked class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                        <label for="shortcutMobile" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-mobile-screen-button text-gray-500"></i> Celular</label>
+                    </div>
                 </div>
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
+
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar / Renomear Subcategoria -->
+    <div id="subcategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 id="subcategoryModalTitle" class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria</h3>
+                <button type="button" onclick="closeSubcategoryModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSubcategorySubmit(event)" class="p-5 flex flex-col gap-3">
+                <input type="hidden" id="subcatParentCategory">
+                <input type="hidden" id="subcatParentSubcategory">
+                <input type="hidden" id="subcatOldName">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Subcategoria *</label>
+                    <div class="relative">
+                        <input type="text" id="subcatNameInput" required placeholder="Ex: YouTube, Instagram..." class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9">
+                        <button type="button" tabindex="-1" onclick="clearField('subcatNameInput')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeSubcategoryModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Alterar Ícone da Subcategoria -->
+    <div id="editSubcatIconModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-image text-blue-600"></i> Alterar Ícone da Subcategoria</h3>
+                <button type="button" onclick="closeEditSubcatIconModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 flex flex-col gap-4">
+                <input type="hidden" id="editSubcatParentCat">
+                <input type="hidden" id="editSubcatName">
+                <button type="button" onclick="triggerSubcatIconFile()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2 text-gray-700 cursor-pointer">
+                    <i class="fa-solid fa-image text-blue-600 pointer-events-none"></i> Escolher imagem ou logo (Ex: YouTube, TikTok, Instagram)
+                </button>
+                <div class="flex items-center gap-2 text-[11px] text-gray-400 uppercase">
+                    <span class="flex-1 border-t border-gray-200"></span>ou<span class="flex-1 border-t border-gray-200"></span>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe FontAwesome (Opcional)</label>
+                    <input type="text" id="newSubcatIconClass" placeholder="Ex: fa-brands fa-instagram text-pink-500" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeEditSubcatIconModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="button" onclick="saveSubcatIcon()" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar Ícone</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mover Subcategoria -->
+    <div id="moveSubcategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-folder-tree text-blue-600"></i> Mover Subcategoria</h3>
+                <button type="button" onclick="closeMoveSubcategoryModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleMoveSubcategorySubmit(event)" class="p-5 flex flex-col gap-3">
+                <input type="hidden" id="moveSubCatName">
+                <input type="hidden" id="moveSubOldParent">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Mover a pasta <strong id="moveSubTargetTitle" class="text-blue-600"></strong> para:</label>
+                    <div class="relative mt-2">
+                        <input type="text" id="moveSubDestinationInput" required autocomplete="off" role="combobox" aria-autocomplete="list" placeholder="Selecione ou digite a subcategoria destino" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('moveSubDestinationInput')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleMoveSubcategoryCombo()" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeMoveSubcategoryModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Mover Pasta</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Editar Atalho -->
-    <div id="editShortcutModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-pen text-blue-600"></i> Editar Atalho
-                </h3>
-                <button type="button" onclick="closeEditShortcutModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <div id="editShortcutModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-pen text-blue-600"></i> Editar Atalho</h3>
+                <button type="button" onclick="closeEditShortcutModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="handleEditFormSubmit(event)" class="p-6 space-y-4">
+            <form onsubmit="handleEditFormSubmit(event)" class="p-5 flex flex-col gap-3">
                 <input type="hidden" id="editOriginalId">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Título</label>
-                    <input type="text" id="editShortcutTitle" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Título do Atalho *</label>
+                    <div class="relative"><input type="text" id="editShortcutTitle" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editShortcutTitle')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">URL / Link</label>
-                    <input type="text" id="editFileName" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
+                    <div class="relative"><input type="text" id="editFileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editFileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="editShortcutCategory" autocomplete="off" class="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                        <button type="button" onclick="toggleCategoryCombo('editShortcutCategory')" class="absolute right-2.5 text-gray-400 hover:text-gray-600 cursor-pointer">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                        </button>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
+                    <div class="relative">
+                        <input type="text" id="editShortcutCategory" required autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                        <button type="button" tabindex="-1" onclick="clearField('editShortcutCategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                        <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleCategoryCombo('editShortcutCategory')" title="Ver categorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Subcategoria</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="editShortcutSubcategory" autocomplete="off" class="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Opcional">
-                            <button type="button" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" class="absolute right-2.5 text-gray-400 hover:text-gray-600 cursor-pointer">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
-                            </button>
+                        <div class="relative">
+                            <input type="text" id="editShortcutSubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                            <button type="button" tabindex="-1" onclick="clearField('editShortcutSubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                            <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubcategory')" title="Ver subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sub-subcategoria</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="editShortcutSubsubcategory" autocomplete="off" class="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Opcional">
-                            <button type="button" onclick="toggleSubcategoryCombo('editShortcutSubsubcategory')" class="absolute right-2.5 text-gray-400 hover:text-gray-600 cursor-pointer">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
-                            </button>
+                        <div class="relative">
+                            <input type="text" id="editShortcutSubsubcategory" autocomplete="off" role="combobox" aria-autocomplete="list" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-16">
+                            <button type="button" tabindex="-1" onclick="clearField('editShortcutSubsubcategory')" title="Limpar" class="clear-field-btn absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+                            <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="toggleSubcategoryCombo('editShortcutSubsubcategory')" title="Ver sub-subcategorias" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-full cursor-pointer"><i class="fa-solid fa-chevron-down text-xs pointer-events-none"></i></button>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-6 pt-2">
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="editShortcutFavorite" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Favorito
-                    </label>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="editShortcutDesktop" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Desktop
-                    </label>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="editShortcutMobile" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        Mobile
-                    </label>
-                </div>
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeEditShortcutModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Modal Confirmação Exclusão -->
-    <div id="deleteModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
-            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4">
-                <i class="fa-solid fa-trash"></i>
-            </div>
-            <h3 class="font-bold text-gray-800 text-base mb-2">Excluir Atalho</h3>
-            <p id="deleteMessage" class="text-sm text-gray-500 mb-6">Tem certeza que deseja excluir este item?</p>
-            <div class="flex items-center justify-center gap-3">
-                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer flex-1">Cancelar</button>
-                <button type="button" id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer flex-1">Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Subcategoria -->
-    <div id="subcategoryModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 id="subcategoryModalTitle" class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-folder-plus text-blue-600"></i> Subcategoria
-                </h3>
-                <button type="button" onclick="closeSubcategoryModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <form onsubmit="handleSubcategorySubmit(event)" class="p-6 space-y-4">
-                <input type="hidden" id="subcatParentCategory">
-                <input type="hidden" id="subcatParentSubcategory">
-                <input type="hidden" id="subcatOldName">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome</label>
-                    <input type="text" id="subcatNameInput" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Nome da subcategoria">
-                </div>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeSubcategoryModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Mover Subcategoria -->
-    <div id="moveSubcategoryModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-folder-tree text-blue-600"></i> Mover Pasta
-                </h3>
-                <button type="button" onclick="closeMoveSubcategoryModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <form onsubmit="handleMoveSubcategorySubmit(event)" class="p-6 space-y-4">
-                <input type="hidden" id="moveSubCatName">
-                <input type="hidden" id="moveSubOldParent">
-                <div>
-                    <p class="text-xs text-gray-500 mb-2">Mover "<span id="moveSubTargetTitle" class="font-semibold text-gray-700"></span>" para outra pasta principal:</p>
-                    <div class="relative flex items-center">
-                        <input type="text" id="moveSubDestinationInput" required autocomplete="off" class="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Selecione a pasta destino...">
-                        <button type="button" onclick="toggleMoveSubcategoryCombo()" class="absolute right-2.5 text-gray-400 hover:text-gray-600 cursor-pointer">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                        </button>
+                <div class="flex flex-wrap items-center gap-4 py-1.5 border-t border-b border-gray-100 my-1">
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="editShortcutFavorite" class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-400">
+                        <label for="editShortcutFavorite" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-star text-amber-400"></i> Favoritos</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="editShortcutDesktop" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                        <label for="editShortcutDesktop" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-desktop text-gray-500"></i> Computador</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <input type="checkbox" id="editShortcutMobile" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                        <label for="editShortcutMobile" class="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-1"><i class="fa-solid fa-mobile-screen-button text-gray-500"></i> Celular</label>
                     </div>
                 </div>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeMoveSubcategoryModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Mover</button>
+
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeEditShortcutModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Modal Editar Ícone de Subcategoria -->
-    <div id="editSubcatIconModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-image text-blue-600"></i> Ícone da Subcategoria
-                </h3>
-                <button type="button" onclick="closeEditSubcatIconModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <input type="hidden" id="editSubcatParentCat">
-                <input type="hidden" id="editSubcatName">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe do Ícone (FontAwesome)</label>
-                    <input type="text" id="newSubcatIconClass" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Ex: fa-solid fa-folder">
-                </div>
-                <div>
-                    <button type="button" onclick="triggerSubcatIconFile()" class="w-full py-2.5 border-2 border-dashed border-gray-300 hover:border-blue-500 text-gray-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                        <i class="fa-solid fa-upload"></i> Enviar Imagem Personalizada
-                    </button>
-                </div>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeEditSubcatIconModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="button" onclick="saveSubcatIcon()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Editar Ícone de Categoria -->
-    <div id="editCategoryIconModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-image text-blue-600"></i> Ícone da Categoria
-                </h3>
-                <button type="button" onclick="closeEditCategoryIconModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <input type="hidden" id="editCategoryIconName">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe do Ícone (FontAwesome)</label>
-                    <input type="text" id="newCategoryIconClass" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Ex: fa-solid fa-folder">
-                </div>
-                <div>
-                    <button type="button" onclick="triggerCategoryIconFile()" class="w-full py-2.5 border-2 border-dashed border-gray-300 hover:border-blue-500 text-gray-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                        <i class="fa-solid fa-upload"></i> Enviar Imagem Personalizada
-                    </button>
-                </div>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeEditCategoryIconModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="button" onclick="saveCategoryIcon()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- Modal Editar Categoria -->
-    <div id="editCategoryModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-pen text-blue-600"></i> Editar Categoria
-                </h3>
-                <button type="button" onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <div id="editCategoryModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-pen text-blue-600"></i> Editar Categoria</h3>
+                <button type="button" onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="handleEditCategorySubmit(event)" class="p-6 space-y-4">
+            <form onsubmit="handleEditCategorySubmit(event)" class="p-5 flex flex-col gap-3">
                 <input type="hidden" id="editCategoryOldName">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Categoria</label>
-                    <input type="text" id="editCategoryNewName" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome da Categoria *</label>
+                    <div class="relative"><input type="text" id="editCategoryNewName" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editCategoryNewName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Ícone</label>
-                    <input type="text" id="editCategoryIconClass" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe do Ícone (FontAwesome)</label>
+                    <div class="relative"><input type="text" id="editCategoryIconClass" placeholder="Ex: fa-solid fa-folder text-blue-500" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('editCategoryIconClass')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeEditCategoryModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">Salvar</button>
+                <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t">
+                    <button type="button" onclick="closeEditCategoryModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal de E-mail / Licença -->
-    <div id="emailModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-user-lock text-blue-600"></i> Identificação
-                </h3>
+    <!-- Modal Alterar Ícone da Categoria -->
+    <div id="editCategoryIconModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2"><i class="fa-solid fa-image text-blue-600"></i> Alterar Ícone da Categoria</h3>
+                <button type="button" onclick="closeEditCategoryIconModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="handleEmailSubmit(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">E-mail</label>
-                    <input type="email" id="loginEmail" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="seu@email.com">
+            <div class="p-5 flex flex-col gap-4">
+                <input type="hidden" id="editCategoryIconName">
+                <button type="button" onclick="triggerCategoryIconFile()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2 text-gray-700 cursor-pointer">
+                    <i class="fa-solid fa-image text-blue-600 pointer-events-none"></i> Escolher imagem (galeria ou pasta)
+                </button>
+                <div class="flex items-center gap-2 text-[11px] text-gray-400 uppercase">
+                    <span class="flex-1 border-t border-gray-200"></span>ou<span class="flex-1 border-t border-gray-200"></span>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Senha</label>
-                    <input type="password" id="loginPassword" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Senha de acesso">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Classe FontAwesome do Ícone</label>
+                    <input type="text" id="newCategoryIconClass" placeholder="Ex: fa-solid fa-brain text-purple-500" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
-                <p id="loginEmailError" class="text-xs text-red-600 hidden"></p>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" id="emailCancelBtn" onclick="closeEmailModal()" class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors cursor-pointer hidden">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer w-full">Entrar</button>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeEditCategoryIconModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                    <button type="button" onclick="saveCategoryIcon()" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">Salvar Ícone</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Bloco de Licença Expirada -->
-    <div id="licenseBlock" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center space-y-4">
-            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-xl mx-auto">
-                <i class="fa-solid fa-triangle-exclamation"></i>
+    <!-- Modal Remover Atalho -->
+    <div id="deleteModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            <div class="bg-red-50 px-5 py-3 border-b border-red-100 flex items-center justify-between">
+                <h3 class="font-semibold text-red-700 text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-red-500"></i> Confirmar Exclusão</h3>
+                <button type="button" onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <h3 class="font-bold text-gray-800 text-lg">Aviso de Licença</h3>
-            <p id="licenseBlockMessage" class="text-sm text-gray-600 leading-relaxed"></p>
-            <button type="button" onclick="useAnotherEmail()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer w-full">Usar outro e-mail</button>
+            <div class="p-5 flex flex-col gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-red-600">
+                        <i class="fa-solid fa-trash-can text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">Deseja realmente excluir este atalho?</p>
+                        <p id="deleteMessage" class="text-xs text-gray-500 mt-1 leading-relaxed">Esta ação removerá permanentemente o acesso rápido da sua lista e sincronizará com a nuvem.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Cancelar</button>
+                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm transition-colors flex items-center gap-1.5"><i class="fa-solid fa-trash text-[11px]"></i> Sim, excluir</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Lógica JavaScript Principal -->
     <script>
-        const APPS_SCRIPT_CENTRAL_URL = 'https://script.google.com/macros/s/AKfycbzQ73_Z50G84C0_h2G8aD8_Qj8a8u8I8M8t8x8v8b8n8m8l8k8j8h8g8f8d8s8a/exec';
         let APPS_SCRIPT_URL = '';
         let APPS_SCRIPT_PLANILHA = '';
-        const APPS_SCRIPT_URL_PLACEHOLDER = 'https://script.google.com/macros/s/.../exec';
-
-        let htmlFiles = [];
-        let categoryCustomizations = {};
-        let categoryViewModes = {};
-        let categorySortOrders = {};
-        let categoryIconSizes = {};
-
-        let currentCategory = 'all';
-        let currentSubcategory = null;
-        let currentSubsubcategory = null;
-        let searchQuery = '';
-        let sidebarOpen = false;
-        let desktopSidebarPinned = true;
-        let isSyncing = false;
-        let pendingSyncCount = 0;
-        let syncInterval = null;
-        let itemToDeleteId = null;
-        let editingShortcutIconId = null;
-        let editingSubcatInfo = null;
+        const APPS_SCRIPT_URL_PLACEHOLDER = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
+        const APPS_SCRIPT_CENTRAL_URL = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec';
 
         function isMobileDevice() {
-            return window.innerWidth < 768;
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
         function isSyncConfigured() {
-            return APPS_SCRIPT_URL && APPS_SCRIPT_URL !== APPS_SCRIPT_URL_PLACEHOLDER;
+            return !!APPS_SCRIPT_URL && APPS_SCRIPT_URL !== APPS_SCRIPT_URL_PLACEHOLDER;
         }
 
-        function generateUniqueId() {
-            return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        function normalizeUrl(value) {
+            const v = String(value || '').trim();
+            if (!v) return '';
+            return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(v) ? v : 'https://' + v;
         }
 
-        function cleanUrlInput(val) {
-            if (!val) return '';
-            const t = val.trim();
-            const match = t.match(/href="([^"]+)"/i);
-            if (match && match[1]) return match[1].trim();
-            const matchHref = t.match(/href=([^\s>]+)/i);
-            if (matchHref && matchHref[1]) return matchHref[1].replace(/["']/g, '').trim();
-            return t;
+        function cleanUrlInput(value) {
+            if (!value) return '';
+            return String(value).trim().replace(/\s+/g, '');
         }
 
-        function normalizeUrl(url) {
-            if (!url) return '';
-            if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:') || url.startsWith('/')) {
-                return url;
-            }
-            return 'https://' + url;
-        }
-
-        function escapeJsStr(str) {
-            return String(str || '').replace(/['\\]/g, '\\$&');
-        }
-
-        function getFaviconUrl(url) {
+        function getFaviconUrl(targetUrl) {
             try {
-                const parsed = new URL(normalizeUrl(url));
-                return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=64`;
-            } catch (e) {
+                return `https://www.google.com/s2/favicons?domain=${new URL(targetUrl).hostname}&sz=128`;
+            } catch (err) {
                 return 'https://via.placeholder.com/32';
             }
         }
 
+        function generateUniqueId() {
+            return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function escapeJsStr(str) {
+            return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        function shareShortcut(itemId) {
+            const item = htmlFiles.find(f => f.id === itemId);
+            if (!item) return;
+
+            const title = item.title || item.name || 'Atalho';
+            const url = item.file || item.name;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: title,
+                    url: url
+                }).catch((err) => {
+                    console.log('Compartilhamento cancelado ou não suportado:', err);
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copiado para a área de transferência!');
+                }).catch(() => {
+                    alert('Não foi possível compartilhar automaticamente. Link: ' + url);
+                });
+            }
+        }
+
+        let htmlFiles = [];
+        let categoryCustomizations = {};
+        let currentCategory = 'all';
+        let currentSubcategory = null;
+        let currentSubsubcategory = null;
+        let searchQuery = '';
+        let categoryViewModes = JSON.parse(localStorage.getItem('local_category_view_modes')) || {};
+        let categorySortOrders = JSON.parse(localStorage.getItem('local_category_sort_orders')) || {};
+        let categoryIconSizes = JSON.parse(localStorage.getItem('local_category_icon_sizes')) || {};
+        let sidebarOpen = window.innerWidth >= 768;
+        let itemToDeleteId = null;
+        let editingShortcutIconId = null;
+        let editingSubcatInfo = null;
+        let isSyncing = false;
+        let syncInterval = null;
+
+        const availableCategoryIcons = [
+            { icon: 'fa-solid fa-house', color: 'text-amber-500' },
+            { icon: 'fa-solid fa-cart-shopping', color: 'text-emerald-500' },
+            { icon: 'fa-solid fa-brain', color: 'text-purple-500' },
+            { icon: 'fa-solid fa-newspaper', color: 'text-blue-500' },
+            { icon: 'fa-solid fa-video', color: 'text-red-500' },
+            { icon: 'fa-solid fa-briefcase', color: 'text-indigo-500' },
+            { icon: 'fa-solid fa-wrench', color: 'text-cyan-600' },
+            { icon: 'fa-solid fa-users', color: 'text-pink-500' },
+            { icon: 'fa-solid fa-star', color: 'text-amber-400' },
+            { icon: 'fa-solid fa-code', color: 'text-teal-600' }
+        ];
+
+        const categoryKeywordMap = {
+            'loja': 1, 'lojas': 1, 'compras': 1,
+            'ia': 2, 'ai': 2, 'inteligência': 2,
+            'noticia': 3, 'notícias': 3, 'news': 3,
+            'canal': 4, 'canais': 4, 'video': 4, 'youtube': 4,
+            'trabalho': 5, 'work': 5,
+            'ferramenta': 6, 'ferramentas': 6,
+            'social': 7, 'redes': 7,
+            'favorito': 8, 'favoritos': 8,
+            'dev': 9, 'programação': 9
+        };
+
         function getCategoryIcon(catName) {
-            const custom = categoryCustomizations[catName];
-            if (custom && custom.icon) return custom.icon;
-            const lower = catName.toLowerCase();
-            if (lower.includes('trabalho') || lower.includes('work')) return 'fa-solid fa-briefcase text-blue-500';
-            if (lower.includes('estudo') || lower.includes('curso')) return 'fa-solid fa-graduation-cap text-indigo-500';
-            if (lower.includes('finan') || lower.includes('banco')) return 'fa-solid fa-wallet text-emerald-500';
-            if (lower.includes('ferramenta') || lower.includes('util')) return 'fa-solid fa-wrench text-amber-500';
-            if (lower.includes('lazer') || lower.includes('jogo')) return 'fa-solid fa-gamepad text-purple-500';
-            return 'fa-solid fa-folder text-blue-400';
+            if (!catName) return 'fa-solid fa-folder text-blue-500';
+            if (catName === 'most_visited') return 'fa-solid fa-fire text-amber-500';
+            if (catName === 'favorites') return 'fa-solid fa-star text-amber-400';
+
+            if (categoryCustomizations[catName] && categoryCustomizations[catName].icon) {
+                return categoryCustomizations[catName].icon;
+            }
+
+            const name = catName.trim().toLowerCase();
+            if (name === 'todos') return 'fa-solid fa-border-all text-blue-600';
+            
+            for (let keyword in categoryKeywordMap) {
+                if (name.includes(keyword)) {
+                    const item = availableCategoryIcons[categoryKeywordMap[keyword]];
+                    return `${item.icon} ${item.color}`;
+                }
+            }
+            return 'fa-solid fa-folder text-blue-500';
         }
 
         function getSubcategoryCustom(catName, subName) {
+            if (!catName || !subName) return null;
             const custom = categoryCustomizations[catName];
-            if (custom && custom.subcatCustom) {
+            if (custom && custom.subcatCustom && typeof custom.subcatCustom === 'object') {
                 const target = subName.trim().toLowerCase();
                 const foundKey = Object.keys(custom.subcatCustom).find(k => k.trim().toLowerCase() === target);
-                if (foundKey && custom.subcatCustom[foundKey]) {
-                    return custom.subcatCustom[foundKey];
-                }
+                if (foundKey) return custom.subcatCustom[foundKey];
             }
             return null;
         }
+
+        let pendingSyncCount = 0;
 
         function beginSync() {
             pendingSyncCount++;
@@ -929,14 +1014,7 @@
         }
 
         function toggleMobileSidebar() { 
-            if (window.innerWidth >= 768) {
-                desktopSidebarPinned = !desktopSidebarPinned;
-            } else {
-                sidebarOpen = !sidebarOpen;
-                if (sidebarOpen) {
-                    renderCategories(); // Atualiza contagens e categorias ao abrir o menu de hambúrguer
-                }
-            }
+            sidebarOpen = !sidebarOpen; 
             applySidebarState(); 
         }
 
@@ -955,15 +1033,9 @@
                     overlay.classList.add('hidden');
                 }
             } else {
-                overlay.classList.add('hidden');
                 sidebar.classList.remove('-translate-x-full', 'w-0', 'p-0', 'border-r-0');
-                if (desktopSidebarPinned) {
-                    sidebar.classList.remove('md:w-20', 'hover:md:w-64', 'group');
-                    sidebar.classList.add('md:w-64', 'sidebar-pinned');
-                } else {
-                    sidebar.classList.remove('md:w-64', 'sidebar-pinned');
-                    sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
-                }
+                sidebar.classList.add('md:w-20', 'hover:md:w-64', 'group');
+                overlay.classList.add('hidden');
             }
         }
 
@@ -1252,6 +1324,7 @@
                 menu.classList.remove('hidden');
                 menu.classList.remove('bottom-full', 'top-full', 'mb-1', 'mt-1');
                 
+                // Smart positioning relative to viewport to avoid getting cut off (last item, top row, etc.)
                 const btnRect = btn.getBoundingClientRect();
                 const menuHeight = menu.offsetHeight || 160;
                 const spaceBelow = window.innerHeight - btnRect.bottom;
@@ -1759,12 +1832,13 @@
                     uniqueCategories.add(cat);
                 }
             });
+            const totalCategories = uniqueCategories.size;
 
             const createCatBtn = (label, iconClass, count, catVal, isSystem = true, catIndex = 0) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => filterCategory(catVal);
-                btn.className = `cat-btn flex items-center justify-between px-3 py-2 rounded-md text-sm w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`;
+                btn.className = `cat-btn flex items-center justify-center md:justify-between px-3 py-2 rounded-md text-sm w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`;
                 
                 let actionMenuHtml = '';
                 if (!isSystem) {
@@ -1772,8 +1846,8 @@
                     const escapedCat = escapeJsStr(catVal);
                     
                     actionMenuHtml = `
-                        <div class="cat-actions flex items-center gap-1 shrink-0 relative action-menu-container">
-                            <span class="cat-count text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
+                        <div class="flex items-center gap-1 shrink-0 relative action-menu-container md:hidden md:group-hover:flex">
+                            <span class="text-xs bg-gray-200/70 text-gray-600 px-2 py-0.5 rounded-full">${count}</span>
                             <button type="button" onclick="toggleActionMenu(event, '${catMenuId}')" title="Ações" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors cursor-pointer">
                                 <i class="fa-solid fa-ellipsis-vertical text-xs pointer-events-none"></i>
                             </button>
@@ -1794,7 +1868,7 @@
                         </div>
                     `;
                 } else {
-                    actionMenuHtml = `<span class="cat-count text-xs bg-gray-200/70 px-2 py-0.5 rounded-full">${count}</span>`;
+                    actionMenuHtml = `<span class="text-xs bg-gray-200/70 px-2 py-0.5 rounded-full md:hidden md:group-hover:inline-block">${count}</span>`;
                 }
 
                 const customImage = (!isSystem && categoryCustomizations[catVal] && categoryCustomizations[catVal].image) || '';
@@ -1805,7 +1879,7 @@
                 btn.innerHTML = `
                     <span class="flex items-center gap-3 truncate flex-1 min-w-0 pointer-events-none">
                         ${iconHtml}
-                        <span class="cat-label truncate pointer-events-none">${label}</span>
+                        <span class="truncate pointer-events-none md:hidden md:group-hover:inline">${label}</span>
                     </span>
                     ${actionMenuHtml}
                 `;
@@ -2441,39 +2515,19 @@
         }
 
         function handleShortcutIconFileSelect(e) {
-            const input = e.target;
-            const file = input.files[0];
-            if (!file || !editingShortcutIconId) { input.value = ''; return; }
-
+            const file = e.target.files[0];
+            if (!file || !editingShortcutIconId) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
-                const img = new Image();
-                img.onload = function() {
-                    const size = 64;
-                    const iw = img.naturalWidth || size;
-                    const ih = img.naturalHeight || size;
-                    const scale = Math.min(size / iw, size / ih);
-                    const w = iw * scale, h = ih * scale;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = size;
-                    canvas.height = size;
-                    canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-
-                    const base64String = canvas.toDataURL('image/png');
-                    const item = htmlFiles.find(f => f.id === editingShortcutIconId);
-                    if (item) {
-                        item.customIcon = base64String;
-                        saveToStorage(true);
-                        render();
-                    }
-                    editingShortcutIconId = null;
-                    input.value = '';
-                };
-                img.onerror = function() {
-                    alert('Não foi possível ler esta imagem.');
-                    input.value = '';
-                };
-                img.src = evt.target.result;
+                const base64String = evt.target.result;
+                const item = htmlFiles.find(f => f.id === editingShortcutIconId);
+                if (item) {
+                    item.customIcon = base64String;
+                    saveToStorage(true);
+                    render();
+                }
+                editingShortcutIconId = null;
+                e.target.value = '';
             };
             reader.readAsDataURL(file);
         }
