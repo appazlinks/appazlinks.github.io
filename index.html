@@ -1066,26 +1066,27 @@
         }
 
         // CORREÇÃO DEFINITIVA: Uso de anchor tag com target="_blank" para disparar azlink:// externamente sem navegar a página atual (evitando about:blank#blocked)
-        function openShortcut(url, itemId) {
-            if (itemId) {
-                const item = htmlFiles.find(f => f.id === itemId);
-                if (item) {
-                    item.visitCount = (item.visitCount || 0) + 1;
-                    saveToStorage(true);
-                    render();
-                }
-            }
-            if (/^azlink:\/\//i.test(url)) {
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                return;
-            }
-            window.open(url, '_blank');
+       function openShortcut(url, itemId) {
+    if (itemId) {
+        const item = htmlFiles.find(f => f.id === itemId);
+        if (item) {
+            item.visitCount = (item.visitCount || 0) + 1;
+            saveToStorage(true);
+            render();
         }
+    }
+    // Dispara o protocolo externo azlinks:// fora do navegador
+    if (/^azlinks:\/\//i.test(url)) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+    }
+    window.open(url, '_blank');
+}
 
         function toggleFavorite(event, itemId) {
             event.stopPropagation();
