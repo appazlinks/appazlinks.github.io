@@ -605,7 +605,7 @@
         }
 
         function escapeJsStr(str) {
-            return String(str || '').replace(/\/g, '\').replace(/'/g, "\'");
+            return String(str || '').replace(/\\/g, '\\').replace(/'/g, "\\'");
         }
 
         function shareShortcut(itemId) {
@@ -891,22 +891,24 @@
                             subsubcategory: s.subsubcategory || ''
                         }));
 
-                        const localMap = new Map();
-                        htmlFiles.forEach(localItem => localMap.set(localItem.id, localItem));
+                        const shortcutMap = new Map();
+                        htmlFiles.forEach(localItem => shortcutMap.set(localItem.id, { ...localItem }));
                         
-                        const mergedShortcuts = parsedRemoteShortcuts.map(remoteItem => {
-                            const localItem = localMap.get(remoteItem.id);
-                            if (localItem) {
-                                return {
+                        parsedRemoteShortcuts.forEach(remoteItem => {
+                            if (shortcutMap.has(remoteItem.id)) {
+                                const localItem = shortcutMap.get(remoteItem.id);
+                                shortcutMap.set(remoteItem.id, {
                                     ...remoteItem,
                                     customIcon: localItem.customIcon || remoteItem.customIcon || '',
                                     visitCount: Math.max(localItem.visitCount || 0, remoteItem.visitCount || 0),
                                     isFavorite: localItem.isFavorite || remoteItem.isFavorite
-                                };
+                                });
+                            } else {
+                                shortcutMap.set(remoteItem.id, remoteItem);
                             }
-                            return remoteItem;
                         });
 
+                        const mergedShortcuts = Array.from(shortcutMap.values());
                         const newShortcutsStr = JSON.stringify(mergedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
                             htmlFiles = mergedShortcuts;
@@ -1281,7 +1283,7 @@
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
-                    return '<button type="button" onclick="event.stopPropagation(); setIconSize('' + k + '')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
                         '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
                 }).join('');
             menu.classList.remove('hidden');
