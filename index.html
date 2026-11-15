@@ -883,16 +883,35 @@
                     let changed = false;
                     
                     if (Array.isArray(data.shortcuts)) {
-                        const parsedShortcuts = data.shortcuts.map(s => ({
+                        const parsedRemoteShortcuts = data.shortcuts.map(s => ({
                             ...s,
                             showDesktop: s.showDesktop !== false,
                             showMobile: s.showMobile !== false,
                             subcategory: s.subcategory || '',
                             subsubcategory: s.subsubcategory || ''
                         }));
-                        const newShortcutsStr = JSON.stringify(parsedShortcuts);
+
+                        const shortcutMap = new Map();
+                        htmlFiles.forEach(localItem => shortcutMap.set(localItem.id, { ...localItem }));
+                        
+                        parsedRemoteShortcuts.forEach(remoteItem => {
+                            if (shortcutMap.has(remoteItem.id)) {
+                                const localItem = shortcutMap.get(remoteItem.id);
+                                shortcutMap.set(remoteItem.id, {
+                                    ...remoteItem,
+                                    customIcon: localItem.customIcon || remoteItem.customIcon || '',
+                                    visitCount: Math.max(localItem.visitCount || 0, remoteItem.visitCount || 0),
+                                    isFavorite: localItem.isFavorite || remoteItem.isFavorite
+                                });
+                            } else {
+                                shortcutMap.set(remoteItem.id, remoteItem);
+                            }
+                        });
+
+                        const mergedShortcuts = Array.from(shortcutMap.values());
+                        const newShortcutsStr = JSON.stringify(mergedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
-                            htmlFiles = parsedShortcuts;
+                            htmlFiles = mergedShortcuts;
                             idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
                             changed = true;
                         }
@@ -900,34 +919,40 @@
 
                     if (data.categories && typeof data.categories === 'object') {
                         const mergedCategories = { ...(data.categories || {}) };
+                        
                         Object.keys(categoryCustomizations).forEach(catKey => {
-                            if (!mergedCategories[catKey]) {
-                                mergedCategories[catKey] = categoryCustomizations[catKey];
+                            const targetCatKey = Object.keys(mergedCategories).find(k => k.trim().toLowerCase() === catKey.trim().toLowerCase()) || catKey;
+                            
+                            if (!mergedCategories[targetCatKey]) {
+                                mergedCategories[targetCatKey] = categoryCustomizations[catKey];
                             } else {
-                                if (categoryCustomizations[catKey].image) {
-                                    mergedCategories[catKey].image = categoryCustomizations[catKey].image;
-                                }
-                                if (categoryCustomizations[catKey].icon) {
-                                    mergedCategories[catKey].icon = categoryCustomizations[catKey].icon;
-                                }
-                                if (categoryCustomizations[catKey].subcatCustom) {
-                                    const remoteSubCust = mergedCategories[catKey].subcatCustom || {};
-                                    const localSubCust = categoryCustomizations[catKey].subcatCustom || {};
-                                    mergedCategories[catKey].subcatCustom = { ...localSubCust, ...remoteSubCust };
-                                    Object.keys(localSubCust).forEach(subKey => {
-                                        const targetSubKey = Object.keys(mergedCategories[catKey].subcatCustom).find(k => k.trim().toLowerCase() === subKey.trim().toLowerCase()) || subKey;
-                                        if (localSubCust[subKey].image || localSubCust[subKey].icon) {
-                                            mergedCategories[catKey].subcatCustom[targetSubKey] = {
-                                                ...(mergedCategories[catKey].subcatCustom[targetSubKey] || {}),
-                                                ...localSubCust[subKey]
-                                            };
-                                        }
+                                const localCat = categoryCustomizations[catKey];
+                                const remoteCat = mergedCategories[targetCatKey];
+
+                                if (localCat.image) remoteCat.image = localCat.image;
+                                if (localCat.icon) remoteCat.icon = localCat.icon;
+
+                                if (localCat.subcatCustom && typeof localCat.subcatCustom === 'object') {
+                                    if (!remoteCat.subcatCustom) remoteCat.subcatCustom = {};
+                                    
+                                    Object.keys(localCat.subcatCustom).forEach(subKey => {
+                                        const targetSubKey = Object.keys(remoteCat.subcatCustom).find(k => k.trim().toLowerCase() === subKey.trim().toLowerCase()) || subKey;
+                                        const localSubVal = localCat.subcatCustom[subKey];
+                                        const remoteSubVal = remoteCat.subcatCustom[targetSubKey] || {};
+
+                                        remoteCat.subcatCustom[targetSubKey] = {
+                                            ...remoteSubVal,
+                                            ...localSubVal,
+                                            image: localSubVal.image || remoteSubVal.image,
+                                            icon: localSubVal.icon || remoteSubVal.icon
+                                        };
                                     });
                                 }
-                                if (categoryCustomizations[catKey].subcategories) {
-                                    mergedCategories[catKey].subcategories = Array.from(new Set([
-                                        ...(mergedCategories[catKey].subcategories || []),
-                                        ...(categoryCustomizations[catKey].subcategories || [])
+
+                                if (localCat.subcategories) {
+                                    remoteCat.subcategories = Array.from(new Set([
+                                        ...(remoteCat.subcategories || []),
+                                        ...(localCat.subcategories || [])
                                     ]));
                                 }
                             }
