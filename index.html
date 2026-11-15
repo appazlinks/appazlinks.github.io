@@ -581,20 +581,62 @@
             return !!APPS_SCRIPT_URL && APPS_SCRIPT_URL !== APPS_SCRIPT_URL_PLACEHOLDER;
         }
 
+        function isLocalWindowsPath(value) {
+            const v = String(value || '').trim();
+            return /^([a-zA-Z]:[\\/]|\\\\|file:\/\/\/|azlink:\/\/)/i.test(v);
+        }
+
         function normalizeUrl(value) {
             const v = String(value || '').trim();
             if (!v) return '';
+            if (/^azlink:\/\//i.test(v)) return v;
+            if (/^file:\/\/\//i.test(v)) {
+                const localPath = decodeURIComponent(v.replace(/^file:\/\/\//i, '')).replace(/\//g, '\\');
+                return 'azlink://' + localPath;
+            }
+            if (/^([a-zA-Z]:[\\/]|\\\\)/.test(v)) {
+                return 'azlink://' + v.replace(/\//g, '\\');
+            }
             return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(v) ? v : 'https://' + v;
         }
 
         function cleanUrlInput(value) {
             if (!value) return '';
-            return String(value).trim().replace(/\s+/g, '');
+            const v = String(value).trim();
+            // Preserva espaços caso seja um caminho local do Windows (ex: C:\Arquivos de Programas\... ou azlink://...)
+            if (isLocalWindowsPath(v)) {
+                return v;
+            }
+            return v.replace(/\s+/g, '');
+        }
+
+        function getLocalShortcutIconDataUri(targetUrl) {
+            const lower = String(targetUrl || '').toLowerCase();
+            if (lower.endsWith('.lnk') || lower.endsWith('.exe') || lower.endsWith('.bat') || lower.endsWith('.cmd')) {
+                return "data:image/svg+xml;utf8," + encodeURIComponent(
+                    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>" +
+                    "<rect width='64' height='64' rx='14' fill='#2563EB'/>" +
+                    "<path d='M22 20h20v6H22zm0 10h20v6H22zm0 10h13v6H22z' fill='#FFFFFF'/>" +
+                    "<path d='M38 42l8-8m0 0h-6m6 0v6' stroke='#93C5FD' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>" +
+                    "</svg>"
+                );
+            }
+            return "data:image/svg+xml;utf8," + encodeURIComponent(
+                "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>" +
+                "<path d='M8 18a6 6 0 0 1 6-6h13l5 6h18a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V18z' fill='#F59E0B'/>" +
+                "<path d='M8 24h48v24a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V24z' fill='#FBBF24'/>" +
+                "</svg>"
+            );
         }
 
         function getFaviconUrl(targetUrl) {
+            if (isLocalWindowsPath(targetUrl)) {
+                return getLocalShortcutIconDataUri(targetUrl);
+            }
             try {
-                return `https://www.google.com/s2/favicons?domain=${new URL(targetUrl).hostname}&sz=128`;
+                const parsed = new URL(targetUrl);
+                if (!parsed.hostname) return getLocalShortcutIconDataUri(targetUrl);
+                return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=128`;
             } catch (err) {
                 return 'https://via.placeholder.com/32';
             }
@@ -605,7 +647,7 @@
         }
 
         function escapeJsStr(str) {
-            return String(str || '').replace(/\\/g, '\\').replace(/'/g, "\\'");
+            return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
 
         function shareShortcut(itemId) {
@@ -1034,6 +1076,10 @@
                     saveToStorage(true);
                     render();
                 }
+            }
+            if (/^azlink:\/\//i.test(url)) {
+                window.location.href = url;
+                return;
             }
             window.open(url, '_blank');
         }
@@ -2469,7 +2515,7 @@
 
                     return `
                         <div class="group relative flex flex-col items-center justify-between ${sz.cardPad} ${sz.cardMin} h-full rounded-lg cursor-pointer text-center bg-white border border-gray-200/80 hover:border-blue-300 hover:shadow-sm overflow-visible"
-                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                             data-item-id="${item.id}" onclick="openShortcut('${escapeJsStr(targetUrl)}', '${item.id}')">
                             
                             <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="absolute top-1 left-1 p-1 text-gray-300 hover:text-amber-400 z-10 cursor-pointer">
                                 <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
@@ -2557,7 +2603,7 @@
 
                     return `
                         <div class="flex items-center justify-between ${sz.rowPad} hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative"
-                             data-item-id="${item.id}" onclick="openShortcut('${targetUrl}', '${item.id}')">
+                             data-item-id="${item.id}" onclick="openShortcut('${escapeJsStr(targetUrl)}', '${item.id}')">
                             <div class="flex items-center gap-3 min-w-0 flex-1 pointer-events-none">
                                 <button type="button" onclick="toggleFavorite(event, '${item.id}')" class="p-1 text-gray-300 hover:text-amber-400 cursor-pointer pointer-events-auto">
                                     <i class="fa-solid fa-star text-xs ${isFav ? 'text-amber-400' : ''} pointer-events-none"></i>
@@ -2691,6 +2737,18 @@
         }
 
         function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileInput = document.getElementById('fileName');
+            if (fileInput) {
+                fileInput.addEventListener('input', () => {
+                    const mobCb = document.getElementById('shortcutMobile');
+                    if (mobCb && isLocalWindowsPath(fileInput.value)) {
+                        mobCb.checked = false;
+                    }
+                });
+            }
+        });
 
         function handleFormSubmit(e) {
             e.preventDefault();
