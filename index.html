@@ -605,7 +605,7 @@
         }
 
         function escapeJsStr(str) {
-            return String(str || '').replace(/\/g, '\').replace(/'/g, "\'");
+            return String(str || '').replace(/\\/g, '\\').replace(/'/g, "\\'");
         }
 
         function shareShortcut(itemId) {
@@ -753,7 +753,12 @@
             localDbPromise = new Promise((resolve, reject) => {
                 if (!window.indexedDB) return reject(new Error('IndexedDB indisponível'));
                 const req = indexedDB.open(LOCAL_DB_NAME, 1);
-                req.onupgradeneeded = () => req.result.createObjectStore(LOCAL_DB_STORE);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains(LOCAL_DB_STORE)) {
+                        db.createObjectStore(LOCAL_DB_STORE);
+                    }
+                };
                 req.onsuccess = () => resolve(req.result);
                 req.onerror = () => reject(req.error);
             });
@@ -793,7 +798,7 @@
         async function loadLocalData() {
             const [s, c, d] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty')]);
             try {
-                if (s !== undefined) {
+                if (s !== undefined && s !== null) {
                     htmlFiles = (JSON.parse(s) || []).map(item => ({
                         ...item,
                         showDesktop: item.showDesktop !== false,
@@ -844,7 +849,7 @@
                 });
                 if (versionAtStart === localVersion) {
                     pendingPush = false;
-                    idbSetMany({ dirty: 'false' });
+                    await idbSetMany({ dirty: 'false' });
                 }
             } catch (err) {
                 console.error("Erro ao sincronizar envio:", err);
@@ -912,7 +917,7 @@
                         const newShortcutsStr = JSON.stringify(mergedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
                             htmlFiles = mergedShortcuts;
-                            idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
+                            await idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
                             changed = true;
                         }
                     }
@@ -961,7 +966,7 @@
                         const newCatStr = JSON.stringify(mergedCategories);
                         if (newCatStr !== JSON.stringify(categoryCustomizations)) {
                             categoryCustomizations = mergedCategories;
-                            idbSetMany({ categories: JSON.stringify(categoryCustomizations) });
+                            await idbSetMany({ categories: JSON.stringify(categoryCustomizations) });
                             changed = true;
                         }
                     }
@@ -1283,7 +1288,7 @@
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
-                    return '<button type="button" onclick="event.stopPropagation(); setIconSize('' + k + '')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
+                    return '<button type="button" onclick="event.stopPropagation(); setIconSize(\'' + k + '\')" class="w-full text-left px-3 py-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-blue-50 ' + (on ? 'text-blue-700 font-medium' : 'text-gray-700') + '">' +
                         '<span>' + ICON_SIZES[k].label + '</span>' + (on ? '<i class="fa-solid fa-check text-xs text-blue-600"></i>' : '') + '</button>';
                 }).join('');
             menu.classList.remove('hidden');
