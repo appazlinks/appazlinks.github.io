@@ -1074,10 +1074,24 @@ function openShortcut(url, itemId) {
             render();
         }
     }
+    
+    // Se for o protocolo personalizado da pasta local
     if (/^azlinks:\/\//i.test(url)) {
-        window.location.href = url;
+        // Tenta disparar via link invisível (funciona perfeitamente no PWA instalado)
+        const a = document.createElement('a');
+        a.href = url;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            if (document.body.contains(a)) {
+                document.body.removeChild(a);
+            }
+        }, 200);
         return;
     }
+    
+    // Links normais da web abrem em nova aba
     window.open(url, '_blank');
 }
 
