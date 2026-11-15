@@ -1075,12 +1075,7 @@ function openShortcut(url, itemId) {
         }
     }
     if (/^azlinks:\/\//i.test(url)) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => document.body.removeChild(a), 100);
+        window.location.href = url;
         return;
     }
     window.open(url, '_blank');
