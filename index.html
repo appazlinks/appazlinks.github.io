@@ -69,6 +69,14 @@
             #sidebar:not(:hover):not(.sidebar-expanded) .sidebar-text {
                 display: none !important;
             }
+
+            #sidebar:not(:hover):not(.sidebar-expanded) .category-scroll {
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            #sidebar:not(:hover):not(.sidebar-expanded) .category-scroll::-webkit-scrollbar {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -274,7 +282,7 @@
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">E-mail cadastrado *</label>
                     <input type="email" id="loginEmail" required autocomplete="email" autocapitalize="none" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
-                <div>
+                <div id="loginPasswordContainer">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Senha *</label>
                     <input type="password" id="loginPassword" required maxlength="8" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
@@ -2870,13 +2878,31 @@
             return `${year}${month}${day}`;
         }
 
+        function isPasswordAlreadyVerified() {
+            return localStorage.getItem('local_auth_verified') === 'true' || !!localStorage.getItem('local_user_data');
+        }
+
         function openEmailModal(canCancel, message) {
             const input = document.getElementById('loginEmail');
+            const passContainer = document.getElementById('loginPasswordContainer');
             const passInput = document.getElementById('loginPassword');
             const error = document.getElementById('loginEmailError');
             const cancelBtn = document.getElementById('emailCancelBtn');
+            const skipPassword = isPasswordAlreadyVerified();
+
             input.value = localStorage.getItem('local_user_email') || '';
             passInput.value = '';
+
+            if (passContainer && passInput) {
+                if (skipPassword) {
+                    passContainer.classList.add('hidden');
+                    passInput.required = false;
+                } else {
+                    passContainer.classList.remove('hidden');
+                    passInput.required = true;
+                }
+            }
+
             if (message) {
                 error.textContent = message;
                 error.classList.remove('hidden');
@@ -2909,11 +2935,13 @@
             const password = document.getElementById('loginPassword').value.trim();
             const error = document.getElementById('loginEmailError');
 
-            const expectedPass = getExpectedPassword();
-            if (password !== expectedPass) {
-                error.textContent = 'Senha incorreta.';
-                error.classList.remove('hidden');
-                return;
+            if (!isPasswordAlreadyVerified()) {
+                const expectedPass = getExpectedPassword();
+                if (password !== expectedPass) {
+                    error.textContent = 'Senha incorreta.';
+                    error.classList.remove('hidden');
+                    return;
+                }
             }
 
             error.classList.add('hidden');
@@ -2924,7 +2952,7 @@
                 data = await fetchUsuario(email);
             } catch (err) {
                 error.textContent = (err && err.userMessage) || 'Não foi possível verificar o e-mail.';
-                error.classList.add('hidden');
+                error.classList.remove('hidden');
                 if (submitBtn) submitBtn.disabled = false;
                 return;
             }
@@ -2938,10 +2966,11 @@
             }
             if (result !== true) {
                 error.textContent = 'E-mail não cadastrado.';
-                error.classList.add('hidden');
+                error.classList.remove('hidden');
                 return;
             }
 
+            localStorage.setItem('local_auth_verified', 'true');
             closeEmailModal();
             currentCategory = getInitialCategory();
             render();
