@@ -1075,31 +1075,16 @@ function openShortcut(url, itemId) {
         }
     }
     
+    // Se for o link local do Windows, abre diretamente na mesma aba/contexto 
+    // ou dispara o redirecionamento sem gerar nova guia em branco.
     if (/^azlinks:\/\//i.test(url)) {
-        // Cria um link temporário com target="_blank" e dispara o clique nativo
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        
-        // Simula o clique do utilizador (necessário para o navegador permitir protocolos externos)
-        try {
-            a.click();
-        } catch (e) {
-            window.location.href = url;
-        }
-        
-        setTimeout(() => {
-            if (document.body.contains(a)) {
-                document.body.removeChild(a);
-            }
-        }, 300);
+        window.location.href = url;
         return;
     }
     
     window.open(url, '_blank');
 }
+        
         function toggleFavorite(event, itemId) {
             event.stopPropagation();
             const item = htmlFiles.find(f => f.id === itemId);
