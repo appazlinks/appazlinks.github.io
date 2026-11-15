@@ -1066,7 +1066,7 @@
         }
 
         // CORREÇÃO DEFINITIVA: Uso de anchor tag com target="_blank" para disparar azlink:// externamente sem navegar a página atual (evitando about:blank#blocked)
-       function openShortcut(url, itemId) {
+    function openShortcut(url, itemId) {
     if (itemId) {
         const item = htmlFiles.find(f => f.id === itemId);
         if (item) {
@@ -1075,14 +1075,9 @@
             render();
         }
     }
-    // Dispara o protocolo externo azlinks:// fora do navegador
+    // Protocolo externo azlinks://: usar location.href evita o about:blank#blocked do Brave/Chrome
     if (/^azlinks:\/\//i.test(url)) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        window.location.href = url;
         return;
     }
     window.open(url, '_blank');
