@@ -1075,23 +1075,18 @@ function openShortcut(url, itemId) {
         }
     }
     
-    // Se for o protocolo personalizado da pasta local
     if (/^azlinks:\/\//i.test(url)) {
-        // Tenta disparar via link invisível (funciona perfeitamente no PWA instalado)
-        const a = document.createElement('a');
-        a.href = url;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
+        // Cria um iframe oculto ou dispara o protocolo sem alterar a janela atual
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
         setTimeout(() => {
-            if (document.body.contains(a)) {
-                document.body.removeChild(a);
-            }
-        }, 200);
+            document.body.removeChild(iframe);
+        }, 500);
         return;
     }
     
-    // Links normais da web abrem em nova aba
     window.open(url, '_blank');
 }
 
