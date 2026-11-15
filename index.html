@@ -603,7 +603,6 @@
         function cleanUrlInput(value) {
             if (!value) return '';
             const v = String(value).trim();
-            // Preserva espaços caso seja um caminho local do Windows (ex: C:\Arquivos de Programas\... ou azlink://...)
             if (isLocalWindowsPath(v)) {
                 return v;
             }
@@ -956,8 +955,6 @@
                         const localById = new Map();
                         htmlFiles.forEach(localItem => localById.set(localItem.id, localItem));
 
-                        // A planilha remota (Google Sheets) é a fonte da verdade:
-                        // Se um item foi excluído em outro dispositivo, ele não virá em parsedRemoteShortcuts e será removido localmente.
                         const mergedShortcuts = parsedRemoteShortcuts.map(remoteItem => {
                             const localItem = localById.get(remoteItem.id);
                             if (localItem) {
@@ -1068,6 +1065,7 @@
             }
         }
 
+        // CORREÇÃO APLICADA AQUI: Uso de anchor tag para disparar azlink:// sem navegar a página web
         function openShortcut(url, itemId) {
             if (itemId) {
                 const item = htmlFiles.find(f => f.id === itemId);
@@ -1078,7 +1076,11 @@
                 }
             }
             if (/^azlink:\/\//i.test(url)) {
-                window.location.href = url;
+                const a = document.createElement('a');
+                a.href = url;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
                 return;
             }
             window.open(url, '_blank');
