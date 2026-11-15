@@ -1064,7 +1064,26 @@ function normalizeUrl(value) {
             }
         }
 
-        // CORREÇÃO DEFINITIVA: Uso de anchor tag com target="_blank" para disparar azlink:// externamente sem navegar a página atual (evitando about:blank#blocked)
+        // Converte o link salvo (azlinks://C:\\Pasta ou azlinks://\\\\servidor\\pasta) em uma URL VÁLIDA para o navegador.
+// O formato antigo com "\\" e ":" logo após "azlinks://" é rejeitado pelo navegador (URL inválida) e nada abre.
+// Novo formato enviado ao Windows: azlinks://open?path=<caminho codificado>
+function buildAzlinksLaunchUrl(stored) {
+    let path = String(stored || '').trim().replace(/^azlinks:\/\//i, '');
+    try { path = decodeURIComponent(path); } catch (e) {}
+    path = path.replace(/^\/+(?=[a-zA-Z]:)/, '').replace(/\//g, '\\');
+    return 'azlinks://open?path=' + encodeURIComponent(path);
+}
+
+function launchExternalProtocol(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.style.display = 'none';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+}
+
 function openShortcut(url, itemId) {
     if (itemId) {
         const item = htmlFiles.find(f => f.id === itemId);
@@ -1074,14 +1093,12 @@ function openShortcut(url, itemId) {
             render();
         }
     }
-    
-    // Se for o link local do Windows, abre diretamente na mesma aba/contexto 
-    // ou dispara o redirecionamento sem gerar nova guia em branco.
+
     if (/^azlinks:\/\//i.test(url)) {
-        window.location.href = url;
+        launchExternalProtocol(buildAzlinksLaunchUrl(url));
         return;
     }
-    
+
     window.open(url, '_blank');
 }
         
