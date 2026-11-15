@@ -747,6 +747,7 @@
         let localDbPromise = null;
         let pendingPush = false;
         let localVersion = 0;
+        let deletedShortcutIds = new Set();
 
         function openLocalDB() {
             if (localDbPromise) return localDbPromise;
@@ -791,8 +792,11 @@
         }
 
         async function loadLocalData() {
-            const [s, c, d] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty')]);
+            const [s, c, d, del] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty'), idbGet('deleted_ids')]);
             try {
+                if (del) {
+                    try { deletedShortcutIds = new Set(JSON.parse(del) || []); } catch (e) { deletedShortcutIds = new Set(); }
+                }
                 if (s !== undefined) {
                     htmlFiles = (JSON.parse(s) || []).map(item => ({
                         ...item,
@@ -835,10 +839,11 @@
                 await fetchWithTimeout(APPS_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ 
                         shortcuts: htmlFiles, 
-                        categories: categoryCustomizations, 
+                        categories: categoryCustomizations,
+                        deletedIds: Array.from(deletedShortcutIds),
                         planilha: APPS_SCRIPT_PLANILHA 
                     })
                 });
@@ -882,33 +887,47 @@
                 if (data.status === "success" && !pendingPush && versionAtStart === localVersion) {
                     let changed = false;
                     
-                    if (Array.isArray(data.shortcuts)) {
-                        const parsedRemoteShortcuts = data.shortcuts.map(s => ({
-                            ...s,
-                            showDesktop: s.showDesktop !== false,
-                            showMobile: s.showMobile !== false,
-                            subcategory: s.subcategory || '',
-                            subsubcategory: s.subsubcategory || ''
-                        }));
-
-                        const shortcutMap = new Map();
-                        htmlFiles.forEach(localItem => shortcutMap.set(localItem.id, { ...localItem }));
-                        
-                        parsedRemoteShortcuts.forEach(remoteItem => {
-                            if (shortcutMap.has(remoteItem.id)) {
-                                const localItem = shortcutMap.get(remoteItem.id);
-                                shortcutMap.set(remoteItem.id, {
-                                    ...remoteItem,
-                                    customIcon: localItem.customIcon || remoteItem.customIcon || '',
-                                    visitCount: Math.max(localItem.visitCount || 0, remoteItem.visitCount || 0),
-                                    isFavorite: localItem.isFavorite || remoteItem.isFavorite
-                                });
-                            } else {
-                                shortcutMap.set(remoteItem.id, remoteItem);
+                    if (Array.isArray(data.deletedIds)) {
+                        let delChanged = false;
+                        data.deletedIds.forEach(id => {
+                            if (id && !deletedShortcutIds.has(id)) {
+                                deletedShortcutIds.add(id);
+                                delChanged = true;
                             }
                         });
+                        if (delChanged) {
+                            idbSetMany({ deleted_ids: JSON.stringify(Array.from(deletedShortcutIds)) });
+                        }
+                    }
 
-                        const mergedShortcuts = Array.from(shortcutMap.values());
+                    if (Array.isArray(data.shortcuts)) {
+                        const parsedRemoteShortcuts = data.shortcuts
+                            .filter(s => s && s.id && !deletedShortcutIds.has(s.id))
+                            .map(s => ({
+                                ...s,
+                                showDesktop: s.showDesktop !== false,
+                                showMobile: s.showMobile !== false,
+                                subcategory: s.subcategory || '',
+                                subsubcategory: s.subsubcategory || ''
+                            }));
+
+                        const localById = new Map();
+                        htmlFiles.forEach(localItem => localById.set(localItem.id, localItem));
+
+                        // A planilha remota (Google Sheets) é a fonte da verdade:
+                        // Se um item foi excluído em outro dispositivo, ele não virá em parsedRemoteShortcuts e será removido localmente.
+                        const mergedShortcuts = parsedRemoteShortcuts.map(remoteItem => {
+                            const localItem = localById.get(remoteItem.id);
+                            if (localItem) {
+                                return {
+                                    ...remoteItem,
+                                    customIcon: remoteItem.customIcon || localItem.customIcon || '',
+                                    visitCount: Math.max(localItem.visitCount || 0, remoteItem.visitCount || 0)
+                                };
+                            }
+                            return remoteItem;
+                        });
+
                         const newShortcutsStr = JSON.stringify(mergedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
                             htmlFiles = mergedShortcuts;
@@ -990,7 +1009,8 @@
         function saveToStorage(syncNow = true) {
             const snapshot = {
                 shortcuts: JSON.stringify(htmlFiles),
-                categories: JSON.stringify(categoryCustomizations)
+                categories: JSON.stringify(categoryCustomizations),
+                deleted_ids: JSON.stringify(Array.from(deletedShortcutIds))
             };
             if (syncNow) {
                 localVersion++;
@@ -2659,6 +2679,9 @@
             itemToDeleteId = itemId;
             document.getElementById('deleteMessage').textContent = `O atalho "${item.title || item.name}" será excluído permanentemente.`;
             document.getElementById('confirmDeleteBtn').onclick = () => {
+                if (itemToDeleteId) {
+                    deletedShortcutIds.add(itemToDeleteId);
+                }
                 htmlFiles = htmlFiles.filter(f => f.id !== itemToDeleteId);
                 saveToStorage(true);
                 closeDeleteModal();
@@ -2817,6 +2840,7 @@
 
         function confirmClearAllShortcuts() {
             if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
+                htmlFiles.forEach(f => { if (f && f.id) deletedShortcutIds.add(f.id); });
                 htmlFiles = [];
                 currentCategory = 'all';
                 currentSubcategory = null;
@@ -2875,6 +2899,7 @@
             if (previousEmail && previousEmail !== user.email) {
                 htmlFiles = [];
                 categoryCustomizations = {};
+                deletedShortcutIds = new Set();
                 currentCategory = 'all';
                 currentSubcategory = null;
                 currentSubsubcategory = null;
