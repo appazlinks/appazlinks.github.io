@@ -220,7 +220,7 @@
                 <div class="flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-md md:hidden">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <span class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-sliders text-white text-sm"></i></span>
-                        <div id="sidebarTitle" class="text-sm font-bold text-white uppercase tracking-widest truncate">Filtros</div>
+                        <div id="sidebarTitle" class="text-sm font-bold text-white uppercase tracking-widest truncate">CATEGORIAS</div>
                     </div>
                     <button type="button" onclick="toggleMobileSidebar()" title="Fechar" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full text-white/90 hover:bg-white/20 transition-colors shrink-0"><i class="fa-solid fa-xmark text-base"></i></button>
                 </div>
@@ -1045,10 +1045,32 @@
             }
         }
 
+        function getInitialCategory() {
+            const isMob = isMobileDevice();
+            const hasFavorites = htmlFiles.some(item => {
+                const showDesktop = item.showDesktop !== false;
+                const showMobile = item.showMobile !== false;
+                const visible = isMob ? showMobile : showDesktop;
+                return visible && !!item.isFavorite;
+            });
+            if (hasFavorites) {
+                return 'favorites';
+            }
+            const lastCat = localStorage.getItem('local_last_category');
+            if (lastCat) {
+                if (['all', 'favorites', 'most_visited'].includes(lastCat)) return lastCat;
+                const exists = htmlFiles.some(s => (s.category || 'Geral').trim() === lastCat) ||
+                               (categoryCustomizations[lastCat] && Array.isArray(categoryCustomizations[lastCat].subcategories) && categoryCustomizations[lastCat].subcategories.length > 0);
+                if (exists) return lastCat;
+            }
+            return 'all';
+        }
+
         function filterCategory(cat) {
             currentCategory = cat;
             currentSubcategory = null;
             currentSubsubcategory = null;
+            localStorage.setItem('local_last_category', cat);
             renderCategories();
             applySidebarState();
             renderGrid();
@@ -1843,7 +1865,7 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => filterCategory(catVal);
-                btn.className = `cat-btn flex items-center justify-center md:justify-between px-3 py-2 rounded-md text-sm w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`;
+                btn.className = `cat-btn flex items-center justify-center md:justify-between px-3 py-2 rounded-md text-sm font-bold w-full cursor-pointer ${currentCategory === catVal ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`;
                 
                 let actionMenuHtml = '';
                 if (!isSystem) {
@@ -2921,8 +2943,11 @@
             }
 
             closeEmailModal();
+            currentCategory = getInitialCategory();
             render();
             await syncFromGoogleSheets();
+            currentCategory = getInitialCategory();
+            render();
             startAutoSync();
         }
 
@@ -2959,6 +2984,7 @@
             initCategoryCombos();
             initSubcategoryCombos();
             await loadLocalData();
+            currentCategory = getInitialCategory();
             render();
             let cached = null;
             try { cached = JSON.parse(localStorage.getItem('local_user_data') || 'null'); } catch (e) {}
@@ -2966,6 +2992,13 @@
             if (result === true) {
                 refreshUserPermissions();
                 await syncFromGoogleSheets();
+                if (!localStorage.getItem('local_last_category') || currentCategory === 'all') {
+                    const updatedInitial = getInitialCategory();
+                    if (updatedInitial !== currentCategory) {
+                        currentCategory = updatedInitial;
+                        render();
+                    }
+                }
                 startAutoSync();
             } else if (result === 'expired') {
                 showLicenseBlock();
