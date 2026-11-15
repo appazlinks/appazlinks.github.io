@@ -581,25 +581,24 @@
             return !!APPS_SCRIPT_URL && APPS_SCRIPT_URL !== APPS_SCRIPT_URL_PLACEHOLDER;
         }
 
-        function isLocalWindowsPath(value) {
-            const v = String(value || '').trim();
-            return /^([a-zA-Z]:[\\/]|\\\\|file:\/\/\/|azlink:\/\/)/i.test(v);
-        }
+    function isLocalWindowsPath(value) {
+    const v = String(value || '').trim();
+    return /^([a-zA-Z]:[\\/]|\\\\|file:\/\/\/|azlinks:\/\/)/i.test(v);
+}
 
-        function normalizeUrl(value) {
-            const v = String(value || '').trim();
-            if (!v) return '';
-            if (/^azlink:\/\//i.test(v)) return v;
-            if (/^file:\/\/\//i.test(v)) {
-                const localPath = decodeURIComponent(v.replace(/^file:\/\/\//i, '')).replace(/\//g, '\\');
-                return 'azlink://' + localPath;
-            }
-            if (/^([a-zA-Z]:[\\/]|\\\\)/.test(v)) {
-                return 'azlink://' + v.replace(/\//g, '\\');
-            }
-            return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(v) ? v : 'https://' + v;
-        }
-
+function normalizeUrl(value) {
+    const v = String(value || '').trim();
+    if (!v) return '';
+    if (/^azlinks:\/\//i.test(v)) return v;
+    if (/^file:\/\/\//i.test(v)) {
+        const localPath = decodeURIComponent(v.replace(/^file:\/\/\//i, '')).replace(/\//g, '\\');
+        return 'azlinks://' + localPath;
+    }
+    if (/^([a-zA-Z]:[\\/]|\\\\)/.test(v)) {
+        return 'azlinks://' + v.replace(/\//g, '\\');
+    }
+    return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(v) ? v : 'https://' + v;
+}
         function cleanUrlInput(value) {
             if (!value) return '';
             const v = String(value).trim();
