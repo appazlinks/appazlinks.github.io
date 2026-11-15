@@ -826,115 +826,21 @@
             }
         }
 
-                async function syncToGoogleSheets() {
+        async function syncToGoogleSheets() {
             if (!isSyncConfigured() || isSyncing || !navigator.onLine) return;
             isSyncing = true;
             beginSync();
             const versionAtStart = localVersion;
             try {
-                // 1. Pull/Merge remote first to avoid overwriting items from other devices
-                const timestamp = Date.now();
-                let getUrl = APPS_SCRIPT_URL;
-                if (APPS_SCRIPT_PLANILHA) {
-                    getUrl += (getUrl.includes('?') ? '&' : '?') + 'planilha=' + encodeURIComponent(APPS_SCRIPT_PLANILHA) + '&_t=' + timestamp;
-                } else {
-                    getUrl += (getUrl.includes('?') ? '&' : '?') + '_t=' + timestamp;
-                }
-
-                try {
-                    const resGet = await fetchWithTimeout(getUrl);
-                    const dataGet = await resGet.json();
-                    if (dataGet.status === "success" && Array.isArray(dataGet.shortcuts)) {
-                        const parsedRemoteShortcuts = dataGet.shortcuts.map(s => ({
-                            ...s,
-                            showDesktop: s.showDesktop !== false,
-                            showMobile: s.showMobile !== false,
-                            subcategory: s.subcategory || '',
-                            subsubcategory: s.subsubcategory || ''
-                        }));
-
-                        const shortcutMap = new Map();
-                        htmlFiles.forEach(localItem => shortcutMap.set(localItem.id, { ...localItem }));
-                        
-                        parsedRemoteShortcuts.forEach(remoteItem => {
-                            if (shortcutMap.has(remoteItem.id)) {
-                                const localItem = shortcutMap.get(remoteItem.id);
-                                shortcutMap.set(remoteItem.id, {
-                                    ...remoteItem,
-                                    customIcon: localItem.customIcon || remoteItem.customIcon || '',
-                                    visitCount: Math.max(localItem.visitCount || 0, remoteItem.visitCount || 0),
-                                    isFavorite: localItem.isFavorite || remoteItem.isFavorite
-                                });
-                            } else {
-                                shortcutMap.set(remoteItem.id, remoteItem);
-                            }
-                        });
-                        htmlFiles = Array.from(shortcutMap.values());
-
-                        if (dataGet.categories && typeof dataGet.categories === 'object') {
-                            const mergedCategories = { ...(dataGet.categories || {}) };
-                            Object.keys(categoryCustomizations).forEach(catKey => {
-                                const targetCatKey = Object.keys(mergedCategories).find(k => k.trim().toLowerCase() === catKey.trim().toLowerCase()) || catKey;
-                                if (!mergedCategories[targetCatKey]) {
-                                    mergedCategories[targetCatKey] = categoryCustomizations[catKey];
-                                } else {
-                                    const localCat = categoryCustomizations[catKey];
-                                    const remoteCat = mergedCategories[targetCatKey];
-                                    if (localCat.image) remoteCat.image = localCat.image;
-                                    if (localCat.icon) remoteCat.icon = localCat.icon;
-                                    if (localCat.subcatCustom && typeof localCat.subcatCustom === 'object') {
-                                        if (!remoteCat.subcatCustom) remoteCat.subcatCustom = {};
-                                        Object.keys(localCat.subcatCustom).forEach(subKey => {
-                                            const targetSubKey = Object.keys(remoteCat.subcatCustom).find(k => k.trim().toLowerCase() === subKey.trim().toLowerCase()) || subKey;
-                                            const localSubVal = localCat.subcatCustom[subKey];
-                                            const remoteSubVal = remoteCat.subcatCustom[targetSubKey] || {};
-                                            remoteCat.subcatCustom[targetSubKey] = {
-                                                ...remoteSubVal,
-                                                ...localSubVal,
-                                                image: localSubVal.image || remoteSubVal.image,
-                                                icon: localSubVal.icon || remoteSubVal.icon
-                                            };
-                                        });
-                                    }
-                                    if (localCat.subcategories) {
-                                        remoteCat.subcategories = Array.from(new Set([
-                                            ...(remoteCat.subcategories || []),
-                                            ...(localCat.subcategories || [])
-                                        ]));
-                                    }
-                                }
-                            });
-                            categoryCustomizations = mergedCategories;
-                        }
-                    }
-                } catch (pullErr) {
-                    console.log("Aviso: Falha ao puxar antes de enviar, prosseguindo com envio local:", pullErr);
-                }
-
-                // 2. Push to Google Sheets using text/plain to ensure e.postData is populated correctly
                 await fetchWithTimeout(APPS_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         shortcuts: htmlFiles, 
                         categories: categoryCustomizations, 
                         planilha: APPS_SCRIPT_PLANILHA 
                     })
-                });
-
-                if (versionAtStart === localVersion) {
-                    pendingPush = false;
-                    idbSetMany({ dirty: 'false', shortcuts: JSON.stringify(htmlFiles), categories: JSON.stringify(categoryCustomizations) });
-                }
-            } catch (err) {
-                console.error("Erro ao sincronizar envio:", err);
-            } finally {
-                isSyncing = false;
-                endSync();
-                if (pendingPush && versionAtStart !== localVersion) setTimeout(syncToGoogleSheets, 0);
-            }
-        })
                 });
                 if (versionAtStart === localVersion) {
                     pendingPush = false;
