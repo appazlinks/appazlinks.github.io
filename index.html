@@ -79,6 +79,13 @@
             }
         }
     </style>
+    <style>
+        /* Zoom de 90% ao abrir no computador (telas largas com mouse). No celular continua 100%. */
+        @media (min-width: 1024px) and (pointer: fine) {
+            html { zoom: 0.9; }
+            body { height: calc(100dvh / 0.9) !important; min-height: calc(100dvh / 0.9) !important; }
+        }
+    </style>
 </head>
 <body class="flex flex-col h-[100dvh] min-h-[100dvh] font-sans overflow-hidden text-slate-800">
 
