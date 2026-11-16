@@ -311,6 +311,7 @@
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
                     <div class="relative"><input type="text" id="fileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('fileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
+                <div id="exeIconBox" class="hidden"><label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Ícone do aplicativo</label><div class="flex items-center gap-2"><button type="button" onclick="pickExeIcon()" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-image mr-1"></i>Pegar ícone do programa (.exe)</button><img id="exeIconPreview" class="hidden w-8 h-8 rounded"><span id="exeIconMsg" class="text-xs text-gray-500"></span></div><input type="file" id="exeIconFile" accept=".exe,.ico" class="hidden"></div>
                 <div id="shortcutCategoryWrapper">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
                     <div class="relative">
@@ -1064,17 +1065,22 @@ function normalizeUrl(value) {
             }
         }
 
-        // Converte o link salvo (azlinks://C:\\Pasta ou azlinks://\\\\servidor\\pasta) em uma URL VÁLIDA para o navegador.
-// O formato antigo com "\\" e ":" logo após "azlinks://" é rejeitado pelo navegador (URL inválida) e nada abre.
-// Novo formato enviado ao Windows: azlinks://open?path=<caminho codificado>
-function buildAzlinksLaunchUrl(stored) {
+// ===== Abertura de atalhos locais (azlinks://) =====
+// Envia ao Windows: azlinks://open?path=<caminho codificado>&name=<nome do atalho>
+function buildAzlinksLaunchUrl(stored, name) {
     let path = String(stored || '').trim().replace(/^azlinks:\/\//i, '');
     try { path = decodeURIComponent(path); } catch (e) {}
     path = path.replace(/^\/+(?=[a-zA-Z]:)/, '').replace(/\//g, '\\');
-    return 'azlinks://open?path=' + encodeURIComponent(path);
+    let url = 'azlinks://open?path=' + encodeURIComponent(path);
+    if (name) url += '&name=' + encodeURIComponent(name);
+    return url;
 }
 
+let __azLastLaunch = { u: '', t: 0 };
 function launchExternalProtocol(url) {
+    const now = Date.now();
+    if (__azLastLaunch.u === url && now - __azLastLaunch.t < 2500) return false; // evita disparo duplicado
+    __azLastLaunch = { u: url, t: now };
     const a = document.createElement('a');
     a.href = url;
     a.style.display = 'none';
@@ -1082,12 +1088,42 @@ function launchExternalProtocol(url) {
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+    return true;
+}
+
+// Círculo girando com 3 pontinhos dentro (aviso de "abrindo atalho")
+function showOpeningSpinner(ms) {
+    if (!document.getElementById('azSpinStyle')) {
+        const st = document.createElement('style');
+        st.id = 'azSpinStyle';
+        st.textContent = '.az-spin-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .15s}' +
+            '.az-spin-overlay.show{opacity:1;pointer-events:all}.az-spin-box{position:relative;width:72px;height:72px}' +
+            '.az-spin-ring{position:absolute;inset:0;border:5px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:azspin .9s linear infinite}' +
+            '.az-spin-dots{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5px}' +
+            '.az-spin-dots i{width:8px;height:8px;border-radius:50%;background:#2563eb;animation:azdot 1s ease-in-out infinite}' +
+            '.az-spin-dots i:nth-child(2){animation-delay:.15s}.az-spin-dots i:nth-child(3){animation-delay:.3s}' +
+            '@keyframes azspin{to{transform:rotate(360deg)}}@keyframes azdot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}';
+        document.head.appendChild(st);
+    }
+    let el = document.getElementById('azSpinner');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'azSpinner';
+        el.className = 'az-spin-overlay';
+        el.innerHTML = '<div class="az-spin-box"><div class="az-spin-ring"></div><div class="az-spin-dots"><i></i><i></i><i></i></div></div>';
+        document.body.appendChild(el);
+    }
+    el.classList.add('show');
+    clearTimeout(showOpeningSpinner._t);
+    showOpeningSpinner._t = setTimeout(() => el.classList.remove('show'), ms || 1800);
 }
 
 function openShortcut(url, itemId) {
+    let title = '';
     if (itemId) {
         const item = htmlFiles.find(f => f.id === itemId);
         if (item) {
+            title = item.title || item.name || '';
             item.visitCount = (item.visitCount || 0) + 1;
             saveToStorage(true);
             render();
@@ -1095,13 +1131,136 @@ function openShortcut(url, itemId) {
     }
 
     if (/^azlinks:\/\//i.test(url)) {
-        launchExternalProtocol(buildAzlinksLaunchUrl(url));
+        if (launchExternalProtocol(buildAzlinksLaunchUrl(url, title))) showOpeningSpinner(1800);
         return;
     }
 
     window.open(url, '_blank');
 }
-        
+
+// ===== Sem internet: mostra só os atalhos que não dependem da internet (links que não começam com http/https) =====
+function isLocalLink(item) { return !/^https?:\/\//i.test(String((item && item.file) || '').trim()); }
+function shouldShowItem(item) { return navigator.onLine || isLocalLink(item); }
+
+function updateOfflineBanner() {
+    let b = document.getElementById('azOfflineBanner');
+    if (navigator.onLine) { if (b) b.remove(); return; }
+    if (!b) {
+        b = document.createElement('div');
+        b.id = 'azOfflineBanner';
+        b.style.cssText = 'position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:9000;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+        b.textContent = 'Sem internet: mostrando apenas os atalhos locais';
+        document.body.appendChild(b);
+    }
+}
+window.addEventListener('offline', () => { updateOfflineBanner(); render(); });
+window.addEventListener('online', () => { updateOfflineBanner(); render(); });
+document.addEventListener('DOMContentLoaded', updateOfflineBanner);
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+
+// ===== Ícone do aplicativo (.exe) =====
+let pendingExeIcon = '';
+
+function buildIcoFromPe(buf) {
+    const dv = new DataView(buf), u8 = new Uint8Array(buf);
+    if (dv.getUint16(0, true) !== 0x5A4D) throw new Error('Arquivo não é um programa do Windows');
+    const pe = dv.getUint32(0x3C, true);
+    if (dv.getUint32(pe, true) !== 0x4550) throw new Error('Cabeçalho PE inválido');
+    const nSec = dv.getUint16(pe + 6, true), optSize = dv.getUint16(pe + 20, true), opt = pe + 24;
+    const dirBase = opt + (dv.getUint16(opt, true) === 0x20B ? 112 : 96);
+    const resRva = dv.getUint32(dirBase + 16, true);
+    if (!resRva) throw new Error('Este programa não tem ícone');
+    const secs = [];
+    for (let i = 0; i < nSec; i++) {
+        const s = opt + optSize + i * 40;
+        secs.push({ va: dv.getUint32(s + 12, true), vs: Math.max(dv.getUint32(s + 8, true), dv.getUint32(s + 16, true)), raw: dv.getUint32(s + 20, true) });
+    }
+    const rva2off = r => { for (const s of secs) if (r >= s.va && r < s.va + s.vs) return r - s.va + s.raw; return -1; };
+    const root = rva2off(resRva);
+    const entries = off => {
+        const n = dv.getUint16(off + 12, true) + dv.getUint16(off + 14, true), out = [];
+        for (let i = 0; i < n; i++) { const e = off + 16 + i * 8, o = dv.getUint32(e + 4, true); out.push({ id: dv.getUint32(e, true), sub: !!(o & 0x80000000), off: o & 0x7FFFFFFF }); }
+        return out;
+    };
+    const leaf = e => { // desce até o primeiro dado do recurso
+        while (e.sub) e = entries(root + e.off)[0];
+        const d = root + e.off, o = rva2off(dv.getUint32(d, true));
+        return u8.slice(o, o + dv.getUint32(d + 4, true));
+    };
+    const typeEntry = t => entries(root).find(e => e.id === t && e.sub);
+    const grp = typeEntry(14), ico = typeEntry(3);
+    if (!grp || !ico) throw new Error('Este programa não tem ícone');
+    const group = leaf(entries(root + grp.off).sort((a, b) => a.id - b.id)[0]);
+    const gdv = new DataView(group.buffer, group.byteOffset, group.byteLength);
+    const icons = {};
+    entries(root + ico.off).forEach(e => { icons[e.id] = e; });
+    let best = null;
+    for (let i = 0; i < gdv.getUint16(4, true); i++) {
+        const p = 6 + i * 14, w = gdv.getUint8(p) || 256, id = gdv.getUint16(p + 12, true), bits = gdv.getUint16(p + 6, true);
+        if (!icons[id]) continue;
+        const score = (w <= 128 ? w : 0) * 100 + bits;
+        if (!best || score > best.score) best = { score, w: gdv.getUint8(p), h: gdv.getUint8(p + 1), bits, id };
+    }
+    if (!best) throw new Error('Não foi possível ler o ícone');
+    const data = leaf(icons[best.id]);
+    const out = new Uint8Array(22 + data.length), odv = new DataView(out.buffer);
+    odv.setUint16(2, 1, true); odv.setUint16(4, 1, true);
+    out[6] = best.w; out[7] = best.h; odv.setUint16(10, 1, true); odv.setUint16(12, best.bits, true);
+    odv.setUint32(14, data.length, true); odv.setUint32(18, 22, true);
+    out.set(data, 22);
+    return out;
+}
+
+function icoToPngDataUrl(icoBytes) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(new Blob([icoBytes], { type: 'image/x-icon' }));
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas'); c.width = c.height = 64;
+            c.getContext('2d').drawImage(img, 0, 0, 64, 64);
+            URL.revokeObjectURL(url);
+            resolve(c.toDataURL('image/png'));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Não foi possível exibir o ícone')); };
+        img.src = url;
+    });
+}
+
+function updateExeIconBox() {
+    const v = (document.getElementById('fileName') || {}).value || '';
+    const box = document.getElementById('exeIconBox');
+    if (box) box.classList.toggle('hidden', !v.trim() || /^https?:\/\//i.test(v.trim()) || /^(www\.|[a-z0-9-]+\.[a-z]{2,}(\/|$))/i.test(v.trim()));
+}
+
+function pickExeIcon() { document.getElementById('exeIconFile').click(); }
+
+async function handleExeIconFile(e) {
+    const file = e.target.files[0];
+    const msg = document.getElementById('exeIconMsg'), prev = document.getElementById('exeIconPreview');
+    if (!file) return;
+    try {
+        msg.textContent = 'Lendo ícone...';
+        let png;
+        if (/\.ico$/i.test(file.name)) png = await icoToPngDataUrl(new Uint8Array(await file.arrayBuffer()));
+        else png = await icoToPngDataUrl(buildIcoFromPe(await file.arrayBuffer()));
+        pendingExeIcon = png;
+        prev.src = png; prev.classList.remove('hidden');
+        msg.textContent = 'Ícone de ' + file.name;
+    } catch (err) {
+        pendingExeIcon = ''; prev.classList.add('hidden');
+        msg.textContent = err.message || 'Não foi possível pegar o ícone';
+    }
+    e.target.value = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const f = document.getElementById('fileName');
+    if (f) f.addEventListener('input', updateExeIconBox);
+    const x = document.getElementById('exeIconFile');
+    if (x) x.addEventListener('change', handleExeIconFile);
+});
+
         function toggleFavorite(event, itemId) {
             event.stopPropagation();
             const item = htmlFiles.find(f => f.id === itemId);
@@ -1967,7 +2126,7 @@ function openShortcut(url, itemId) {
             const visibleFiles = htmlFiles.filter(item => {
                 const showDesktop = item.showDesktop !== false;
                 const showMobile = item.showMobile !== false;
-                return isMob ? showMobile : showDesktop;
+                return (isMob ? showMobile : showDesktop) && shouldShowItem(item);
             });
 
             const uniqueCategories = new Set(visibleFiles.map(s => (s.category || 'Geral').trim()));
@@ -2397,7 +2556,7 @@ function openShortcut(url, itemId) {
             let deviceFiltered = htmlFiles.filter(item => {
                 const showDesktop = item.showDesktop !== false;
                 const showMobile = item.showMobile !== false;
-                return isMob ? showMobile : showDesktop;
+                return (isMob ? showMobile : showDesktop) && shouldShowItem(item);
             });
 
             let filtered = [];
@@ -2698,7 +2857,7 @@ function openShortcut(url, itemId) {
             document.getElementById('shortcutModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('shortcutTitle').focus(), 50);
         }
-        function closeModal() { closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
+        function closeModal() { pendingExeIcon = ''; { const pv = document.getElementById('exeIconPreview'), ms = document.getElementById('exeIconMsg'); if (pv) pv.classList.add('hidden'); if (ms) ms.textContent = ''; updateExeIconBox(); } closeCategoryCombo(); document.getElementById('shortcutModal').classList.add('hidden'); }
 
         function openEditShortcutModal(itemId) {
             const item = htmlFiles.find(f => f.id === itemId);
@@ -2799,7 +2958,7 @@ function openShortcut(url, itemId) {
 
             htmlFiles.push({
                 id: generateUniqueId(),
-                title, name: title, file, category, subcategory, subsubcategory, customIcon: '',
+                title, name: title, file, category, subcategory, subsubcategory, customIcon: pendingExeIcon || '',
                 visitCount: 0, isFavorite: isFav,
                 showDesktop: showDesk, showMobile: showMob
             });
