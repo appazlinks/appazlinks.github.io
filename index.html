@@ -1140,11 +1140,25 @@ function openShortcut(url, itemId) {
 
 // ===== Sem internet: mostra só os atalhos que não dependem da internet (links que não começam com http/https) =====
 function isLocalLink(item) { return !/^https?:\/\//i.test(String((item && item.file) || '').trim()); }
-function shouldShowItem(item) { return navigator.onLine || isLocalLink(item); }
+// navigator.onLine só sabe se há rede (Wi-Fi/cabo), não se há internet de verdade; por isso testamos a conexão.
+let azInternetOk = navigator.onLine;
+function shouldShowItem(item) { return azInternetOk || isLocalLink(item); }
+async function checkInternet() {
+    let ok = navigator.onLine;
+    if (ok) {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 4000);
+        try { await fetch('https://www.gstatic.com/generate_204?_=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: ctl.signal }); }
+        catch (e) { ok = false; }
+        clearTimeout(t);
+    }
+    if (ok !== azInternetOk) { azInternetOk = ok; updateOfflineBanner(); render(); }
+    return ok;
+}
 
 function updateOfflineBanner() {
     let b = document.getElementById('azOfflineBanner');
-    if (navigator.onLine) { if (b) b.remove(); return; }
+    if (azInternetOk) { if (b) b.remove(); return; }
     if (!b) {
         b = document.createElement('div');
         b.id = 'azOfflineBanner';
@@ -1153,9 +1167,10 @@ function updateOfflineBanner() {
         document.body.appendChild(b);
     }
 }
-window.addEventListener('offline', () => { updateOfflineBanner(); render(); });
-window.addEventListener('online', () => { updateOfflineBanner(); render(); });
-document.addEventListener('DOMContentLoaded', updateOfflineBanner);
+window.addEventListener('offline', checkInternet);
+window.addEventListener('online', checkInternet);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkInternet(); });
+document.addEventListener('DOMContentLoaded', () => { updateOfflineBanner(); checkInternet(); setInterval(checkInternet, 15000); });
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
