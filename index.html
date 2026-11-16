@@ -838,6 +838,12 @@ function normalizeUrl(value) {
             }
         }
 
+        // Atalhos que precisam de internet (http/https) não ficam gravados no aparelho: vêm sempre da planilha.
+        // Só são mantidos localmente os atalhos locais e, enquanto houver envio pendente, tudo (para não perder nada).
+        function persistShortcuts(forceAll) {
+            return JSON.stringify((forceAll || pendingPush) ? htmlFiles : htmlFiles.filter(isLocalLink));
+        }
+
         async function loadLocalData() {
             const [s, c, d, del] = await Promise.all([idbGet('shortcuts'), idbGet('categories'), idbGet('dirty'), idbGet('deleted_ids')]);
             try {
@@ -854,6 +860,10 @@ function normalizeUrl(value) {
                     }));
                     categoryCustomizations = JSON.parse(c || '{}') || {};
                     pendingPush = d === 'true';
+                    if (!pendingPush) {
+                        htmlFiles = htmlFiles.filter(isLocalLink);
+                        idbSetMany({ shortcuts: persistShortcuts(false) });
+                    }
                     return;
                 }
                 htmlFiles = (JSON.parse(localStorage.getItem('local_html_shortcuts')) || []).map(item => ({
@@ -865,7 +875,7 @@ function normalizeUrl(value) {
                 }));
                 categoryCustomizations = JSON.parse(localStorage.getItem('local_category_customizations')) || {};
                 await idbSetMany({
-                    shortcuts: JSON.stringify(htmlFiles),
+                    shortcuts: persistShortcuts(true),
                     categories: JSON.stringify(categoryCustomizations),
                     dirty: 'false'
                 });
@@ -896,7 +906,7 @@ function normalizeUrl(value) {
                 });
                 if (versionAtStart === localVersion) {
                     pendingPush = false;
-                    idbSetMany({ dirty: 'false' });
+                    idbSetMany({ dirty: 'false', shortcuts: persistShortcuts(false) });
                 }
             } catch (err) {
                 console.error("Erro ao sincronizar envio:", err);
@@ -933,6 +943,7 @@ function normalizeUrl(value) {
                 
                 if (data.status === "success" && !pendingPush && versionAtStart === localVersion) {
                     let changed = false;
+                    let needRepush = false; // há itens só deste aparelho que a planilha não tem: reenviar, nunca apagar
                     
                     if (Array.isArray(data.deletedIds)) {
                         let delChanged = false;
@@ -973,10 +984,15 @@ function normalizeUrl(value) {
                             return remoteItem;
                         });
 
+                        // Atalho que existe só aqui (ainda não chegou à planilha) é mantido e reenviado, não apagado.
+                        const remoteIdSet = new Set(mergedShortcuts.map(s => s.id));
+                        const localOnly = htmlFiles.filter(l => l && l.id && !remoteIdSet.has(l.id) && !deletedShortcutIds.has(l.id));
+                        if (localOnly.length) { mergedShortcuts.push(...localOnly); needRepush = true; }
+
                         const newShortcutsStr = JSON.stringify(mergedShortcuts);
                         if (newShortcutsStr !== JSON.stringify(htmlFiles)) {
                             htmlFiles = mergedShortcuts;
-                            idbSetMany({ shortcuts: JSON.stringify(htmlFiles) });
+                            idbSetMany({ shortcuts: persistShortcuts(false) });
                             changed = true;
                         }
                     }
@@ -989,37 +1005,10 @@ function normalizeUrl(value) {
                             
                             if (!mergedCategories[targetCatKey]) {
                                 mergedCategories[targetCatKey] = categoryCustomizations[catKey];
-                            } else {
-                                const localCat = categoryCustomizations[catKey];
-                                const remoteCat = mergedCategories[targetCatKey];
-
-                                if (localCat.image) remoteCat.image = localCat.image;
-                                if (localCat.icon) remoteCat.icon = localCat.icon;
-
-                                if (localCat.subcatCustom && typeof localCat.subcatCustom === 'object') {
-                                    if (!remoteCat.subcatCustom) remoteCat.subcatCustom = {};
-                                    
-                                    Object.keys(localCat.subcatCustom).forEach(subKey => {
-                                        const targetSubKey = Object.keys(remoteCat.subcatCustom).find(k => k.trim().toLowerCase() === subKey.trim().toLowerCase()) || subKey;
-                                        const localSubVal = localCat.subcatCustom[subKey];
-                                        const remoteSubVal = remoteCat.subcatCustom[targetSubKey] || {};
-
-                                        remoteCat.subcatCustom[targetSubKey] = {
-                                            ...remoteSubVal,
-                                            ...localSubVal,
-                                            image: localSubVal.image || remoteSubVal.image,
-                                            icon: localSubVal.icon || remoteSubVal.icon
-                                        };
-                                    });
-                                }
-
-                                if (localCat.subcategories) {
-                                    remoteCat.subcategories = Array.from(new Set([
-                                        ...(remoteCat.subcategories || []),
-                                        ...(localCat.subcategories || [])
-                                    ]));
-                                }
+                                needRepush = true;
                             }
+                            // Categoria que existe na planilha: vale a versão da planilha (sem alterações locais pendentes),
+                            // assim ícones e imagens trocados em outro dispositivo chegam aqui.
                         });
 
                         const newCatStr = JSON.stringify(mergedCategories);
@@ -1033,6 +1022,7 @@ function normalizeUrl(value) {
                     if (changed) {
                         render();
                     }
+                    if (needRepush) setTimeout(() => saveToStorage(true), 800);
                 }
             } catch (err) {
                 console.error("Erro ao puxar dados do Sheets:", err);
@@ -1053,7 +1043,7 @@ function normalizeUrl(value) {
 
         function saveToStorage(syncNow = true) {
             const snapshot = {
-                shortcuts: JSON.stringify(htmlFiles),
+                shortcuts: persistShortcuts(syncNow),
                 categories: JSON.stringify(categoryCustomizations),
                 deleted_ids: JSON.stringify(Array.from(deletedShortcutIds))
             };
