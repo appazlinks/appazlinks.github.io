@@ -1224,6 +1224,70 @@ function autoFetchIcon(item) {
     } catch (e) {}
 }
 
+// ===== Buscar o endereço no computador (categoria "Atalhos") =====
+// O navegador não mostra o caminho completo de um arquivo; por isso o Windows (azlinks.js) abre a janela de escolha,
+// copia o endereço escolhido para a área de transferência (com o prefixo AZPICK:) e o app o preenche sozinho.
+const PICK_FIELDS = [
+    { input: 'fileName', cat: 'shortcutCategory' },
+    { input: 'editFileName', cat: 'editShortcutCategory' }
+];
+let __azPick = null;
+
+function ensurePickBox(inputId) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return null;
+    let box = document.getElementById('pickBox_' + inputId);
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'pickBox_' + inputId;
+        box.className = 'hidden mt-1 flex items-center gap-2 flex-wrap';
+        box.innerHTML = '<button type="button" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-folder-open mr-1"></i>Procurar no computador</button><span class="text-xs text-gray-500">ou digite o endereço acima</span>';
+        box.querySelector('button').addEventListener('click', () => pickLocalPath(inputId));
+        const holder = inp.closest('.relative') || inp.parentNode;
+        holder.parentNode.insertBefore(box, holder.nextSibling);
+    }
+    return box;
+}
+
+function refreshPickBoxes() {
+    PICK_FIELDS.forEach(f => {
+        const box = ensurePickBox(f.input), cat = document.getElementById(f.cat);
+        if (!box || !cat) return;
+        box.classList.toggle('hidden', String(cat.value || '').trim().toLowerCase() !== 'atalhos');
+    });
+}
+
+function pickLocalPath(inputId) {
+    __azPick = { id: inputId, t: Date.now() };
+    const box = document.getElementById('pickBox_' + inputId);
+    if (box) box.querySelector('span').textContent = 'Escolha na janela do Windows...';
+    launchExternalProtocol('azlinks://pick?_=' + Date.now());
+}
+
+async function tryReadPickedPath() {
+    if (!__azPick) return;
+    if (Date.now() - __azPick.t > 120000) { __azPick = null; return; }
+    if (!document.hasFocus() || !navigator.clipboard || !navigator.clipboard.readText) return;
+    try {
+        const t = (await navigator.clipboard.readText()) || '';
+        if (t.indexOf('AZPICK:') !== 0) return;
+        const inp = document.getElementById(__azPick.id), box = document.getElementById('pickBox_' + __azPick.id);
+        if (inp) { inp.value = t.slice(7).trim(); inp.dispatchEvent(new Event('input', { bubbles: true })); }
+        if (box) box.querySelector('span').textContent = 'Endereço preenchido';
+        __azPick = null;
+    } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    PICK_FIELDS.forEach(f => {
+        const inp = document.getElementById(f.input);
+        if (inp) inp.addEventListener('input', () => { if (inp.value.indexOf('AZPICK:') === 0) inp.value = inp.value.slice(7).trim(); });
+    });
+    refreshPickBoxes();
+    setInterval(() => { refreshPickBoxes(); tryReadPickedPath(); }, 700);
+});
+window.addEventListener('focus', tryReadPickedPath);
+
 // ===== Ícone do aplicativo (.exe) =====
 let pendingExeIcon = '';
 
