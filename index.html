@@ -311,7 +311,6 @@
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Link ou URL *</label>
                     <div class="relative"><input type="text" id="fileName" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-9"><button type="button" tabindex="-1" onclick="clearField('fileName')" title="Limpar" class="clear-field-btn absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full cursor-pointer"><i class="fa-solid fa-xmark pointer-events-none"></i></button></div>
                 </div>
-                <div id="exeIconBox" class="hidden"><label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Ícone do aplicativo</label><div class="flex items-center gap-2"><button type="button" onclick="pickExeIcon()" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-image mr-1"></i>Pegar ícone do programa (.exe)</button><img id="exeIconPreview" class="hidden w-8 h-8 rounded"><span id="exeIconMsg" class="text-xs text-gray-500"></span></div><input type="file" id="exeIconFile" accept=".exe,.ico" class="hidden"></div>
                 <div id="shortcutCategoryWrapper">
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Categoria *</label>
                     <div class="relative">
@@ -1173,6 +1172,21 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 document.addEventListener('DOMContentLoaded', () => { updateOfflineBanner(); checkInternet(); setInterval(checkInternet, 15000); });
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+
+// Pede ao Windows (azlinks.js) para pegar o ícone do programa e enviar à planilha; depois o app o recebe na sincronização.
+function autoFetchIcon(item) {
+    try {
+        const f = String(item.file || '');
+        if (!/^azlinks:\/\//i.test(f) || !azInternetOk || !isSyncConfigured()) return;
+        let path = f.replace(/^azlinks:\/\//i, '');
+        try { path = decodeURIComponent(path); } catch (e) {}
+        path = path.replace(/^\/+(?=[a-zA-Z]:)/, '').replace(/\//g, '\\');
+        const url = 'azlinks://icon?path=' + encodeURIComponent(path) + '&id=' + encodeURIComponent(item.id) +
+            '&url=' + encodeURIComponent(APPS_SCRIPT_URL) + '&planilha=' + encodeURIComponent(APPS_SCRIPT_PLANILHA || '');
+        if (!launchExternalProtocol(url)) return;
+        [9000, 20000].forEach(ms => setTimeout(() => { if (typeof syncFromGoogleSheets === 'function') syncFromGoogleSheets(); }, ms));
+    } catch (e) {}
 }
 
 // ===== Ícone do aplicativo (.exe) =====
@@ -2978,6 +2992,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showDesktop: showDesk, showMobile: showMob
             });
             const newId = htmlFiles[htmlFiles.length - 1].id;
+            autoFetchIcon(htmlFiles[htmlFiles.length - 1]);
             saveToStorage(true);
             e.target.reset();
             closeModal();
