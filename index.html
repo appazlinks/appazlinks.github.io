@@ -887,24 +887,61 @@ function normalizeUrl(value) {
             }
         }
 
+// Ícones grandes (fotos) estouram o limite de 50.000 caracteres por célula da planilha e faziam o envio inteiro falhar.
+function shrinkIconDataUrl(src, size) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const ctx = c.getContext('2d');
+            const r = Math.min(size / img.width, size / img.height);
+            const w = img.width * r, h = img.height * r;
+            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+            let out = c.toDataURL('image/png');
+            if (out.length > 40000) out = c.toDataURL('image/jpeg', 0.85);
+            resolve(out);
+        };
+        img.onerror = () => resolve(src);
+        img.src = src;
+    });
+}
+
+async function shrinkBigIcons() {
+    let any = false;
+    for (const it of htmlFiles) {
+        const ic = it && it.customIcon;
+        if (ic && ic.length > 40000 && /^data:image\//.test(ic)) { it.customIcon = await shrinkIconDataUrl(ic, 96); any = true; }
+    }
+    if (any) idbSetMany({ shortcuts: persistShortcuts(true) });
+}
+
         async function syncToGoogleSheets() {
             if (!isSyncConfigured() || isSyncing || !navigator.onLine) return;
             isSyncing = true;
             beginSync();
+            try { await shrinkBigIcons(); } catch (e) {}
             const versionAtStart = localVersion;
             try {
-                await fetchWithTimeout(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ 
-                        shortcuts: htmlFiles, 
-                        categories: categoryCustomizations,
-                        deletedIds: Array.from(deletedShortcutIds),
-                        planilha: APPS_SCRIPT_PLANILHA 
-                    })
+                const payload = JSON.stringify({ 
+                    shortcuts: htmlFiles, 
+                    categories: categoryCustomizations,
+                    deletedIds: Array.from(deletedShortcutIds),
+                    planilha: APPS_SCRIPT_PLANILHA 
                 });
-                if (versionAtStart === localVersion) {
+                let enviado = false;
+                try {
+                    // Lê a resposta da planilha: só considera enviado se ela confirmar "success"
+                    const resp = await fetchWithTimeout(APPS_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: payload });
+                    const j = await resp.json();
+                    enviado = !!(j && j.status === "success");
+                    if (!enviado) console.error("A planilha recusou o envio:", j && j.message);
+                } catch (e1) {
+                    // Sem permissão para ler a resposta: envia do jeito antigo (sem confirmação)
+                    await fetchWithTimeout(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: payload });
+                    enviado = true;
+                }
+                if (enviado && versionAtStart === localVersion) {
                     pendingPush = false;
                     idbSetMany({ dirty: 'false', shortcuts: persistShortcuts(false) });
                 }
@@ -975,6 +1012,7 @@ function normalizeUrl(value) {
                         const mergedShortcuts = parsedRemoteShortcuts.map(remoteItem => {
                             const localItem = localById.get(remoteItem.id);
                             if (localItem) {
+                                if (localItem.customIcon && !remoteItem.customIcon && localItem.customIcon.length > 40000) needRepush = true;
                                 return {
                                     ...remoteItem,
                                     customIcon: remoteItem.customIcon || localItem.customIcon || '',
@@ -2851,9 +2889,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const base64String = evt.target.result;
                 const item = htmlFiles.find(f => f.id === editingShortcutIconId);
                 if (item) {
-                    item.customIcon = base64String;
-                    saveToStorage(true);
-                    render();
+                    shrinkIconDataUrl(base64String, 96).then(small => {
+                        item.customIcon = small;
+                        saveToStorage(true);
+                        render();
+                    });
                 }
                 editingShortcutIconId = null;
                 e.target.value = '';
