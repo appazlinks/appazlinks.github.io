@@ -1509,6 +1509,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function getInitialCategory() {
+            return 'favorites'; // sempre abre em Favoritos
             const isMob = isMobileDevice();
             const hasFavorites = htmlFiles.some(item => {
                 const showDesktop = item.showDesktop !== false;
