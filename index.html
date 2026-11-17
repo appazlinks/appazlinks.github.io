@@ -1241,8 +1241,8 @@ function ensurePickBox(inputId) {
         box = document.createElement('div');
         box.id = 'pickBox_' + inputId;
         box.className = 'hidden mt-1 flex items-center gap-2 flex-wrap';
-        box.innerHTML = '<button type="button" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-folder-open mr-1"></i>Procurar no computador</button><span class="text-xs text-gray-500">ou digite o endereço acima</span>';
-        box.querySelector('button').addEventListener('click', () => pickLocalPath(inputId));
+        box.innerHTML = '<button type="button" data-kind="file" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-file mr-1"></i>Procurar arquivo</button><button type="button" data-kind="folder" class="px-3 py-1.5 text-xs font-semibold border rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"><i class="fa-solid fa-folder-open mr-1"></i>Procurar pasta</button><span class="text-xs text-gray-500">ou digite o endereço acima</span>';
+        box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => pickLocalPath(inputId, b.dataset.kind)));
         const holder = inp.closest('.relative') || inp.parentNode;
         holder.parentNode.insertBefore(box, holder.nextSibling);
     }
@@ -1257,11 +1257,11 @@ function refreshPickBoxes() {
     });
 }
 
-function pickLocalPath(inputId) {
+function pickLocalPath(inputId, kind) {
     __azPick = { id: inputId, t: Date.now() };
     const box = document.getElementById('pickBox_' + inputId);
     if (box) box.querySelector('span').textContent = 'Escolha na janela do Windows...';
-    launchExternalProtocol('azlinks://pick?_=' + Date.now());
+    launchExternalProtocol('azlinks://pick?kind=' + (kind === 'folder' ? 'folder' : 'file') + '&_=' + Date.now());
 }
 
 async function tryReadPickedPath() {
