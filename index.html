@@ -104,7 +104,6 @@
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] min-h-[100dvh] font-sans overflow-hidden text-slate-800">
-    <div id="azSpinner" class="az-spin-overlay show" style="background:rgba(243,244,246,.97)"><div class="az-spin-box"><div class="az-spin-ring"></div><div class="az-spin-dots"><i></i><i></i><i></i></div></div></div>
 
     <!-- Barra Superior -->
     <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 p-3 flex flex-col items-start md:items-stretch gap-3 shadow-sm z-20 shrink-0">
@@ -1214,15 +1213,7 @@ function hideStartupSpinner() {
     const el = document.getElementById('azSpinner');
     if (el) { el.classList.remove('show'); el.style.background = ''; }
 }
-(function () {
-    const go = () => {
-        showOpeningSpinner(1e9);
-        const el = document.getElementById('azSpinner');
-        if (el) el.style.background = 'rgba(243,244,246,.97)';
-        setTimeout(hideStartupSpinner, 9000); // segurança: nunca fica preso
-    };
-    if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
-})();
+// O círculo de abertura foi removido (computador e celular): os atalhos guardados no aparelho aparecem direto.
 
 // ===== Sem internet: mostra só os atalhos que não dependem da internet (links que não começam com http/https) =====
 function isLocalLink(item) { return !/^https?:\/\//i.test(String((item && item.file) || '').trim()); }
@@ -1569,22 +1560,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function getInitialCategory() {
+        // Categorias visíveis neste aparelho (respeita Computador/Celular e o modo sem internet)
+        function visibleForDevice() {
             const isMob = isMobileDevice();
-            const hasFavorites = htmlFiles.some(item => {
-                const showDesktop = item.showDesktop !== false;
-                const showMobile = item.showMobile !== false;
-                const visible = isMob ? showMobile : showDesktop;
-                return visible && !!item.isFavorite && shouldShowItem(item);
-            });
-            return hasFavorites ? 'favorites' : 'most_visited'; // abre em Favoritos; sem favoritos, em Mais visitados
-            const lastCat = localStorage.getItem('local_last_category');
-            if (lastCat) {
-                if (['all', 'favorites', 'most_visited'].includes(lastCat)) return lastCat;
-                const exists = htmlFiles.some(s => (s.category || 'Geral').trim() === lastCat) ||
-                               (categoryCustomizations[lastCat] && Array.isArray(categoryCustomizations[lastCat].subcategories) && categoryCustomizations[lastCat].subcategories.length > 0);
-                if (exists) return lastCat;
+            return htmlFiles.filter(item => (isMob ? item.showMobile !== false : item.showDesktop !== false) && shouldShowItem(item));
+        }
+
+        function categoryHasVisibleItems(cat) {
+            const vis = visibleForDevice();
+            if (cat === 'all') return vis.length > 0;
+            if (cat === 'favorites') return vis.some(i => i.isFavorite);
+            if (cat === 'most_visited') return vis.some(i => (i.visitCount || 0) > 0);
+            return vis.some(i => String(i.category || 'Geral').trim() === cat);
+        }
+
+        // Computador: Atalhos > Favoritos > Mais visitados > Todos.  Celular (Android/iPhone): Favoritos > Mais visitados > Todos.
+        function getInitialCategory() {
+            const vis = visibleForDevice();
+            if (!isMobileDevice()) {
+                const at = vis.find(i => String(i.category || '').trim().toLowerCase() === 'atalhos');
+                if (at) return String(at.category).trim();
             }
+            if (vis.some(i => i.isFavorite)) return 'favorites';
+            if (vis.some(i => (i.visitCount || 0) > 0)) return 'most_visited';
             return 'all';
         }
 
@@ -3559,7 +3557,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result === true) {
                 refreshUserPermissions();
                 // Favoritos guardados no aparelho: mostra na hora e atualiza em seguida, sem esperar a planilha
-                const earlyShow = currentCategory === 'favorites';
+                const earlyShow = categoryHasVisibleItems(currentCategory);
                 if (earlyShow) hideStartupSpinner();
                 await syncFromGoogleSheets();
                 if (!earlyShow) {
