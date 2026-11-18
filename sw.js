@@ -23,7 +23,7 @@ self.addEventListener('fetch', e => {
     const r = e.request;
     if (r.method !== 'GET') return;
     const host = new URL(r.url).hostname;
-    if (r.url.indexOf('generate_204') !== -1) return; // teste de internet: nunca usar cache
+    if (r.url.indexOf('azping') !== -1 || r.url.indexOf('generate_204') !== -1) return; // teste de internet: nunca usar cache
     if (host.endsWith('script.google.com') || host.endsWith('googleusercontent.com')) return; // sincronização nunca vai para o cache
     e.respondWith(
         caches.open(CACHE).then(cache =>
