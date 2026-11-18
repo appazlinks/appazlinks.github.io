@@ -1574,13 +1574,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return vis.some(i => String(i.category || 'Geral').trim() === cat);
         }
 
-        // Computador: Atalhos > Favoritos > Mais visitados > Todos.  Celular (Android/iPhone): Favoritos > Mais visitados > Todos.
+        // Todos os aparelhos (computador, Android e iPhone): Favoritos > Mais visitados > Todos.
         function getInitialCategory() {
             const vis = visibleForDevice();
-            if (!isMobileDevice()) {
-                const at = vis.find(i => String(i.category || '').trim().toLowerCase() === 'atalhos');
-                if (at) return String(at.category).trim();
-            }
             if (vis.some(i => i.isFavorite)) return 'favorites';
             if (vis.some(i => (i.visitCount || 0) > 0)) return 'most_visited';
             return 'all';
