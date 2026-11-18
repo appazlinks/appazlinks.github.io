@@ -862,10 +862,11 @@ function normalizeUrl(value) {
             }
         }
 
-        // Atalhos que precisam de internet (http/https) não ficam gravados no aparelho: vêm sempre da planilha.
-        // Só são mantidos localmente os atalhos locais e, enquanto houver envio pendente, tudo (para não perder nada).
+        // Atalhos que precisam de internet (http/https) vêm da planilha. No aparelho ficam gravados só os atalhos locais
+        // e os FAVORITOS (para abrirem na hora); enquanto houver envio pendente, tudo (para não perder nada).
+        function keepOnDevice(i) { return isLocalLink(i) || !!(i && i.isFavorite); }
         function persistShortcuts(forceAll) {
-            return JSON.stringify((forceAll || pendingPush) ? htmlFiles : htmlFiles.filter(isLocalLink));
+            return JSON.stringify((forceAll || pendingPush) ? htmlFiles : htmlFiles.filter(keepOnDevice));
         }
 
         async function loadLocalData() {
@@ -886,7 +887,7 @@ function normalizeUrl(value) {
                     categoryCustomizations = JSON.parse(c || '{}') || {};
                     pendingPush = d === 'true';
                     if (!pendingPush) {
-                        htmlFiles = htmlFiles.filter(isLocalLink);
+                        htmlFiles = htmlFiles.filter(keepOnDevice);
                         idbSetMany({ shortcuts: persistShortcuts(false) });
                     }
                     return;
@@ -3557,8 +3558,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = cached ? applyUser(cached) : false;
             if (result === true) {
                 refreshUserPermissions();
+                // Favoritos guardados no aparelho: mostra na hora e atualiza em seguida, sem esperar a planilha
+                const earlyShow = currentCategory === 'favorites';
+                if (earlyShow) hideStartupSpinner();
                 await syncFromGoogleSheets();
-                {
+                if (!earlyShow) {
                     const updatedInitial = getInitialCategory();
                     if (updatedInitial !== currentCategory) {
                         currentCategory = updatedInitial;
