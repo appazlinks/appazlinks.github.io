@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-    <style id="azSpinStyle">.az-spin-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .15s}.az-spin-overlay.show{opacity:1;pointer-events:all}.az-spin-box{position:relative;width:72px;height:72px}.az-spin-ring{position:absolute;inset:0;border:5px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:azspin .9s linear infinite}.az-spin-dots{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5px}.az-spin-dots i{width:8px;height:8px;border-radius:50%;background:#2563eb;animation:azdot 1s ease-in-out infinite}.az-spin-dots i:nth-child(2){animation-delay:.15s}.az-spin-dots i:nth-child(3){animation-delay:.3s}@keyframes azspin{to{transform:rotate(360deg)}}@keyframes azdot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}</style>
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -11,7 +10,6 @@
     <!-- Favicon Moderno -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%232563eb'/><path d='M30 50l20-20v15h20v10H50v15z' fill='%23ffffff'/><circle cx='70' cy='70' r='8' fill='%2360a5fa'/></svg>">
     <link rel="manifest" href="manifest.json">
-    <script>/* Celular: manifesto em modo navegador (links abrem em abas normais). Computador: instalável como aplicativo. */(function(){if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){var l=document.querySelector('link[rel="manifest"]');if(l)l.setAttribute("href","manifest-celular.json");}})();</script>
     <link rel="apple-touch-icon" href="azlinks-192x192.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -90,7 +88,6 @@
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] min-h-[100dvh] font-sans overflow-hidden text-slate-800">
-    <div id="azSpinner" class="az-spin-overlay show" style="background:rgba(243,244,246,.97)"><div class="az-spin-box"><div class="az-spin-ring"></div><div class="az-spin-dots"><i></i><i></i><i></i></div></div></div>
 
     <!-- Barra Superior -->
     <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 p-3 flex flex-col items-start md:items-stretch gap-3 shadow-sm z-20 shrink-0">
@@ -1179,10 +1176,21 @@ function openShortcut(url, itemId) {
     }
 
     if (/^azlinks:\/\//i.test(url)) {
-        launchExternalProtocol(buildAzlinksLaunchUrl(url, title));
+        if (launchExternalProtocol(buildAzlinksLaunchUrl(url, title))) showOpeningSpinner(1800);
         return;
     }
 
+    // No Android, abre o link no navegador (aba independente), fora da janela do aplicativo
+    if (/Android/i.test(navigator.userAgent) && /^https?:\/\//i.test(url) && !/^https?:\/\/(www\.)?azlinks\.com\.br/i.test(url)) {
+        const mm = url.match(/^(https?):\/\/(.*)$/i);
+        const a = document.createElement('a');
+        a.href = 'intent://' + mm[2].replace(/#/g, '%23') + '#Intent;scheme=' + mm[1].toLowerCase() + ';action=android.intent.action.VIEW;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+        return;
+    }
     window.open(url, '_blank');
 }
 
@@ -1207,23 +1215,14 @@ function isLocalLink(item) { return !/^https?:\/\//i.test(String((item && item.f
 // navigator.onLine só sabe se há rede (Wi-Fi/cabo), não se há internet de verdade; por isso testamos a conexão.
 let azInternetOk = navigator.onLine;
 function shouldShowItem(item) { return azInternetOk || isLocalLink(item); }
-let azFailCount = 0;
 async function checkInternet() {
     let ok = navigator.onLine;
     if (ok) {
-        // Testa o próprio site (não depende de serviços de terceiros, que alguns bloqueadores impedem)
         const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), 6000);
-        try {
-            const r = await fetch('manifest.json?azping=' + Date.now(), { cache: 'no-store', signal: ctl.signal });
-            ok = r.status < 500;
-        } catch (e) { ok = false; }
+        const t = setTimeout(() => ctl.abort(), 4000);
+        try { await fetch('https://www.gstatic.com/generate_204?_=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: ctl.signal }); }
+        catch (e) { ok = false; }
         clearTimeout(t);
-        // Uma falha isolada não conta: só considera sem internet após 2 falhas seguidas
-        if (ok) azFailCount = 0;
-        else { azFailCount++; if (azFailCount < 2 && azInternetOk) ok = true; }
-    } else {
-        azFailCount = 2;
     }
     if (ok !== azInternetOk) { azInternetOk = ok; updateOfflineBanner(); render(); }
     return ok;
