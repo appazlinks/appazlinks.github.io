@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
+    <script>
+    /* Pré-busca: começa a pedir os atalhos à planilha já no início, em paralelo com o carregamento do restante da página. */
+    (function () {
+        try {
+            var u = JSON.parse(localStorage.getItem('local_user_data') || 'null');
+            if (!u || !navigator.onLine) return;
+            var base = 'https://script.google.com/macros/s/AKfycbyNRHauds83by09v_Dq5wYROW87ycWqqf1mn48VeRi7MXCHyh0g4v6VtnEULq8_jpA/exec'; /* igual a APPS_SCRIPT_CENTRAL_URL */
+            var url = base + '?' + (u.planilha ? 'planilha=' + encodeURIComponent(u.planilha) + '&' : '') + '_t=' + Date.now();
+            var p = fetch(url);
+            p.catch(function () {});
+            window.__azPrefetch = { t: Date.now(), p: p };
+        } catch (e) {}
+    })();
+    </script>
     <style id="azSpinStyle">.az-spin-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .15s}.az-spin-overlay.show{opacity:1;pointer-events:all}.az-spin-box{position:relative;width:72px;height:72px}.az-spin-ring{position:absolute;inset:0;border:5px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:azspin .9s linear infinite}.az-spin-dots{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5px}.az-spin-dots i{width:8px;height:8px;border-radius:50%;background:#2563eb;animation:azdot 1s ease-in-out infinite}.az-spin-dots i:nth-child(2){animation-delay:.15s}.az-spin-dots i:nth-child(3){animation-delay:.3s}@keyframes azspin{to{transform:rotate(360deg)}}@keyframes azdot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}</style>
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -969,6 +983,7 @@ async function shrinkBigIcons() {
 
         async function syncFromGoogleSheets() {
             if (!isSyncConfigured()) return;
+            const usePrefetch = !pendingPush;
             if (pendingPush) {
                 await syncToGoogleSheets();
                 if (pendingPush) return;
@@ -988,7 +1003,13 @@ async function shrinkBigIcons() {
                     getUrl += (getUrl.includes('?') ? '&' : '?') + '_t=' + timestamp;
                 }
 
-                const res = await fetchWithTimeout(getUrl);
+                let res = null;
+                const pf = window.__azPrefetch;
+                window.__azPrefetch = null;
+                if (usePrefetch && pf && Date.now() - pf.t < 20000) {
+                    try { res = await pf.p; } catch (e) { res = null; }
+                }
+                if (!res || !res.ok) res = await fetchWithTimeout(getUrl);
                 const data = await res.json();
                 
                 if (data.status === "success" && !pendingPush && versionAtStart === localVersion) {
