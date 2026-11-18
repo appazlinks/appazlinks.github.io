@@ -1176,21 +1176,10 @@ function openShortcut(url, itemId) {
     }
 
     if (/^azlinks:\/\//i.test(url)) {
-        if (launchExternalProtocol(buildAzlinksLaunchUrl(url, title))) showOpeningSpinner(1800);
+        launchExternalProtocol(buildAzlinksLaunchUrl(url, title));
         return;
     }
 
-    // No Android, abre o link no navegador (aba independente), fora da janela do aplicativo
-    if (/Android/i.test(navigator.userAgent) && /^https?:\/\//i.test(url) && !/^https?:\/\/(www\.)?azlinks\.com\.br/i.test(url)) {
-        const mm = url.match(/^(https?):\/\/(.*)$/i);
-        const a = document.createElement('a');
-        a.href = 'intent://' + mm[2].replace(/#/g, '%23') + '#Intent;scheme=' + mm[1].toLowerCase() + ';action=android.intent.action.VIEW;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
-        return;
-    }
     window.open(url, '_blank');
 }
 
