@@ -2296,9 +2296,53 @@ document.addEventListener('DOMContentLoaded', () => {
             render();
         }
 
+        // ===== Confirmação de exclusão (janela do app, no lugar do alerta do navegador) =====
+        function moveNote(n, destino) {
+            if (n === 0) return 'Não há links dentro dela.';
+            return (n === 1 ? 'O 1 link dentro dela' : 'Os ' + n + ' links dentro dela') + ' não ' + (n === 1 ? 'será apagado' : 'serão apagados') + ': ' + (n === 1 ? 'ficará' : 'ficarão') + ' em "' + destino + '".';
+        }
+
+        function closeAskConfirm() {
+            const m = document.getElementById('askConfirm');
+            if (m) m.remove();
+            document.removeEventListener('keydown', askConfirmKey);
+        }
+        function askConfirmKey(e) { if (e.key === 'Escape') closeAskConfirm(); }
+
+        function askConfirm(opts, onOk) {
+            closeAskConfirm();
+            const ov = document.createElement('div');
+            ov.id = 'askConfirm';
+            ov.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4';
+            ov.style.zIndex = '130';
+            ov.innerHTML =
+                '<div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">' +
+                '<div class="bg-red-50 px-5 py-3 border-b border-red-100 flex items-center justify-between"><h3 class="font-semibold text-red-700 text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-red-500"></i> Confirmar Exclusão</h3><button type="button" id="acX" class="text-gray-400 hover:text-gray-600 cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>' +
+                '<div class="p-5 flex flex-col gap-4"><div class="flex items-start gap-3"><div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-red-600"><i class="fa-solid fa-trash-can text-lg"></i></div>' +
+                '<div><p id="acTitle" class="text-sm font-semibold text-gray-800"></p><p id="acMsg" class="text-xs text-gray-500 mt-1 leading-relaxed"></p><p id="acNote" class="text-xs text-green-700 mt-2 leading-relaxed hidden"></p></div></div>' +
+                '<div class="flex justify-end gap-2"><button type="button" id="acCancel" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md cursor-pointer">Cancelar</button><button type="button" id="acOk" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-md cursor-pointer"></button></div></div></div>';
+            document.body.appendChild(ov);
+            const $ = id => document.getElementById(id);
+            $('acTitle').textContent = opts.title || 'Deseja continuar?';
+            $('acMsg').textContent = opts.message || '';
+            if (opts.note) { $('acNote').textContent = opts.note; $('acNote').classList.remove('hidden'); }
+            $('acOk').textContent = opts.confirmText || 'Excluir';
+            $('acCancel').addEventListener('click', closeAskConfirm);
+            $('acX').addEventListener('click', closeAskConfirm);
+            ov.addEventListener('click', e => { if (e.target === ov) closeAskConfirm(); });
+            $('acOk').addEventListener('click', () => { closeAskConfirm(); onOk(); });
+            document.addEventListener('keydown', askConfirmKey);
+            $('acCancel').focus();
+        }
+
         function deleteSubcategoryPrompt(catName, subName, parentSubName = '') {
             if (parentSubName) {
-                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão em "${parentSubName}".`)) {
+                askConfirm({
+                    title: `Remover a subcategoria "${subName}"?`,
+                    message: `A subcategoria "${subName}" será removida de "${parentSubName}".`,
+                    note: moveNote(htmlFiles.filter(it => (it.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() && (it.subcategory || '').trim().toLowerCase() === parentSubName.toLowerCase() && (it.subsubcategory || '').trim().toLowerCase() === subName.toLowerCase()).length, parentSubName),
+                    confirmText: 'Remover'
+                }, () => {
                     htmlFiles.forEach(item => {
                         if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
                             (item.subcategory || '').trim().toLowerCase() === parentSubName.toLowerCase() &&
@@ -2320,9 +2364,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     saveToStorage(true);
                     render();
-                }
+                });
             } else {
-                if (confirm(`Deseja remover a subcategoria "${subName}"? Os links dentro dela ficarão na categoria "${catName}".`)) {
+                askConfirm({
+                    title: `Remover a subcategoria "${subName}"?`,
+                    message: `A subcategoria "${subName}" será removida da categoria "${catName}".`,
+                    note: moveNote(htmlFiles.filter(it => (it.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() && (it.subcategory || '').trim().toLowerCase() === subName.toLowerCase()).length, catName),
+                    confirmText: 'Remover'
+                }, () => {
                     htmlFiles.forEach(item => {
                         if ((item.category || 'Geral').trim().toLowerCase() === catName.toLowerCase() &&
                             (item.subcategory || '').trim().toLowerCase() === subName.toLowerCase()) {
@@ -2353,7 +2402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     saveToStorage(true);
                     render();
-                }
+                });
             }
         }
 
@@ -2759,7 +2808,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function deleteCategoryPrompt(catName) {
-            if (confirm(`Deseja remover a categoria "${catName}"? Os atalhos serão movidos para "Geral".`)) {
+            askConfirm({
+                title: `Remover a categoria "${catName}"?`,
+                message: `A categoria "${catName}" e suas subcategorias serão removidas.`,
+                note: moveNote(htmlFiles.filter(it => (it.category || 'Geral').trim() === catName).length, 'Geral'),
+                confirmText: 'Remover'
+            }, () => {
                 htmlFiles.forEach(item => {
                     if ((item.category || 'Geral').trim() === catName) {
                         item.category = 'Geral';
@@ -2775,7 +2829,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 saveToStorage(true);
                 render();
-            }
+            });
         }
 
         function renderGrid() {
@@ -3321,7 +3375,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function confirmClearAllShortcuts() {
-            if(confirm('Tem certeza que deseja apagar todos os atalhos?')) {
+            askConfirm({
+                title: 'Apagar todos os atalhos?',
+                message: `Todos os ${htmlFiles.length} atalhos serão apagados da planilha e de todos os seus aparelhos. Esta ação não pode ser desfeita.`,
+                confirmText: 'Apagar tudo'
+            }, () => {
                 htmlFiles.forEach(f => { if (f && f.id) { rememberDeleted(f); deletedShortcutIds.add(f.id); } });
                 htmlFiles = [];
                 currentCategory = 'all';
@@ -3329,7 +3387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentSubsubcategory = null;
                 saveToStorage(true);
                 render();
-            }
+            });
         }
 
         function render() {
