@@ -1200,7 +1200,8 @@ function openShortcut(url, itemId) {
     }
 
     if (/^azlinks:\/\//i.test(url)) {
-        launchExternalProtocol(buildAzlinksLaunchUrl(url, title));
+        // Computador: círculo girando com 3 pontinhos enquanto o atalho local (pasta, arquivo ou programa) abre
+        if (launchExternalProtocol(buildAzlinksLaunchUrl(url, title)) && !isMobileDevice()) showOpeningSpinner(1500);
         return;
     }
 
