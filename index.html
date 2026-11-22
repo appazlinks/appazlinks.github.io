@@ -143,10 +143,8 @@
 </head>
 <body class="flex flex-col h-[100dvh] min-h-[100dvh] font-sans overflow-hidden text-slate-900">
 
-    <!-- Barra Superior -->
     <header class="bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-3 md:px-5 py-3 flex flex-col gap-3 shadow-soft z-20 shrink-0">
 
-        <!-- Linha 1: Logo + Ações Desktop -->
         <div class="flex items-center justify-between w-full gap-3">
             <div class="flex items-center cursor-pointer select-none shrink-0" onclick="window.location.reload()">
                 <svg class="desktop-logo-svg" width="140" height="34" viewBox="0 0 180 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -325,7 +323,6 @@
     <input type="file" id="categoryIconFileInput" accept="image/*" class="hidden" onchange="handleCategoryIconFileSelect(event)">
     <input type="file" id="subcatIconFileInput" accept="image/*" class="hidden" onchange="handleSubcatIconFileSelect(event)">
 
-    <!-- Tela de licença vencida -->
     <div id="licenseBlock" class="fixed inset-0 bg-white z-[70] hidden flex items-center justify-center p-6">
         <div class="w-full max-w-md border border-red-200 rounded-2xl p-8 flex flex-col items-center text-center gap-4 shadow-card">
             <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center ring-1 ring-red-100">
@@ -336,7 +333,6 @@
         </div>
     </div>
 
-    <!-- Modal de acesso por e-mail -->
     <div id="emailModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
@@ -363,7 +359,6 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar Atalho -->
     <div id="shortcutModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -412,7 +407,6 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar / Renomear Subcategoria -->
     <div id="subcategoryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -441,7 +435,6 @@
         </div>
     </div>
 
-    <!-- Modal Alterar Ícone da Subcategoria -->
     <div id="editSubcatIconModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -472,7 +465,6 @@
         </div>
     </div>
 
-    <!-- Modal Mover Subcategoria -->
     <div id="moveSubcategoryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -501,7 +493,6 @@
         </div>
     </div>
 
-    <!-- Modal Editar Atalho -->
     <div id="editShortcutModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -569,7 +560,6 @@
         </div>
     </div>
 
-    <!-- Modal Editar Categoria -->
     <div id="editCategoryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -597,7 +587,6 @@
         </div>
     </div>
 
-    <!-- Modal Alterar Ícone da Categoria -->
     <div id="editCategoryIconModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -627,7 +616,6 @@
         </div>
     </div>
 
-    <!-- Modal Remover Atalho -->
     <div id="deleteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200/80 ring-1 ring-black/[0.02]">
             <div class="px-5 py-4 border-b border-red-100 bg-red-50/60 flex items-center justify-between">
@@ -1275,14 +1263,6 @@
                 __azPick = null;
             } catch (e) {}
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            PICK_FIELDS.forEach(f => {
-                const inp = document.getElementById(f.input);
-                if (inp) inp.addEventListener('input', () => { if (inp.value.indexOf('AZPICK:') === 0) inp.value = inp.value.slice(7).trim(); });
-            });
-            refreshPickBoxes();
-            setInterval(() => { refreshPickBoxes(); tryReadPickedPath(); }, 700);
-        });
         window.addEventListener('focus', tryReadPickedPath);
 
         let pendingExeIcon = '';
@@ -1363,12 +1343,6 @@
             }
             e.target.value = '';
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            const f = document.getElementById('fileName');
-            if (f) f.addEventListener('input', updateExeIconBox);
-            const x = document.getElementById('exeIconFile');
-            if (x) x.addEventListener('change', handleExeIconFile);
-        });
 
         function toggleFavorite(event, itemId) {
             event.stopPropagation();
@@ -1646,9 +1620,7 @@
                 { key: 'all', label: 'Todos os Atalhos', icon: 'fa-solid fa-border-all', color: 'text-brand-600' }
             ];
             const cats = getAllCategoryNames();
-            cats.forEach(c => {
-                items.push({ key: c, label: c, custom: categoryCustomizations[c] });
-            });
+            cats.forEach(c => { items.push({ key: c, label: c, custom: categoryCustomizations[c] }); });
             items.forEach(it => {
                 if (!categoryHasVisibleItems(it.key)) return;
                 const isActive = currentCategory === it.key;
@@ -1657,13 +1629,9 @@
                 btn.className = 'group/item w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ' + (isActive ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900');
                 btn.onclick = () => filterCategory(it.key);
                 let iconHtml;
-                if (it.custom && it.custom.image) {
-                    iconHtml = `<img src="${it.custom.image}" class="w-4 h-4 object-contain rounded">`;
-                } else if (it.custom && it.custom.icon) {
-                    iconHtml = `<i class="${it.custom.icon}"></i>`;
-                } else {
-                    iconHtml = `<i class="${it.icon} ${it.color}"></i>`;
-                }
+                if (it.custom && it.custom.image) iconHtml = `<img src="${it.custom.image}" class="w-4 h-4 object-contain rounded">`;
+                else if (it.custom && it.custom.icon) iconHtml = `<i class="${it.custom.icon}"></i>`;
+                else iconHtml = `<i class="${it.icon} ${it.color}"></i>`;
                 btn.innerHTML =
                     `<span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? 'bg-white shadow-soft' : 'bg-slate-100/70 group-hover/item:bg-white'}">${iconHtml}</span>` +
                     `<span class="sidebar-text truncate text-sm">${it.label}</span>`;
@@ -1756,12 +1724,11 @@
                         `<button type="button" onclick="event.stopPropagation(); toggleFavorite(event, '${item.id}')" class="w-7 h-7 rounded-lg flex items-center justify-center ${item.isFavorite ? 'text-amber-400 bg-amber-50' : 'text-slate-300 hover:text-amber-400 hover:bg-slate-100'} transition-colors">` +
                             `<i class="fa-solid fa-star text-xs pointer-events-none"></i>` +
                         `</button>`;
-                    listEl.appendChild(card ? row : row);
+                    listEl.appendChild(row);
                 });
             }
         }
 
-        // ===== Modais de formulário =====
         function openModal() {
             const m = document.getElementById('shortcutModal');
             if (!m) return;
@@ -1844,6 +1811,17 @@
             closeSubcategoryModal();
             saveToStorage(true);
             render();
+        }
+
+        function openAddSubcategoryModal(parentCat, parentSub, currentSub) {
+            const m = document.getElementById('subcategoryModal');
+            if (!m) return;
+            document.getElementById('subcatParentCategory').value = parentCat || '';
+            document.getElementById('subcatParentSubcategory').value = parentSub || '';
+            document.getElementById('subcatOldName').value = '';
+            document.getElementById('subcatNameInput').value = '';
+            m.classList.remove('hidden');
+            setTimeout(() => document.getElementById('subcatNameInput').focus(), 80);
         }
 
         function closeMoveSubcategoryModal() { const m = document.getElementById('moveSubcategoryModal'); if (m) m.classList.add('hidden'); }
@@ -1955,17 +1933,24 @@
             e.target.value = '';
         }
 
-        function closeDeleteModal() { const m = document.getElementById('deleteModal'); if (m) m.classList.add('hidden'); itemToDeleteId = null; }
-        document.getElementById('confirmDeleteBtn')?.addEventListener('click', () => {
+        function closeDeleteModal() {
+            const m = document.getElementById('deleteModal');
+            if (m) m.classList.add('hidden');
+            itemToDeleteId = null;
+        }
+        function handleConfirmDelete() {
             if (!itemToDeleteId) return;
             const idx = htmlFiles.findIndex(i => i.id === itemToDeleteId);
-            if (idx >= 0) { rememberDeleted(htmlFiles[idx]); htmlFiles.splice(idx, 1); }
-            deletedShortcutIds.add(itemToDeleteId);
+            if (idx >= 0) {
+                rememberDeleted(htmlFiles[idx]);
+                htmlFiles.splice(idx, 1);
+                deletedShortcutIds.add(itemToDeleteId);
+            }
             itemToDeleteId = null;
             saveToStorage(true);
             closeDeleteModal();
             render();
-        });
+        }
 
         function confirmClearAllShortcuts() {
             if (!confirm('Remover TODOS os atalhos? Esta ação não pode ser desfeita.')) return;
@@ -2010,7 +1995,6 @@
 
         function clearField(id) { const el = document.getElementById(id); if (el) { el.value = ''; el.focus(); } }
 
-        // Combos (datalist-like)
         function toggleCategoryCombo(inputId) {
             const inp = document.getElementById(inputId);
             if (!inp) return;
@@ -2034,8 +2018,50 @@
             inp.focus();
         }
 
-        // Inicialização
+        // ---- Funções de licença / e-mail (stubs para evitar erros) ----
+        function openEmailModal(force) {
+            const m = document.getElementById('emailModal');
+            if (m) m.classList.remove('hidden');
+        }
+        function closeEmailModal() {
+            const m = document.getElementById('emailModal');
+            if (m) m.classList.add('hidden');
+        }
+        function handleEmailSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            if (email) {
+                try { localStorage.setItem('local_user_data', JSON.stringify({ email })); } catch (err) {}
+            }
+            closeEmailModal();
+        }
+        function useAnotherEmail() {
+            try { localStorage.removeItem('local_user_data'); } catch (e) {}
+            openEmailModal(true);
+        }
+
+        // ===== INICIALIZAÇÃO =====
         async function init() {
+            // Registra handler do botão de exclusão DEPOIS que o DOM existe
+            const delBtn = document.getElementById('confirmDeleteBtn');
+            if (delBtn) delBtn.addEventListener('click', handleConfirmDelete);
+
+            // Registra input file de ícone do atalho
+            const iconInput = document.getElementById('shortcutIconFileInput');
+            if (iconInput) iconInput.addEventListener('change', handleShortcutIconFileSelect);
+
+            // Registra eventos do exe icon
+            const fileNameInput = document.getElementById('fileName');
+            if (fileNameInput) fileNameInput.addEventListener('input', updateExeIconBox);
+
+            // Pick boxes e leitura da área de transferência (loop)
+            PICK_FIELDS.forEach(f => {
+                const inp = document.getElementById(f.input);
+                if (inp) inp.addEventListener('input', () => { if (inp.value.indexOf('AZPICK:') === 0) inp.value = inp.value.slice(7).trim(); });
+            });
+            refreshPickBoxes();
+            setInterval(() => { refreshPickBoxes(); tryReadPickedPath(); }, 700);
+
             await loadLocalData();
             const saved = localStorage.getItem('local_last_category');
             currentCategory = saved || getInitialCategory();
@@ -2043,6 +2069,7 @@
             startAutoSync();
             setTimeout(() => { if (isSyncConfigured()) syncFromGoogleSheets(); }, 300);
         }
+
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
