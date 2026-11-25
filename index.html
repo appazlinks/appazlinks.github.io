@@ -650,6 +650,23 @@ function normalizeUrl(value) {
             );
         }
 
+        // Logo do TikTok embutido (o serviço de favicons do Google não devolve o ícone do TikTok)
+        function getTikTokIconDataUri() {
+            const note = (c, dx, dy) => "<g transform='translate(" + dx + " " + dy + ")' fill='none' stroke='" + c + "' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'>" +
+                "<path d='M38 14V38A9 9 0 1 1 29 29'/><path d='M38 14c1 7 6 11 13 11'/></g>";
+            return "data:image/svg+xml;utf8," + encodeURIComponent(
+                "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>" +
+                "<rect width='64' height='64' rx='14' fill='#000'/>" +
+                note('#25F4EE', -2, -2) + note('#FE2C55', 2, 2) + note('#FFFFFF', 0, 0) +
+                "</svg>"
+            );
+        }
+
+        function isTikTokHost(host) {
+            host = String(host || '').toLowerCase();
+            return host === 'tiktok.com' || host.endsWith('.tiktok.com');
+        }
+
         function getFaviconUrl(targetUrl) {
             if (isLocalWindowsPath(targetUrl)) {
                 return getLocalShortcutIconDataUri(targetUrl);
@@ -657,6 +674,7 @@ function normalizeUrl(value) {
             try {
                 const parsed = new URL(targetUrl);
                 if (!parsed.hostname) return getLocalShortcutIconDataUri(targetUrl);
+                if (isTikTokHost(parsed.hostname)) return getTikTokIconDataUri();
                 return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=128`;
             } catch (err) {
                 return 'https://via.placeholder.com/32';
@@ -1722,7 +1740,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function setViewMode(mode) {
-            categoryViewModes[currentCategory] = mode;
+            categoryViewModes[getScopeKey()] = mode;
             saveToStorage(false);
             renderGrid();
         }
@@ -1740,7 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function setIconSize(size) {
             if (!ICON_SIZES[size]) return;
-            categoryIconSizes[currentCategory] = size;
+            categoryIconSizes[getScopeKey()] = size;
             saveToStorage(false);
             closeSizeMenu();
             renderGrid();
@@ -1763,7 +1781,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 menu.style.zIndex = '100';
                 document.body.appendChild(menu);
             }
-            const current = getIconSize(currentCategory);
+            const current = getIconSize(getScopeKey());
             menu.innerHTML = '<div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tamanho</div>' +
                 ['small', 'medium', 'large'].map(k => {
                     const on = k === current;
@@ -1787,6 +1805,44 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSizeMenu();
         }, true);
 
+        // Chave de escopo: cada categoria, subcategoria e sub-subcategoria guarda sua própria grade/lista, ordenação e tamanho.
+        function buildScopeKey(cat, sub, subsub) {
+            if (!cat || ['all', 'favorites', 'most_visited'].includes(cat) || !sub) return cat;
+            let k = cat + '||' + String(sub).trim().toLowerCase();
+            if (subsub) k += '||' + String(subsub).trim().toLowerCase();
+            return k;
+        }
+
+        function getScopeKey() {
+            return buildScopeKey(currentCategory, currentSubcategory, currentSubsubcategory);
+        }
+
+        function forEachScopeMap(fn) {
+            [categoryViewModes, categorySortOrders, categoryIconSizes].forEach(fn);
+        }
+
+        // Move as configurações de uma chave (e das filhas) para outra chave (renomear)
+        function moveScopeKeys(oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            forEachScopeMap(map => {
+                Object.keys(map).forEach(k => {
+                    if (k === oldKey || k.indexOf(oldKey + '||') === 0) {
+                        map[newKey + k.slice(oldKey.length)] = map[k];
+                        delete map[k];
+                    }
+                });
+            });
+        }
+
+        function removeScopeKeys(key) {
+            if (!key) return;
+            forEachScopeMap(map => {
+                Object.keys(map).forEach(k => {
+                    if (k === key || k.indexOf(key + '||') === 0) delete map[k];
+                });
+            });
+        }
+
         function getViewMode(cat) {
             return categoryViewModes[cat] || 'grid';
         }
@@ -1796,14 +1852,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function toggleSortOrder() {
-            const current = getSortOrder(currentCategory);
-            categorySortOrders[currentCategory] = current === 'asc' ? 'desc' : 'asc';
+            const key = getScopeKey();
+            const current = getSortOrder(key);
+            categorySortOrders[key] = current === 'asc' ? 'desc' : 'asc';
             saveToStorage(false);
             renderGrid();
         }
 
         function updateSortButtonStyle() {
-            const order = getSortOrder(currentCategory);
+            const order = getSortOrder(getScopeKey());
             const iconDesk = document.getElementById('sortIconDesk');
             const iconMob = document.getElementById('sortIconMob');
 
@@ -1813,7 +1870,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateViewButtonsStyle() {
-            const mode = getViewMode(currentCategory);
+            const mode = getViewMode(getScopeKey());
             const gridBtnDesk = document.getElementById('btnGridDesk');
             const listBtnDesk = document.getElementById('btnListDesk');
             const gridBtnMob = document.getElementById('btnGridMob');
@@ -2191,6 +2248,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
+            // Configurações de exibição: a pasta movida vira sub-subcategoria do destino
+            (function () {
+                const oldK = buildScopeKey(catName, subToMove);
+                const destK = buildScopeKey(catName, newDestinationParent);
+                forEachScopeMap(map => {
+                    Object.keys(map).forEach(k => {
+                        if (k.indexOf(oldK + '||') === 0) { map[destK + k.slice(oldK.length)] = map[k]; delete map[k]; }
+                    });
+                });
+                moveScopeKeys(oldK, buildScopeKey(catName, newDestinationParent, subToMove));
+            })();
+
             saveToStorage(true);
             closeMoveSubcategoryModal();
             currentSubcategory = newDestinationParent;
@@ -2232,6 +2301,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             item.subsubcategory = newSub;
                         }
                     });
+                    moveScopeKeys(buildScopeKey(catName, parentSub, oldSub), buildScopeKey(catName, parentSub, newSub));
                     children = children.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
                     if (!children.some(s => s.toLowerCase() === newSub.toLowerCase())) children.push(newSub);
                     if (currentSubsubcategory && currentSubsubcategory.toLowerCase() === oldSub.toLowerCase()) {
@@ -2257,6 +2327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             item.subcategory = newSub;
                         }
                     });
+                    moveScopeKeys(buildScopeKey(catName, oldSub), buildScopeKey(catName, newSub));
                     subs = subs.filter(s => s.toLowerCase() !== oldSub.toLowerCase());
                     if (!subs.some(s => s.toLowerCase() === newSub.toLowerCase())) subs.push(newSub);
 
@@ -2351,6 +2422,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             item.subsubcategory = '';
                         }
                     });
+                    removeScopeKeys(buildScopeKey(catName, parentSubName, subName));
                     if (categoryCustomizations[catName] && categoryCustomizations[catName].subsubcategories) {
                         const parentKey = Object.keys(categoryCustomizations[catName].subsubcategories)
                             .find(k => k.toLowerCase() === parentSubName.toLowerCase());
@@ -2380,6 +2452,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             item.subsubcategory = '';
                         }
                     });
+                    removeScopeKeys(buildScopeKey(catName, subName));
                     if (categoryCustomizations[catName]) {
                         if (Array.isArray(categoryCustomizations[catName].subcategories)) {
                             categoryCustomizations[catName].subcategories = categoryCustomizations[catName].subcategories.filter(
@@ -2720,9 +2793,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (newName !== oldName) {
                 delete categoryCustomizations[oldName];
-                if (categorySortOrders[oldName]) { categorySortOrders[newName] = categorySortOrders[oldName]; delete categorySortOrders[oldName]; }
-                if (categoryViewModes[oldName]) { categoryViewModes[newName] = categoryViewModes[oldName]; delete categoryViewModes[oldName]; }
-                if (categoryIconSizes[oldName]) { categoryIconSizes[newName] = categoryIconSizes[oldName]; delete categoryIconSizes[oldName]; }
+                moveScopeKeys(oldName, newName);
             }
 
             if (currentCategory === oldName) currentCategory = newName;
@@ -2823,6 +2894,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 delete categoryCustomizations[catName];
+                removeScopeKeys(catName);
                 if (currentCategory === catName) {
                     currentCategory = 'all';
                     currentSubcategory = null;
@@ -2837,8 +2909,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const grid = document.getElementById('shortcutsGrid');
             const list = document.getElementById('shortcutsList');
             const empty = document.getElementById('emptyState');
-            const viewMode = getViewMode(currentCategory);
-            const sortOrder = getSortOrder(currentCategory);
+            const viewMode = getViewMode(getScopeKey());
+            const sortOrder = getSortOrder(getScopeKey());
 
             if (!grid) return;
             updateCategoryHeader();
@@ -2905,7 +2977,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             empty.classList.add('hidden');
 
-            const sz = ICON_SIZES[getIconSize(currentCategory)];
+            const sz = ICON_SIZES[getIconSize(getScopeKey())];
             const escapedCat = escapeJsStr(currentCategory);
             const escapedParentSub = escapeJsStr(currentSubcategory || '');
 
